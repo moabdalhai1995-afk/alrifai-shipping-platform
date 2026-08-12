@@ -120,8 +120,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 1000*60*60*24*7 }
 }));
-app.use(express.static(path.join(__dirname, "public")));
-
+app.app.use(express.static(__dirname));
 function orderNo(){ return "RIF-" + Date.now().toString().slice(-8) + "-" + crypto.randomBytes(2).toString("hex").toUpperCase(); }
 function partnerNo(){ return "PAR-" + Date.now().toString().slice(-8); }
 
