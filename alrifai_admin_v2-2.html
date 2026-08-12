@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة إدارة الرفاعي</title>
+<style>
+:root{--g:#bd8b29;--ink:#15202f;--bg:#f7f4ed}*{box-sizing:border-box}body{font-family:Arial;margin:0;background:var(--bg);color:var(--ink)}
+header{padding:20px;background:#fff}main{padding:18px;max-width:1100px;margin:auto}.card,.stat{background:#fff;padding:18px;border-radius:18px;margin:14px 0}
+.hidden{display:none!important}input,button,select{padding:13px;border-radius:10px;border:1px solid #ddd;width:100%;margin:5px 0;font:inherit}
+button{background:var(--g);color:#fff;border:0;font-weight:bold}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat b{display:block;font-size:27px;color:var(--g)}
+.tabs{display:flex;gap:8px;overflow:auto}.tabs button{width:auto;min-width:max-content}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}
+td,th{padding:10px;border-bottom:1px solid #eee;text-align:right}.toolbar{display:grid;grid-template-columns:1fr auto;gap:10px}.toolbar button{width:auto}
+.password-wrap{position:relative}.password-toggle{position:absolute;left:8px;top:8px;width:45px;background:transparent;color:#15202f}.msg{color:#b42318}.ok{color:#18794e}
+@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.toolbar button{width:100%}}
+</style></head>
+<body><header><h2>الرفاعي للشحن الدولي — لوحة الإدارة</h2></header><main>
+<div id="login" class="card"><h3>دخول المدير</h3><input id="phone" inputmode="tel" placeholder="رقم الجوال">
+<div class="password-wrap"><input id="password" type="password" placeholder="كلمة المرور"><button class="password-toggle" onclick="togglePassword()">👁️</button></div>
+<button id="loginBtn" onclick="doLogin()">دخول</button><p id="msg" class="msg"></p></div>
+
+<div id="panel" class="hidden">
+<div class="stats"><div class="stat">الطلبات<b id="count">0</b></div><div class="stat">تم الشحن<b id="shipped">0</b></div><div class="stat">قيد التنفيذ<b id="processing">0</b></div><div class="stat">المدن<b id="cities">0</b></div></div>
+<div class="card"><div class="tabs"><button onclick="tab('orders')">الطلبات</button><button onclick="tab('quotes')">عروض الأسعار</button><button onclick="tab('payments')">المدفوعات</button><button onclick="tab('products')">المنتجات</button><button onclick="tab('suppliers')">الموردون</button><button onclick="tab('partners')">طلبات الشراكة</button></div></div>
+<div id="orders" class="page card"><h3>إدارة الطلبات</h3><div class="toolbar"><input id="q" placeholder="بحث" oninput="render()"><button onclick="load()">تحديث الطلبات</button></div>
+<div class="scroll"><table><thead><tr><th>الطلب</th><th>العميل</th><th>الجوال</th><th>المنتج</th><th>المدينة</th><th>الحالة</th><th>تحديث</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div id="quotes" class="page card hidden"><h3>عروض الأسعار</h3><p>القسم جاهز للربط مع الخادم.</p></div>
+<div id="payments" class="page card hidden"><h3>المدفوعات</h3><p>متابعة حالة السداد والدفعات.</p></div>
+<div id="products" class="page card hidden"><h3>المنتجات</h3><p>إدارة كتالوج الأجهزة والأثاث.</p></div>
+<div id="suppliers" class="page card hidden"><h3>الموردون</h3><p>إدارة بيانات الوكلاء والموردين.</p></div>
+<div id="partners" class="page card hidden"><h3>طلبات الشراكة</h3><p>مراجعة الشركات الراغبة في عرض منتجاتها.</p></div>
+<button onclick="logout()">تسجيل الخروج</button></div></main>
+<script>
+let orders=[];const labels=['تم استلام الطلب','جاري تأكيد السعر والتوفر','تم الشراء والتجهيز','تم الشحن'];
+async function api(u,o={}){let r=await fetch(u,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...o}),d={};try{d=await r.json()}catch(e){}if(!r.ok)throw Error(d.error||('خطأ '+r.status));return d}
+function togglePassword(){password.type=password.type==='password'?'text':'password'}
+async function doLogin(){msg.textContent='';try{let d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({phone:phone.value.trim(),password:password.value})});if(!d.user||d.user.role!=='admin')throw Error('الحساب ليس مديراً');show();await load()}catch(e){msg.textContent=e.message}}
+function show(){login.classList.add('hidden');panel.classList.remove('hidden')}
+function tab(id){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
+async function load(){try{orders=(await api('/api/admin/orders')).orders||[];render()}catch(e){alert(e.message)}}
+function render(){let s=(q.value||'').toLowerCase(),a=orders.filter(o=>!s||JSON.stringify(o).toLowerCase().includes(s));count.textContent=orders.length;shipped.textContent=orders.filter(o=>Number(o.status)===3).length;processing.textContent=orders.filter(o=>Number(o.status)!==3).length;cities.textContent=new Set(orders.map(o=>o.city).filter(Boolean)).size;rows.innerHTML=a.map(o=>`<tr><td>${o.order_no||''}</td><td>${o.name||''}</td><td>${o.phone||''}</td><td>${o.product||''}</td><td>${o.city||''}</td><td>${labels[Number(o.status)]||'غير محدد'}</td><td><select onchange="status('${o.order_no}',this.value)"><option value="">اختر</option>${labels.map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></td></tr>`).join('')}
+async function status(n,s){if(s==='')return;try{await api('/api/admin/orders/'+encodeURIComponent(n)+'/status',{method:'PATCH',body:JSON.stringify({status:Number(s)})});await load()}catch(e){alert(e.message)}}
+async function logout(){try{await api('/api/auth/logout',{method:'POST'})}catch(e){}location.reload()}
+(async()=>{try{let d=await api('/api/me');if(d.authenticated&&d.user?.role==='admin'){show();await load()}}catch(e){}})();
+</script></body></html>
