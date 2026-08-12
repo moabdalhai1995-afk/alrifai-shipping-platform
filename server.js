@@ -146,7 +146,7 @@ app.post("/api/auth/login",(req,res)=>{
   const {phone,password}=req.body;
   const u=db.prepare("SELECT * FROM users WHERE phone=?").get((phone||"").trim());
   if(!u || !bcrypt.compareSync(password||"",u.password_hash)) return res.status(401).json({error:"رقم الجوال أو كلمة المرور غير صحيحة"});
-  req.session.user={id:u.id};
+  req.session.user={id:u.id,role:u.role};
   res.json({ok:true,user:{id:u.id,name:u.name,phone:u.phone,role:u.role}});
 });
 app.post("/api/auth/logout",(req,res)=>req.session.destroy(()=>res.json({ok:true})));
