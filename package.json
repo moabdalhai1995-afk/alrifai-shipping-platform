@@ -1,12 +1,12 @@
 {
   "name": "alrifai-shipping-platform",
-  "version": "3.0.0",
+  "version": "3.1.1",
   "private": true,
   "description": "AlRifai International Shipping Platform - accounts, orders and SQLite database",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node --require ./reset-preload.js server.js",
+    "dev": "node --require ./reset-preload.js server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

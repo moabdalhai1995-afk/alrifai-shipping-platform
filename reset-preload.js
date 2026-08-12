@@ -5,7 +5,7 @@ const TOKEN_TTL_MS = 15 * 60 * 1000;
 const usedTokens = new Set();
 const requestsByIp = new Map();
 
-function base64urlEncode(obj) {
+function b64(obj) {
   return Buffer.from(JSON.stringify(obj)).toString("base64url");
 }
 function sign(data, secret) {
@@ -13,8 +13,10 @@ function sign(data, secret) {
 }
 function makeToken(email) {
   const secret = process.env.SESSION_SECRET;
-  if (!secret) throw new Error("SESSION_SECRET غير مضبوط");
-  const payload = base64urlEncode({
+  if (!secret || secret === "CHANGE_ME_BEFORE_PRODUCTION") {
+    throw new Error("SESSION_SECRET غير مضبوط بصورة آمنة");
+  }
+  const payload = b64({
     email: email.toLowerCase(),
     exp: Date.now() + TOKEN_TTL_MS,
     nonce: crypto.randomBytes(16).toString("hex")
@@ -36,9 +38,11 @@ function verifyToken(token) {
   if (usedTokens.has(tokenHash)) return null;
 
   let data;
-  try { data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")); }
-  catch { return null; }
-
+  try {
+    data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  } catch {
+    return null;
+  }
   if (!data.email || !data.exp || Date.now() > data.exp) return null;
   return { ...data, tokenHash };
 }
@@ -66,20 +70,19 @@ async function sendRecoveryEmail(to, link) {
       from,
       to: [to],
       subject: "استرداد دخول مدير منصة الرفاعي",
-      html: `
-        <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8">
-          <h2>استرداد دخول المدير</h2>
-          <p>تم طلب استرداد الدخول إلى لوحة إدارة الرفاعي للشحن الدولي.</p>
-          <p><a href="${link}" style="display:inline-block;background:#bd8b29;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">استرداد الدخول</a></p>
-          <p>صلاحية الرابط 15 دقيقة ويعمل مرة واحدة فقط.</p>
-          <p>إذا لم تطلب الاسترداد فتجاهل هذه الرسالة.</p>
-        </div>`
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8">
+        <h2>استرداد دخول المدير</h2>
+        <p>تم طلب استرداد الدخول إلى لوحة إدارة الرفاعي للشحن الدولي.</p>
+        <p><a href="${link}" style="display:inline-block;background:#bd8b29;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">استرداد الدخول</a></p>
+        <p>صلاحية الرابط 15 دقيقة ويعمل مرة واحدة فقط.</p>
+        <p>إذا لم تطلب الاسترداد فتجاهل هذه الرسالة.</p>
+      </div>`
     })
   });
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error("فشل إرسال البريد: " + response.status + " " + text.slice(0, 200));
+    throw new Error("Resend " + response.status + ": " + text.slice(0, 250));
   }
 }
 
@@ -90,8 +93,10 @@ function installRecovery(app) {
   app.post("/api/admin/recovery/request", async (req, res) => {
     const email = String(req.body?.email || "").trim().toLowerCase();
     const adminEmail = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
-
-    const generic = { ok: true, message: "إذا كان البريد مطابقاً لحساب المدير فسيتم إرسال رابط الاسترداد." };
+    const generic = {
+      ok: true,
+      message: "إذا كان البريد مطابقاً لحساب المدير فسيتم إرسال رابط الاسترداد."
+    };
 
     if (!canRequest(req.ip || req.socket?.remoteAddress || "unknown")) {
       return res.status(429).json({ error: "محاولات كثيرة. حاول بعد 15 دقيقة." });
@@ -105,7 +110,7 @@ function installRecovery(app) {
       await sendRecoveryEmail(adminEmail, link);
       return res.json(generic);
     } catch (err) {
-      console.error("admin recovery email error:", err.message);
+      console.error("admin recovery:", err.message);
       return res.status(500).json({ error: "تعذر إرسال رسالة الاسترداد حالياً." });
     }
   });
@@ -123,17 +128,32 @@ function installRecovery(app) {
     req.session.save(() => res.redirect("/admin-1.html?recovered=1"));
   });
 
-  console.log("AlRifai admin email recovery enabled");
+  console.log("AlRifai admin recovery routes installed");
 }
 
 function wrappedExpress(...args) {
   const app = realExpress(...args);
+  const originalUse = app.use.bind(app);
+
+  app.use = function (...args) {
+    // server.js registers its generic API 404 middleware near the end.
+    // Install recovery routes immediately BEFORE that catch-all so they remain reachable.
+    const maybeMiddleware = args.find(x => typeof x === "function");
+    const source = maybeMiddleware ? Function.prototype.toString.call(maybeMiddleware) : "";
+    if (!app.__alrifaiRecoveryInstalled && source.includes("API route not found")) {
+      installRecovery(app);
+    }
+    return originalUse(...args);
+  };
+
   const originalListen = app.listen.bind(app);
-  app.listen = function (...listenArgs) {
-    installRecovery(app);
-    return originalListen(...listenArgs);
+  app.listen = function (...args) {
+    // Fallback in case server structure changes and no API catch-all was detected.
+    if (!app.__alrifaiRecoveryInstalled) installRecovery(app);
+    return originalListen(...args);
   };
   return app;
 }
+
 Object.assign(wrappedExpress, realExpress);
 require.cache[require.resolve("express")].exports = wrappedExpress;
