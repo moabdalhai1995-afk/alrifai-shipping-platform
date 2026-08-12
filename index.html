@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="منصة الرفاعي للشحن الدولي - شراء وشحن من السعودية إلى السودان">
+<title>الرفاعي للشحن الدولي | منصة الشراء والشحن</title>
+<style>
+:root{--ink:#16202a;--gold:#b8872d;--gold2:#8d671f;--bg:#f7f5f1;--white:#fff;--muted:#68717a;--line:#e7e1d7;--dark:#101820;--ok:#18794e}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+a{text-decoration:none;color:inherit}.wrap{max-width:1180px;margin:auto;padding:0 20px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}.nav{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:22px;font-weight:800}.brand span{display:block;color:var(--gold);font-size:12px;margin-top:3px}
+nav{display:flex;gap:20px;font-size:14px}.actions{display:flex;gap:8px}.btn{border:0;border-radius:10px;padding:12px 18px;cursor:pointer;font-weight:700;font-family:inherit}.primary{background:var(--gold);color:#fff}.primary:hover{background:var(--gold2)}.outline{background:#fff;border:1px solid var(--line)}
+.hero{padding:70px 0 55px;background:linear-gradient(120deg,#fff 0%,#f7f0e2 100%)}.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.kicker{color:var(--gold);font-weight:800}.hero h1{font-size:46px;line-height:1.25;margin:12px 0}.hero p{font-size:18px;line-height:1.9;color:var(--muted);max-width:720px}.hero-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 12px 35px #0000000b}.route{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:20px}.route b{color:var(--gold)}
+section{padding:58px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.section-head h2{margin:0;font-size:30px}.muted{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}.icon{font-size:32px}.card h3{margin:12px 0 8px}.card p{color:var(--muted);line-height:1.8}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.toolbar input,.toolbar select{padding:12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;background:#fff}.toolbar input{flex:1;min-width:220px}
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.product{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}.product-img{height:150px;background:#eee9df;display:grid;place-items:center;font-size:48px}.product-body{padding:16px}.price{font-weight:800;color:var(--gold);margin:10px 0}.product button{width:100%}.tag{display:inline-block;background:#f3eee4;color:var(--gold2);padding:5px 8px;border-radius:8px;font-size:11px;font-weight:700}
+.calc{background:#fff;border:1px solid var(--line);border-radius:18px;padding:25px}.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;background:#fff}.result{margin-top:16px;padding:18px;border-radius:12px;background:#f8f3e8;border:1px solid #eadcc0}.result strong{font-size:24px;color:var(--gold2)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.step{background:#fff;border:1px solid var(--line);padding:20px;border-radius:14px}.num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#fff;font-weight:800}
+.partner{background:#18232d;color:#fff;border-radius:24px;padding:45px}.partner p{color:#d8dde1;line-height:1.9;max-width:750px}
+.track{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.track-item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}.track-item .state{font-size:24px;margin-bottom:8px}.track-item.done{border-color:#d4eadf}.track-item.done .state{color:var(--ok)}
+footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.footer-grid p{color:#bbc3ca;line-height:1.8}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-box{background:#fff;border-radius:18px;max-width:620px;width:100%;padding:28px;max-height:90vh;overflow:auto}.close{float:left;border:0;background:none;font-size:25px;cursor:pointer}
+.cart{position:fixed;left:20px;bottom:20px;z-index:25}.cart button{box-shadow:0 8px 25px #0002}.badge{display:inline-grid;place-items:center;min-width:23px;height:23px;border-radius:50%;background:#fff;color:var(--gold2);margin-right:5px}
+.toast{position:fixed;bottom:20px;right:20px;background:#18232d;color:#fff;padding:13px 18px;border-radius:10px;display:none;z-index:80}
+.empty{padding:35px;text-align:center;background:#fff;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
+.small{font-size:12px}
+@media(max-width:850px){nav{display:none}.hero-grid,.footer-grid{grid-template-columns:1fr}.hero h1{font-size:36px}.cards,.products{grid-template-columns:repeat(2,1fr)}.steps,.track{grid-template-columns:1fr 1fr}.calc-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.cards,.products,.steps,.track,.calc-grid{grid-template-columns:1fr}.actions .outline{display:none}.nav{min-height:64px}.hero{padding-top:45px}.hero h1{font-size:31px}}
+</style>
+
+<style>
+#accountArea{display:none}
+.phase2-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.p2-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.p2-stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+.p2-stat b{font-size:28px;color:var(--gold2);display:block;margin-top:7px}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px}.admin-table th,.admin-table td{padding:11px;border-bottom:1px solid var(--line);text-align:right}.admin-table th{background:#f8f4ec}
+.status-select{padding:7px;border:1px solid var(--line);border-radius:8px;font-family:inherit}
+.user-pill{font-size:12px;color:var(--muted)}
+@media(max-width:700px){.phase2-grid{grid-template-columns:1fr}.admin-table{font-size:11px}}
+</style>
+
+<style>
+.p4-box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
+.pay-methods{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.pay-method{border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;background:#fff}.pay-method:hover{border-color:var(--gold)}.pay-method input{margin-left:7px}
+.notice{padding:12px;border-radius:10px;background:#f8f3e8;margin:10px 0}
+@media(max-width:700px){.pay-methods{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+<div class="brand">الرفاعي للشحن الدولي<span>من السعودية إلى السودان</span></div>
+<nav><a href="#products">المنتجات</a><a href="#calculator">حاسبة الشحن</a><a href="#how">كيف تعمل</a><a href="#track">تتبع</a><a href="#partners">للشركاء</a></nav>
+<div class="actions"><button class="btn outline" id="loginBtn" onclick="openAuth()">دخول</button><button class="btn outline" onclick="openPartner()">انضم كشريك</button><button class="btn primary" onclick="openOrder()">اطلب الآن</button></div>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap hero-grid">
+<div><div class="kicker">منصة شراء وشحن متكاملة</div><h1>منتجات سعودية تختارها… ونحن نتولى الشراء والشحن إلى السودان</h1>
+<p>تصفح منتجات الشركات والمتاجر السعودية المتعاقدة مع الرفاعي، أرسل طلبك، واحصل على عرض الشراء والشحن قبل الاعتماد.</p>
+<button class="btn primary" onclick="location.href='#products'">تصفح المنتجات</button>
+<button class="btn outline" onclick="openOrder()">اطلب شراء وشحن</button></div>
+<div class="hero-card"><div class="route">السعودية <b>→</b> السودان</div><hr style="border:0;border-top:1px solid #eee;margin:22px 0">
+<strong>الخدمة تشمل</strong><ul style="line-height:2.1;color:#68717a"><li>اختيار المنتج من الشركاء</li><li>تنسيق الشراء والاستلام</li><li>تجهيز الشحنة</li><li>تقدير تكلفة الشحن</li><li>متابعة حالة الطلب</li></ul></div>
+</div></section>
+
+<section><div class="wrap"><div class="section-head"><div><h2>خدماتنا</h2><p class="muted">منصة واحدة للشراء والشحن والمتابعة.</p></div></div>
+<div class="cards">
+<div class="card"><div class="icon">🛒</div><h3>تسوّق من شركائنا</h3><p>اختر من منتجات الشركات والمتاجر السعودية المتعاقدة معنا.</p></div>
+<div class="card"><div class="icon">📦</div><h3>شراء وتجهيز</h3><p>ننسق الشراء والاستلام وتجهيز المنتجات للشحن.</p></div>
+<div class="card"><div class="icon">🚢</div><h3>الشحن إلى السودان</h3><p>خدمات للأفراد والتجار والحاويات حسب نوع الشحنة والوجهة.</p></div>
+</div></div></section>
+
+<section id="products"><div class="wrap"><div class="section-head"><div><h2>كتالوج المنتجات</h2><p class="muted">كتالوج تجريبي قابل للاستبدال ببيانات الشركاء الفعلية.</p></div><button class="btn outline" onclick="openOrder()">طلب منتج غير موجود</button></div>
+<div class="toolbar"><input id="search" placeholder="ابحث عن منتج..." oninput="renderProducts()"><select id="category" onchange="renderProducts()"><option value="">كل الأقسام</option><option>أجهزة منزلية</option><option>تكييف</option><option>أثاث</option><option>إلكترونيات</option></select></div>
+<div id="productsGrid" class="products"></div></div></section>
+
+<section id="calculator"><div class="wrap"><div class="section-head"><div><h2>حاسبة تقديرية للشحن</h2><p class="muted">تقدير أولي فقط، والسعر النهائي يعتمد على الوزن/الحجم ونوع الشحنة والوجهة.</p></div></div>
+<div class="calc"><div class="calc-grid">
+<div class="field"><label>الوجهة</label><select id="cCity"><option value="khartoum">الخرطوم</option><option value="jazira">الجزيرة</option><option value="atbara">عطبرة</option><option value="shendi">شندي</option></select></div>
+<div class="field"><label>نوع الشحنة</label><select id="cType"><option value="parcel">طرد</option><option value="commercial">شحنة تجارية</option><option value="container">حاوية</option></select></div>
+<div class="field"><label>الوزن (كجم)</label><input id="cWeight" type="number" min="1" value="10"></div>
+<div class="field"><label>عدد الطرود</label><input id="cQty" type="number" min="1" value="1"></div>
+</div><button class="btn primary" onclick="calculate()">احسب التقدير</button><div id="calcResult" class="result" style="display:none"></div></div></div></section>
+
+<section id="how"><div class="wrap"><div class="section-head"><div><h2>كيف تعمل المنصة؟</h2><p class="muted">رحلة واضحة من اختيار المنتج حتى الشحن.</p></div></div>
+<div class="steps"><div class="step"><span class="num">1</span><h3>اختر</h3><p class="muted">تصفح المنتجات المتاحة.</p></div><div class="step"><span class="num">2</span><h3>اطلب</h3><p class="muted">أرسل المنتج والكمية والوجهة.</p></div><div class="step"><span class="num">3</span><h3>اعتمد</h3><p class="muted">نؤكد التوفر والسعر وتكلفة الشحن.</p></div><div class="step"><span class="num">4</span><h3>نشحن</h3><p class="muted">نشتري ونستلم ونجهز ثم نشحن.</p></div></div></div></section>
+
+<section id="track"><div class="wrap"><div class="section-head"><div><h2>تتبع الطلب</h2><p class="muted">أدخل رقم الطلب لمعرفة آخر حالة محفوظة على الجهاز.</p></div></div>
+<div class="calc"><div style="display:flex;gap:10px"><input id="trackId" class="field" style="margin:0;flex:1;padding:12px;border:1px solid var(--line);border-radius:9px" placeholder="مثال: RIF-1001"><button class="btn primary" onclick="trackOrder()">تتبع</button></div><div id="trackResult" style="margin-top:15px"></div></div></div></section>
+
+<section id="partners"><div class="wrap"><div class="partner"><h2>هل أنت شركة أو متجر في السعودية؟</h2><p>انضم إلى شبكة شركاء الرفاعي واعرض منتجاتك أمام عملاء يبحثون عن الشراء من السوق السعودي والشحن إلى السودان.</p><button class="btn primary" onclick="openPartner()">قدّم طلب شراكة</button></div></div></section>
+
+<section><div class="wrap"><div class="section-head"><div><h2>وجهاتنا المستهدفة</h2><p class="muted">الخدمة والوجهة تخضعان للجدول التشغيلي.</p></div></div><div class="cards"><div class="card"><h3>🇸🇩 الخرطوم</h3></div><div class="card"><h3>🇸🇩 الجزيرة</h3></div><div class="card"><h3>🇸🇩 عطبرة</h3></div><div class="card"><h3>🇸🇩 شندي</h3></div></div></div></section>
+</main>
+
+
+<section id="accountArea">
+<div class="wrap">
+<div class="section-head"><div><h2>حسابي</h2><p class="muted">إدارة بياناتك ومتابعة طلباتك.</p></div><button class="btn outline" onclick="logoutUser()">تسجيل الخروج</button></div>
+<div class="phase2-grid">
+<div class="p2-panel">
+<h3>بيانات العميل</h3>
+<div class="field"><label>الاسم</label><input id="profileName"></div>
+<div class="field"><label>الجوال</label><input id="profilePhone" disabled></div>
+<button class="btn primary" onclick="saveProfile()">حفظ التعديل</button>
+</div>
+<div class="p2-panel">
+<h3>طلباتي</h3><div id="myOrders"><div class="empty">جاري التحميل...</div></div>
+</div>
+</div>
+<div class="p4-box">
+<h3>عروض الأسعار والدفع</h3>
+<div id="myQuotes"><div class="empty">جاري تحميل عروض الأسعار...</div></div>
+<div id="myPayments" style="margin-top:15px"></div>
+</div>
+<div class="p4-box">
+<h3>الإشعارات</h3><div id="myNotifications"><div class="empty">لا توجد إشعارات.</div></div>
+</div>
+</div>
+</section>
+
+<section id="adminArea" style="display:none">
+<div class="wrap">
+<div class="section-head"><div><h2>لوحة تحكم الإدارة</h2><p class="muted">إدارة العملاء والطلبات والشركاء.</p></div><button class="btn outline" onclick="logoutUser()">تسجيل الخروج</button></div>
+<div id="adminStats" class="cards" style="margin-bottom:20px"></div>
+<div class="p2-panel" style="margin-bottom:18px"><h3>الطلبات</h3><div id="adminOrders"></div></div>
+
+<div class="p2-panel" style="margin-top:18px">
+<h3>إدارة الشركاء والمنتجات</h3>
+<div class="phase2-grid">
+<div>
+<h4>إضافة شريك</h4>
+<div class="field"><label>اسم الشريك</label><input id="sName"></div>
+<div class="field"><label>الجوال</label><input id="sPhone"></div>
+<div class="field"><label>المدينة</label><input id="sCity"></div>
+<button class="btn primary" onclick="addSupplier()">إضافة الشريك</button>
+</div>
+<div>
+<h4>إضافة منتج</h4>
+<div class="field"><label>الشريك</label><select id="prodSupplier"></select></div>
+<div class="field"><label>اسم المنتج</label><input id="prodName"></div>
+<div class="field"><label>القسم</label><input id="prodCategory"></div>
+<div class="field"><label>السعر بالريال</label><input id="prodPrice" type="number" min="0" step="0.01"></div>
+<button class="btn primary" onclick="addProduct()">إضافة المنتج</button>
+</div>
+</div>
+<div id="catalogAdmin" style="margin-top:18px"></div>
+</div>
+
+<div class="p2-panel" style="margin-top:18px">
+<h3>عروض الأسعار</h3>
+<div class="phase2-grid">
+<div>
+<div class="field"><label>رقم الطلب الداخلي</label><input id="quoteOrderId" type="number"></div>
+<div class="field"><label>قيمة المنتجات</label><input id="quoteProduct" type="number" min="0" step="0.01"></div>
+<div class="field"><label>الشحن</label><input id="quoteShipping" type="number" min="0" step="0.01"></div>
+<div class="field"><label>رسوم الخدمة</label><input id="quoteService" type="number" min="0" step="0.01"></div>
+<div class="field"><label>ملاحظات</label><textarea id="quoteNotes" rows="2"></textarea></div>
+<button class="btn primary" onclick="createQuote()">إنشاء عرض سعر</button>
+</div>
+<div id="quotesAdmin"></div>
+</div>
+</div>
+
+<div class="p2-panel" style="margin-top:18px"><h3>عمليات الدفع</h3><div id="adminPayments"></div></div>
+<div class="p2-panel"><h3>طلبات الشراكة</h3><div id="adminPartners"></div></div>
+</div>
+</section>
+<footer><div class="wrap footer-grid"><div><h2>الرفاعي للشحن الدولي</h2><p>منصة تربط العملاء في السودان بمنتجات الشركات والمتاجر السعودية، مع تنسيق الشراء والتجهيز والشحن.</p></div><div><b>روابط</b><p><a href="#products">المنتجات</a><br><a href="#calculator">حاسبة الشحن</a><br><a href="#track">تتبع الطلب</a></p></div><div><b>تواصل</b><p>واتساب: <a href="https://wa.me/?text=السلام عليكم، أريد الاستفسار عن الشحن عبر منصة الرفاعي" target="_blank">فتح واتساب</a><br>الرياض – السعودية</p></div></div></footer>
+
+<div class="cart"><button class="btn primary" onclick="openCart()">🛒 السلة <span id="cartCount" class="badge">0</span></button></div>
+
+<div class="modal" id="orderModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>طلب شراء وشحن</h2>
+<div class="field"><label>الاسم *</label><input id="oName"></div><div class="field"><label>رقم الجوال / واتساب *</label><input id="oPhone"></div>
+<div class="field"><label>المنتج *</label><input id="oProduct"></div><div class="field"><label>مدينة الوصول *</label><select id="oCity"><option>الخرطوم</option><option>الجزيرة</option><option>عطبرة</option><option>شندي</option></select></div>
+<div class="field"><label>الكمية</label><input id="oQty" type="number" min="1" value="1"></div><div class="field"><label>التفاصيل</label><textarea id="oDetails" rows="3"></textarea></div>
+<button class="btn primary" style="width:100%" onclick="submitOrder()">حفظ وإرسال الطلب</button></div></div>
+
+<div class="modal" id="partnerModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>طلب شراكة</h2>
+<div class="field"><label>اسم الشركة / المتجر *</label><input id="pCompany"></div><div class="field"><label>اسم المسؤول *</label><input id="pName"></div><div class="field"><label>رقم التواصل *</label><input id="pPhone"></div><div class="field"><label>المدينة</label><input id="pCity"></div><div class="field"><label>نوع المنتجات</label><input id="pProducts"></div><div class="field"><label>نبذة</label><textarea id="pDetails" rows="3"></textarea></div>
+<button class="btn primary" style="width:100%" onclick="submitPartner()">حفظ طلب الشراكة</button></div></div>
+
+<div class="modal" id="cartModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>سلة الطلب</h2><div id="cartItems"></div><button class="btn primary" style="width:100%;margin-top:15px" onclick="orderCart()">تحويل السلة إلى طلب</button></div></div>
+
+<div class="modal" id="authModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button>
+<h2 id="authTitle">تسجيل الدخول</h2>
+<div class="field" id="authNameWrap" style="display:none"><label>الاسم</label><input id="authName"></div>
+<div class="field"><label>رقم الجوال</label><input id="authPhone" inputmode="tel"></div>
+<div class="field"><label>كلمة المرور</label><input id="authPassword" type="password"></div>
+<button class="btn primary" style="width:100%" onclick="submitAuth()">متابعة</button>
+<p style="text-align:center;margin-top:15px"><button class="btn outline" id="authSwitch" onclick="toggleAuth()">إنشاء حساب جديد</button></p>
+</div></div>
+
+<div class="modal" id="paymentModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button>
+<h2>الدفع</h2><p>المبلغ المستحق: <b id="payAmount"></b></p><input id="payQuoteNo" type="hidden">
+<div class="pay-methods">
+<label class="pay-method"><input type="radio" name="payMethod" value="card" checked> بطاقة</label>
+<label class="pay-method"><input type="radio" name="payMethod" value="tamara"> تمارا</label>
+<label class="pay-method"><input type="radio" name="payMethod" value="tabby"> تابي</label>
+<label class="pay-method"><input type="radio" name="payMethod" value="bank_transfer"> تحويل بنكي</label>
+</div>
+<div class="notice">الدفع الإلكتروني في هذه النسخة مُجهّز كنقطة تكامل، ويحتاج مفاتيح حسابات بوابة الدفع وWebhook قبل استقبال مدفوعات حقيقية.</div>
+<button class="btn primary" style="width:100%" onclick="startPayment()">متابعة</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const products=[
+{id:1,name:"ثلاجات",cat:"أجهزة منزلية",icon:"🧊",desc:"أجهزة منزلية",price:"حسب المورد"},
+{id:2,name:"مكيفات",cat:"تكييف",icon:"❄️",desc:"سبليت وشباك",price:"حسب المورد"},
+{id:3,name:"أثاث منزلي",cat:"أثاث",icon:"🛋️",desc:"غرف ومجالس وكنب",price:"حسب المورد"},
+{id:4,name:"شاشات وأجهزة",cat:"إلكترونيات",icon:"📺",desc:"إلكترونيات منزلية",price:"حسب المورد"},
+{id:5,name:"غسالات",cat:"أجهزة منزلية",icon:"🧺",desc:"غسالات منزلية",price:"حسب المورد"},
+{id:6,name:"أجهزة مطبخ",cat:"أجهزة منزلية",icon:"🍳",desc:"أجهزة ومستلزمات المطبخ",price:"حسب المورد"},
+{id:7,name:"مكاتب وتجهيزات",cat:"أثاث",icon:"🪑",desc:"مكاتب وتجهيزات تجارية",price:"حسب المورد"},
+{id:8,name:"إكسسوارات إلكترونية",cat:"إلكترونيات",icon:"🔌",desc:"ملحقات وأجهزة",price:"حسب المورد"}
+];
+let cart=JSON.parse(localStorage.getItem("rifai_cart")||"[]");
+
+async function renderProducts(){
+ const q=(document.getElementById("search").value||"").trim().toLowerCase(), c=document.getElementById("category").value;
+ let source=products;
+ try{
+   const d=await api("/api/catalog");
+   if(d.products && d.products.length) source=d.products.map(p=>({id:p.id,name:p.name,cat:p.category||"عام",desc:p.description||"",price:p.price?Number(p.price).toLocaleString("ar-SA")+" "+p.currency:"حسب المورد",icon:"📦"}));
+ }catch(e){}
+ const list=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q))&&(!c||p.cat===c));
+ const el=document.getElementById("productsGrid");
+ el.innerHTML=list.length?list.map(p=>`<div class="product"><div class="product-img">${p.icon||"📦"}</div><div class="product-body"><span class="tag">${p.cat}</span><h3>${p.name}</h3><p class="muted">${p.desc}</p><div class="price">${p.price}</div><button class="btn primary" onclick="addCart(${p.id})">أضف للسلة</button></div></div>`).join(""):`<div class="empty" style="grid-column:1/-1">لا توجد منتجات مطابقة.</div>`;
+}
+function saveCart(){localStorage.setItem("rifai_cart",JSON.stringify(cart));document.getElementById("cartCount").textContent=cart.length}
+function addCart(id){cart.push(products.find(p=>p.id===id));saveCart();showToast("تمت إضافة المنتج إلى السلة");}
+function openCart(){
+ document.getElementById("cartItems").innerHTML=cart.length?cart.map((p,i)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)"><span>${p.icon} ${p.name}</span><button class="btn outline" onclick="removeCart(${i})">حذف</button></div>`).join(""):`<div class="empty">السلة فارغة.</div>`;
+ document.getElementById("cartModal").classList.add("show");
+}
+function removeCart(i){cart.splice(i,1);saveCart();openCart()}
+function orderCart(){if(!cart.length)return showToast("السلة فارغة");document.getElementById("oProduct").value=cart.map(x=>x.name).join("، ");closeModals();document.getElementById("orderModal").classList.add("show")}
+function openOrder(product=""){document.getElementById("oProduct").value=product;document.getElementById("orderModal").classList.add("show")}
+function openPartner(){document.getElementById("partnerModal").classList.add("show")}
+function closeModals(){document.querySelectorAll(".modal").forEach(x=>x.classList.remove("show"))}
+function showToast(t){let x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",3000)}
+function submitOrder(){
+ if(!oName.value.trim()||!oPhone.value.trim()||!oProduct.value.trim())return showToast("يرجى تعبئة الاسم والجوال والمنتج");
+ const id="RIF-"+(1000+Math.floor(Math.random()*9000));
+ const order={id,name:oName.value,phone:oPhone.value,product:oProduct.value,city:oCity.value,qty:oQty.value,details:oDetails.value,status:0,date:new Date().toLocaleString("ar-SA")};
+ localStorage.setItem("rifai_order_"+id,JSON.stringify(order));
+ localStorage.setItem("rifai_last_order",id);
+ closeModals();showToast("تم حفظ الطلب رقم "+id);document.getElementById("trackId").value=id;trackOrder();
+}
+function submitPartner(){
+ if(!pCompany.value.trim()||!pName.value.trim()||!pPhone.value.trim())return showToast("يرجى تعبئة البيانات الأساسية");
+ const id="PAR-"+Date.now().toString().slice(-6);
+ localStorage.setItem("rifai_partner_"+id,JSON.stringify({id,company:pCompany.value,name:pName.value,phone:pPhone.value,city:pCity.value,products:pProducts.value,details:pDetails.value}));
+ closeModals();showToast("تم حفظ طلب الشراكة رقم "+id);
+}
+function calculate(){
+ const w=Math.max(1,Number(cWeight.value)||1),q=Math.max(1,Number(cQty.value)||1),type=cType.value,city=cCity.value;
+ let base=type==="parcel"?35:type==="commercial"?28:1200;
+ let cityFee=city==="khartoum"?0:city==="jazira"?25:city==="atbara"?45:50;
+ let total=type==="container"?base:base+(w*5)+((q-1)*10)+cityFee;
+ calcResult.style.display="block";calcResult.innerHTML=`<div>التقدير المبدئي</div><strong>${total.toLocaleString("ar-SA")} ريال سعودي</strong><div class="small muted">هذا تقدير غير ملزم ويحتاج إلى اعتماد السعر النهائي من الرفاعي.</div>`;
+}
+function trackOrder(){
+ const id=document.getElementById("trackId").value.trim(), el=document.getElementById("trackResult");
+ if(!id)return showToast("أدخل رقم الطلب");
+ const raw=localStorage.getItem("rifai_order_"+id);
+ if(!raw){el.innerHTML='<div class="empty">لم يتم العثور على الطلب على هذا الجهاز.</div>';return}
+ const o=JSON.parse(raw), states=["تم استلام الطلب","جاري تأكيد السعر والتوفر","تم الشراء والتجهيز","تم الشحن"];
+ el.innerHTML=`<div class="track">${states.map((s,i)=>`<div class="track-item ${i<=o.status?"done":""}"><div class="state">${i<=o.status?"✓":"○"}</div><b>${s}</b></div>`).join("")}</div><p class="muted">الطلب: <b>${o.id}</b> — ${o.product} — الوجهة: ${o.city}</p>`;
+}
+renderProducts();saveCart();
+</script>
+
+<script>
+/* V3 backend integration: replaces local-only order/partner/tracking behavior when a server is running. */
+async function api(path, options={}) {
+  const r = await fetch(path, {headers:{"Content-Type":"application/json",...(options.headers||{})}, ...options});
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error || "حدث خطأ");
+  return data;
+}
+async function submitOrder(){
+  if(!oName.value.trim()||!oPhone.value.trim()||!oProduct.value.trim()) return showToast("يرجى تعبئة الاسم والجوال والمنتج");
+  try {
+    const d=await api("/api/orders",{method:"POST",body:JSON.stringify({
+      name:oName.value.trim(), phone:oPhone.value.trim(), product:oProduct.value.trim(),
+      city:oCity.value, qty:Number(oQty.value)||1, details:oDetails.value.trim()
+    })});
+    closeModals(); showToast("تم إنشاء الطلب "+d.orderNo);
+    document.getElementById("trackId").value=d.orderNo; trackOrder();
+  } catch(e) { showToast(e.message); }
+}
+async function submitPartner(){
+  if(!pCompany.value.trim()||!pName.value.trim()||!pPhone.value.trim()) return showToast("يرجى تعبئة البيانات الأساسية");
+  try {
+    const d=await api("/api/partners",{method:"POST",body:JSON.stringify({
+      company:pCompany.value.trim(),name:pName.value.trim(),phone:pPhone.value.trim(),
+      city:pCity.value.trim(),products:pProducts.value.trim(),details:pDetails.value.trim()
+    })});
+    closeModals(); showToast("تم حفظ طلب الشراكة "+d.refNo);
+  } catch(e) { showToast(e.message); }
+}
+async function trackOrder(){
+  const id=document.getElementById("trackId").value.trim(), el=document.getElementById("trackResult");
+  if(!id)return showToast("أدخل رقم الطلب");
+  try {
+    const d=await api("/api/orders/"+encodeURIComponent(id)), o=d.order;
+    const states=["تم استلام الطلب","جاري تأكيد السعر والتوفر","تم الشراء والتجهيز","تم الشحن"];
+    el.innerHTML=`<div class="track">${states.map((s,i)=>`<div class="track-item ${i<=o.status?"done":""}"><div class="state">${i<=o.status?"✓":"○"}</div><b>${s}</b></div>`).join("")}</div><p class="muted">الطلب: <b>${o.order_no}</b> — ${o.product} — الوجهة: ${o.city}</p>`;
+  } catch(e) { el.innerHTML='<div class="empty">'+e.message+'</div>'; }
+}
+</script>
+
+
+<script>
+let authMode="login";
+function openAuth(){authMode="login";document.getElementById("authModal").classList.add("show");renderAuthMode();}
+function renderAuthMode(){
+ document.getElementById("authTitle").textContent=authMode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";
+ document.getElementById("authNameWrap").style.display=authMode==="login"?"none":"block";
+ document.getElementById("authSwitch").textContent=authMode==="login"?"إنشاء حساب جديد":"لدي حساب بالفعل";
+}
+function toggleAuth(){authMode=authMode==="login"?"register":"login";renderAuthMode();}
+async function submitAuth(){
+ try{
+  const d=await api(authMode==="login"?"/api/auth/login":"/api/auth/register",{method:"POST",body:JSON.stringify({
+   name:document.getElementById("authName").value,phone:document.getElementById("authPhone").value,password:document.getElementById("authPassword").value
+  })});
+  closeModals(); showToast("تم تسجيل الدخول");
+  loadAccount();
+ }catch(e){showToast(e.message)}
+}
+async function logoutUser(){await api("/api/auth/logout",{method:"POST"});document.getElementById("accountArea").style.display="none";document.getElementById("adminArea").style.display="none";document.getElementById("loginBtn").textContent="دخول";showToast("تم تسجيل الخروج")}
+async function loadAccount(){
+ try{
+  const me=await api("/api/me");
+  if(!me.authenticated){document.getElementById("loginBtn").textContent="دخول";return}
+  document.getElementById("loginBtn").textContent=me.user.role==="admin"?"لوحة الإدارة":"حسابي";
+  if(me.user.role==="admin"){document.getElementById("adminArea").style.display="block";document.getElementById("accountArea").style.display="none";await loadAdmin();}
+  else {document.getElementById("accountArea").style.display="block";document.getElementById("adminArea").style.display="none";await loadProfile();await loadMyOrders();}
+ }catch(e){}
+}
+async function loadProfile(){
+ const d=await api("/api/profile");profileName.value=d.user.name;profilePhone.value=d.user.phone;
+}
+async function saveProfile(){
+ try{await api("/api/profile",{method:"PUT",body:JSON.stringify({name:profileName.value})});showToast("تم حفظ البيانات")}
+ catch(e){showToast(e.message)}
+}
+async function loadMyOrders(){
+ const d=await api("/api/my-orders");const el=document.getElementById("myOrders");
+ if(!d.orders.length){el.innerHTML='<div class="empty">لا توجد طلبات حتى الآن.</div>';return}
+ const labels=["مستلم","قيد التأكيد","تم التجهيز","تم الشحن"];
+ el.innerHTML=d.orders.map(o=>`<div style="padding:12px 0;border-bottom:1px solid var(--line)"><b>${o.order_no}</b><br>${o.product} — ${o.city}<br><span class="user-pill">${labels[o.status]} · ${o.created_at}</span></div>`).join("");
+}
+async function loadAdmin(){
+ const s=await api("/api/admin/stats");
+ document.getElementById("adminStats").innerHTML=[
+  ["العملاء",s.stats.users],["كل الطلبات",s.stats.orders],["الطلبات المفتوحة",s.stats.pending],["طلبات الشراكة",s.stats.partners]
+ ].map(x=>`<div class="p2-stat"><span class="muted">${x[0]}</span><b>${x[1]}</b></div>`).join("");
+ const o=await api("/api/admin/orders"), labels=["تم الاستلام","قيد التأكيد","تم التجهيز","تم الشحن"];
+ document.getElementById("adminOrders").innerHTML=o.orders.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>الطلب</th><th>العميل</th><th>المنتج</th><th>الوجهة</th><th>الحالة</th></tr>${o.orders.map(x=>`<tr><td>${x.order_no}</td><td>${x.name}<br>${x.phone}</td><td>${x.product}</td><td>${x.city}</td><td><select class="status-select" onchange="changeStatus('${x.order_no}',this.value)">${labels.map((l,i)=>`<option value="${i}" ${i===x.status?"selected":""}>${l}</option>`).join("")}</select></td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد طلبات.</div>';
+ const p=await api("/api/admin/partners");
+ document.getElementById("adminPartners").innerHTML=p.partners.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>المرجع</th><th>الشركة</th><th>المسؤول</th><th>الجوال</th><th>المدينة</th></tr>${p.partners.map(x=>`<tr><td>${x.ref_no}</td><td>${x.company}</td><td>${x.name}</td><td>${x.phone}</td><td>${x.city||"-"}</td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد طلبات شراكة.</div>';
+}
+async function changeStatus(no,status){
+ try{await api("/api/admin/orders/"+encodeURIComponent(no)+"/status",{method:"PATCH",body:JSON.stringify({status:Number(status)})});showToast("تم تحديث حالة الطلب");loadAdmin()}
+ catch(e){showToast(e.message)}
+}
+loadAccount();
+</script>
+
+<script>
+async function addSupplier(){
+ try{await api("/api/admin/suppliers",{method:"POST",body:JSON.stringify({name:sName.value,phone:sPhone.value,city:sCity.value})});showToast("تمت إضافة الشريك");sName.value="";await loadAdmin();await renderProducts()}
+ catch(e){showToast(e.message)}
+}
+async function loadSuppliers(){
+ const d=await api("/api/admin/suppliers");
+ prodSupplier.innerHTML='<option value="">بدون شريك</option>'+d.suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+}
+async function addProduct(){
+ try{await api("/api/admin/products",{method:"POST",body:JSON.stringify({supplier_id:prodSupplier.value||null,name:prodName.value,category:prodCategory.value,price:Number(prodPrice.value)||0})});showToast("تمت إضافة المنتج");prodName.value="";prodPrice.value="";await loadAdmin();await renderProducts()}
+ catch(e){showToast(e.message)}
+}
+async function loadCatalogAdmin(){
+ const d=await api("/api/catalog"),el=document.getElementById("catalogAdmin");
+ el.innerHTML=d.products.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>المنتج</th><th>الشريك</th><th>القسم</th><th>السعر</th></tr>${d.products.map(p=>`<tr><td>${p.name}</td><td>${p.supplier_name||"-"}</td><td>${p.category||"-"}</td><td>${Number(p.price).toLocaleString("ar-SA")} ${p.currency}</td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد منتجات في الكتالوج.</div>';
+}
+async function createQuote(){
+ try{
+  const d=await api("/api/admin/quotes",{method:"POST",body:JSON.stringify({
+   order_id:Number(quoteOrderId.value),product_total:Number(quoteProduct.value)||0,
+   shipping_total:Number(quoteShipping.value)||0,service_fee:Number(quoteService.value)||0,notes:quoteNotes.value
+  })});
+  showToast("تم إنشاء عرض "+d.quoteNo+" بإجمالي "+d.total.toLocaleString("ar-SA")+" ريال");loadQuotesAdmin();
+ }catch(e){showToast(e.message)}
+}
+async function loadQuotesAdmin(){
+ const d=await api("/api/admin/quotes"),el=document.getElementById("quotesAdmin");
+ el.innerHTML=d.quotes.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>العرض</th><th>الطلب</th><th>العميل</th><th>الإجمالي</th></tr>${d.quotes.map(q=>`<tr><td>${q.quote_no}</td><td>${q.order_no}</td><td>${q.customer_name}</td><td><b>${Number(q.total).toLocaleString("ar-SA")} SAR</b></td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد عروض أسعار.</div>';
+}
+const _loadAdmin=loadAdmin;
+loadAdmin=async function(){await _loadAdmin();try{await loadSuppliers();await loadCatalogAdmin();await loadQuotesAdmin()}catch(e){}}
+</script>
+
+<script>
+async function loadPhase4Customer(){
+ try{
+  const q=await api("/api/my-quotes"), el=document.getElementById("myQuotes");
+  if(!q.quotes.length){el.innerHTML='<div class="empty">لا توجد عروض أسعار حتى الآن.</div>'}
+  else el.innerHTML=q.quotes.map(x=>`<div class="notice"><b>${x.quote_no}</b> — الطلب ${x.order_no}<br>المنتج: ${x.product}<br><b>${Number(x.total).toLocaleString("ar-SA")} SAR</b><br>
+   الحالة: ${x.status==="accepted"?"تم الاعتماد":"بانتظار الاعتماد"}
+   ${x.status!=="accepted"?`<button class="btn primary" style="margin-top:8px" onclick="acceptQuote('${x.quote_no}')">اعتماد العرض</button>`:`<button class="btn outline" style="margin-top:8px" onclick="openPayment('${x.quote_no}',${Number(x.total)})">الانتقال للدفع</button>`}
+   </div>`).join("");
+  const p=await api("/api/my-payments");
+  document.getElementById("myPayments").innerHTML=p.payments.length?'<h4>عمليات الدفع</h4>'+p.payments.map(x=>`<div class="notice">${x.payment_no} — ${x.order_no} — ${Number(x.amount).toLocaleString("ar-SA")} SAR — ${x.status}</div>`).join(""):"";
+  const n=await api("/api/notifications");
+  document.getElementById("myNotifications").innerHTML=n.notifications.length?n.notifications.map(x=>`<div class="notice"><b>${x.title}</b><br>${x.body}<div class="small muted">${x.created_at}</div></div>`).join(""):'<div class="empty">لا توجد إشعارات.</div>';
+ }catch(e){}
+}
+async function acceptQuote(no){try{await api("/api/quotes/"+encodeURIComponent(no)+"/accept",{method:"POST"});showToast("تم اعتماد عرض السعر");loadPhase4Customer()}catch(e){showToast(e.message)}}
+function openPayment(no,total){
+ document.getElementById("paymentModal").classList.add("show");
+ document.getElementById("payQuoteNo").value=no;
+ document.getElementById("payAmount").textContent=Number(total).toLocaleString("ar-SA")+" ريال";
+}
+async function startPayment(){
+ const method=document.querySelector('input[name="payMethod"]:checked').value;
+ try{
+  const d=await api("/api/payments/checkout",{method:"POST",body:JSON.stringify({quoteNo:payQuoteNo.value,method})});
+  closeModals();showToast(d.message);loadPhase4Customer();
+ }catch(e){showToast(e.message)}
+}
+async function loadAdminPayments(){
+ const d=await api("/api/admin/payments"),el=document.getElementById("adminPayments");
+ el.innerHTML=d.payments.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>الدفع</th><th>الطلب</th><th>العميل</th><th>المبلغ</th><th>الطريقة</th><th>الحالة</th></tr>${d.payments.map(x=>`<tr><td>${x.payment_no}</td><td>${x.order_no}</td><td>${x.customer_name}</td><td>${Number(x.amount).toLocaleString("ar-SA")} SAR</td><td>${x.method}</td><td><select class="status-select" onchange="changePaymentStatus('${x.payment_no}',this.value)">${["pending","paid","failed","refunded"].map(s=>`<option ${s===x.status?"selected":""}>${s}</option>`).join("")}</select></td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد عمليات دفع.</div>';
+}
+async function changePaymentStatus(no,status){try{await api("/api/admin/payments/"+encodeURIComponent(no)+"/status",{method:"PATCH",body:JSON.stringify({status})});showToast("تم تحديث الدفع");loadAdminPayments()}catch(e){showToast(e.message)}}
+const _loadAdmin2=loadAdmin;
+loadAdmin=async function(){await _loadAdmin2();try{await loadAdminPayments()}catch(e){}}
+const _loadAccount2=loadAccount;
+loadAccount=async function(){await _loadAccount2();try{const me=await api("/api/me");if(me.authenticated&&me.user.role!=="admin")await loadPhase4Customer()}catch(e){}}
+</script>
+</body>
+</html>
