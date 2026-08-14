@@ -100,7 +100,7 @@ function renderStats(s){
  .map(x=>`<div class="stat"><span>${x[2]} ${x[0]}</span><b>${x[1]}</b></div>`).join("");
 }
 function renderCustomers(rows){
- $("customersList").innerHTML=rows.length?`<div class="grid">${rows.map(x=>`<article class="card"><div class="card-head"><h4>${esc(x.name)}</h4><span class="tag">عميل #${x.id}</span></div><a class="phone" href="tel:${esc(x.phone)}">${esc(x.phone)}</a><div class="meta"><span>عدد الطلبات: <b>${x.order_count}</b></span><span>تاريخ التسجيل: ${new Date(x.created_at+"Z").toLocaleDateString("ar-SA")}</span></div></article>`).join("")}</div>`:'<div class="empty">لا يوجد عملاء.</div>';
+ $("customersList").innerHTML=rows.length?`<div class="grid">${rows.map(x=>`<article class="card"><div class="card-head"><h4>${esc(x.name)}</h4><span class="tag">عميل #${x.id}</span></div><a class="phone" href="tel:${esc(x.phone)}">${esc(x.phone)}</a>${x.email?`<a class="phone" href="mailto:${esc(x.email)}">${esc(x.email)} ${x.email_verified?"✓":"غير مؤكد"}</a>`:""}<div class="meta"><span>عدد الطلبات: <b>${x.order_count}</b></span><span>تاريخ التسجيل: ${new Date(x.created_at+"Z").toLocaleDateString("ar-SA")}</span></div></article>`).join("")}</div>`:'<div class="empty">لا يوجد عملاء.</div>';
 }
 function renderOrders(rows){
  const labels=["تم الاستلام","قيد التأكيد","تم التجهيز","تم الشحن"];
