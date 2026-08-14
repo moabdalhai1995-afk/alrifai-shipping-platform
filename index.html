@@ -64,6 +64,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 .notice{padding:12px;border-radius:10px;background:#f8f3e8;margin:10px 0}
 @media(max-width:700px){.pay-methods{grid-template-columns:1fr 1fr}}
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <header><div class="wrap nav">
@@ -121,6 +122,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <h3>بيانات العميل</h3>
 <div class="field"><label>الاسم</label><input id="profileName"></div>
 <div class="field"><label>الجوال</label><input id="profilePhone" disabled></div>
+<div class="field"><label>البريد الإلكتروني</label><input id="profileEmail" disabled></div>
 <button class="btn primary" onclick="saveProfile()">حفظ التعديل</button>
 </div>
 <div class="p2-panel">
@@ -218,10 +220,13 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 
 <div class="modal" id="authModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button>
 <h2 id="authTitle">تسجيل الدخول</h2>
-<div class="field" id="authNameWrap" style="display:none"><label>الاسم</label><input id="authName"></div>
-<div class="field"><label>رقم الجوال</label><input id="authPhone" inputmode="tel"></div>
-<div class="field"><label>كلمة المرور</label><input id="authPassword" type="password"></div>
+<div class="field" id="authNameWrap" style="display:none"><label>الاسم</label><input id="authName" autocomplete="name"></div>
+<div class="field"><label id="authIdentifierLabel">رقم الجوال أو البريد الإلكتروني</label><input id="authPhone" autocomplete="username"></div>
+<div class="field" id="authEmailWrap" style="display:none"><label>البريد الإلكتروني</label><input id="authEmail" type="email" autocomplete="email"></div>
+<div class="field"><label>كلمة المرور</label><input id="authPassword" type="password" autocomplete="current-password"></div>
 <button class="btn primary" style="width:100%" onclick="submitAuth()">متابعة</button>
+<div id="googleButton" style="display:flex;justify-content:center;margin-top:14px"></div>
+<p id="verifyHint" class="muted" style="display:none;text-align:center">بعد إنشاء الحساب سنرسل رابط التفعيل إلى بريدك.</p>
 <p style="text-align:center;margin-top:15px"><button class="btn outline" id="authSwitch" onclick="toggleAuth()">إنشاء حساب جديد</button></p>
 </div></div>
 
@@ -349,21 +354,60 @@ async function trackOrder(){
 
 <script>
 let authMode="login";
+let googleAuthReady=false;
 function openAuth(){authMode="login";document.getElementById("authModal").classList.add("show");renderAuthMode();}
 function renderAuthMode(){
- document.getElementById("authTitle").textContent=authMode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";
- document.getElementById("authNameWrap").style.display=authMode==="login"?"none":"block";
- document.getElementById("authSwitch").textContent=authMode==="login"?"إنشاء حساب جديد":"لدي حساب بالفعل";
+ const registering=authMode==="register";
+ document.getElementById("authTitle").textContent=registering?"إنشاء حساب جديد":"تسجيل الدخول";
+ document.getElementById("authNameWrap").style.display=registering?"block":"none";
+ document.getElementById("authEmailWrap").style.display=registering?"block":"none";
+ document.getElementById("verifyHint").style.display=registering?"block":"none";
+ document.getElementById("authIdentifierLabel").textContent=registering?"رقم الجوال":"رقم الجوال أو البريد الإلكتروني";
+ document.getElementById("authPhone").inputMode=registering?"tel":"text";
+ document.getElementById("authPassword").autocomplete=registering?"new-password":"current-password";
+ document.getElementById("authSwitch").textContent=registering?"لدي حساب بالفعل":"إنشاء حساب جديد";
 }
 function toggleAuth(){authMode=authMode==="login"?"register":"login";renderAuthMode();}
 async function submitAuth(){
  try{
-  const d=await api(authMode==="login"?"/api/auth/login":"/api/auth/register",{method:"POST",body:JSON.stringify({
-   name:document.getElementById("authName").value,phone:document.getElementById("authPhone").value,password:document.getElementById("authPassword").value
+  const response=await api(authMode==="login"?"/api/auth/login":"/api/auth/register",{method:"POST",body:JSON.stringify({
+   name:document.getElementById("authName").value,
+   phone:document.getElementById("authPhone").value,
+   email:document.getElementById("authEmail").value,
+   password:document.getElementById("authPassword").value
   })});
-  closeModals(); showToast("تم تسجيل الدخول");
+  closeModals();
+  if(response.requiresVerification){
+    showToast(response.message||"أرسلنا رابط التفعيل إلى بريدك");
+    return;
+  }
+  showToast("تم تسجيل الدخول");
   loadAccount();
  }catch(e){showToast(e.message)}
+}
+async function handleGoogleCredential(response){
+ try{
+  await api("/api/auth/google",{method:"POST",body:JSON.stringify({credential:response.credential})});
+  closeModals();showToast("تم تسجيل الدخول بواسطة Google");loadAccount();
+ }catch(e){showToast(e.message)}
+}
+async function initGoogleAuth(){
+ try{
+  const config=await api("/api/auth/config");
+  if(!config.googleClientId)return;
+  let attempts=0;
+  const timer=setInterval(()=>{
+   attempts++;
+   if(window.google?.accounts?.id){
+    clearInterval(timer);
+    google.accounts.id.initialize({client_id:config.googleClientId,callback:handleGoogleCredential});
+    google.accounts.id.renderButton(document.getElementById("googleButton"),{
+      theme:"outline",size:"large",text:"signin_with",locale:"ar",width:260
+    });
+    googleAuthReady=true;
+   }else if(attempts>20){clearInterval(timer)}
+  },250);
+ }catch(e){}
 }
 async function logoutUser(){await api("/api/auth/logout",{method:"POST"});document.getElementById("accountArea").style.display="none";document.getElementById("adminArea").style.display="none";document.getElementById("loginBtn").textContent="دخول";closeModals();openAuth();showToast("تم تسجيل الخروج")}
 async function loadAccount(){
@@ -376,7 +420,7 @@ async function loadAccount(){
  }catch(e){}
 }
 async function loadProfile(){
- const d=await api("/api/profile");profileName.value=d.user.name;profilePhone.value=d.user.phone;
+ const d=await api("/api/profile");profileName.value=d.user.name;profilePhone.value=d.user.phone;profileEmail.value=d.user.email||"";
 }
 async function saveProfile(){
  try{await api("/api/profile",{method:"PUT",body:JSON.stringify({name:profileName.value})});showToast("تم حفظ البيانات")}
@@ -405,6 +449,15 @@ async function changeStatus(no,status){
  catch(e){showToast(e.message)}
 }
 loadAccount();
+initGoogleAuth();
+const verificationState=new URLSearchParams(location.search).get("email_verified");
+if(verificationState==="1"){
+ setTimeout(()=>{openAuth();showToast("تم تأكيد البريد الإلكتروني، يمكنك تسجيل الدخول الآن")},400);
+ history.replaceState({},document.title,location.pathname);
+}else if(verificationState==="invalid"){
+ setTimeout(()=>showToast("رابط التفعيل غير صالح أو انتهت صلاحيته"),400);
+ history.replaceState({},document.title,location.pathname);
+}
 if(location.pathname==="/admin"){
   setTimeout(async()=>{
     try{
