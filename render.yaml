@@ -15,4 +15,4 @@ services:
       - key: SETUP_KEY
         generateValue: true
       - key: DB_FILE
-        value: /tmp/alrifai.db
+        value: /var/data/alrifai.db
