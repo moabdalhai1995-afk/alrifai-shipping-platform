@@ -31,6 +31,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 .small{font-size:12px}
 @media(max-width:850px){nav{display:none}.hero-grid,.footer-grid{grid-template-columns:1fr}.hero h1{font-size:36px}.cards,.products{grid-template-columns:repeat(2,1fr)}.steps,.track{grid-template-columns:1fr 1fr}.calc-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.cards,.products,.steps,.track,.calc-grid{grid-template-columns:1fr}.actions .outline{display:none}.nav{min-height:64px}.hero{padding-top:45px}.hero h1{font-size:31px}}
+.top-track{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}@media(max-width:520px){.brand{font-size:17px}.top-track{padding:10px 12px}.actions .order-top{display:none}}
 
 /* Admin dashboard refresh */
 .admin-dashboard{padding:34px 0 70px;background:linear-gradient(180deg,#f7f1e5 0,#fff 260px)}
@@ -72,7 +73,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <header><div class="wrap nav">
 <div class="brand">الرفاعي للشحن الدولي<span>من السعودية إلى السودان</span></div>
 <nav><a href="#products">المنتجات</a><a href="#calculator">حاسبة الشحن</a><a href="#how">كيف تعمل</a><a href="#track">تتبع</a><a href="#partners">للشركاء</a></nav>
-<div class="actions"><button class="btn outline" id="loginBtn" onclick="openAuth()">دخول</button><button class="btn outline" onclick="openPartner()">انضم كشريك</button><button class="btn primary" onclick="openOrder()">اطلب الآن</button></div>
+<div class="actions"><button class="btn outline" id="loginBtn" onclick="openAuth()">دخول</button><button class="btn outline" onclick="openPartner()">انضم كشريك</button><button class="btn primary top-track" onclick="goToTracking()">📦 تتبع الطلب</button><button class="btn outline order-top" onclick="openOrder()">اطلب الآن</button></div>
 </div></header>
 
 <main>
@@ -291,6 +292,7 @@ function openCart(){
 function removeCart(i){cart.splice(i,1);saveCart();openCart()}
 function orderCart(){if(!cart.length)return showToast("السلة فارغة");const method=document.querySelector('input[name="cartPayMethod"]:checked');document.getElementById("oProduct").value=cart.map(x=>x.name).join("، ");document.getElementById("oDetails").value="وسيلة الدفع المفضلة: "+({card:"البطاقة البنكية",tamara:"تمارا",tabby:"تابي",bank_transfer:"تحويل بنكي"}[method.value]||method.value);closeModals();document.getElementById("orderModal").classList.add("show")}
 function openOrder(product=""){document.getElementById("oProduct").value=product;document.getElementById("orderModal").classList.add("show")}
+function goToTracking(){document.getElementById("track").scrollIntoView({behavior:"smooth"});setTimeout(()=>document.getElementById("trackId").focus(),500)}
 function openPartner(){document.getElementById("partnerModal").classList.add("show")}
 function closeModals(){document.querySelectorAll(".modal").forEach(x=>x.classList.remove("show"))}
 function showToast(t){let x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",3000)}
