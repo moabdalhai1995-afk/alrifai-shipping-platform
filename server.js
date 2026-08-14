@@ -313,6 +313,21 @@ app.get("/api/admin/stats", (req, res) => {
   res.json({ ok: true, stats: { users, orders, pending, partners } });
 });
 
+app.get("/api/admin/users", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const users = db.prepare(`
+    SELECT u.id,u.name,u.phone,u.created_at,
+           COUNT(o.id) AS order_count,
+           MAX(o.created_at) AS last_order_at
+    FROM users u
+    LEFT JOIN orders o ON o.user_id=u.id
+    WHERE u.role='customer'
+    GROUP BY u.id,u.name,u.phone,u.created_at
+    ORDER BY u.id DESC
+  `).all();
+  res.json({ ok: true, users });
+});
+
 app.patch("/api/admin/orders/:orderNo/status", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const status = Number(req.body.status);
