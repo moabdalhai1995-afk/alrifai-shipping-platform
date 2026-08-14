@@ -29,6 +29,21 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 .small{font-size:12px}
 @media(max-width:850px){nav{display:none}.hero-grid,.footer-grid{grid-template-columns:1fr}.hero h1{font-size:36px}.cards,.products{grid-template-columns:repeat(2,1fr)}.steps,.track{grid-template-columns:1fr 1fr}.calc-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.cards,.products,.steps,.track,.calc-grid{grid-template-columns:1fr}.actions .outline{display:none}.nav{min-height:64px}.hero{padding-top:45px}.hero h1{font-size:31px}}
+
+/* Admin dashboard refresh */
+.admin-dashboard{padding:34px 0 70px;background:linear-gradient(180deg,#f7f1e5 0,#fff 260px)}
+.admin-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;background:#0b1f33;color:#fff;border-radius:24px;padding:24px;margin-bottom:14px;box-shadow:0 16px 40px #0b1f3322}
+.admin-hero h2{margin:5px 0;font-size:clamp(25px,5vw,38px)}.admin-hero p{margin:0;color:#d8e0e7}.admin-kicker{color:#e7b74e;font-weight:900}.admin-logout{background:#fff;color:#0b1f33}
+.admin-nav{display:flex;gap:8px;overflow:auto;padding:5px 0 16px;position:sticky;top:0;z-index:8;background:#f7f1e5}
+.admin-nav a{white-space:nowrap;padding:10px 15px;border-radius:999px;background:#fff;border:1px solid var(--line);font-weight:800}
+.admin-stats{grid-template-columns:repeat(4,1fr)}.admin-stat{position:relative;overflow:hidden}.admin-stat .stat-icon{font-size:25px}.admin-stat b{font-size:30px;color:#0b1f33}
+.admin-panel{border:1px solid #e5dccb;border-radius:20px;box-shadow:0 8px 28px #0b1f330d}
+.admin-panel-head,.admin-panel-head>div,.record-title,.record-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}.panel-icon{font-size:24px}
+.admin-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.admin-record{background:#fff;border:1px solid #e8e2d8;border-right:4px solid #c6922b;border-radius:14px;padding:15px;min-width:0}.admin-record p{margin:9px 0;color:#59636d}
+.record-title{margin-bottom:8px}.record-phone{color:#8c641d;font-weight:800;direction:ltr;display:inline-block}.record-meta{margin-top:11px;color:#6f7780;font-size:13px;flex-wrap:wrap}.tracking-no{font-family:monospace;color:#0b1f33;font-size:16px}
+.status-select{max-width:180px}
+@media(max-width:760px){.admin-dashboard{padding-top:18px}.admin-hero{align-items:flex-start;padding:18px;border-radius:18px}.admin-hero p{font-size:13px}.admin-logout{padding:9px 12px}.admin-stats{grid-template-columns:repeat(2,1fr)}.admin-cards{grid-template-columns:1fr}.admin-panel{padding:15px}.admin-nav{margin-inline:-4px}.admin-stat b{font-size:25px}}
 </style>
 
 <style>
@@ -123,14 +138,29 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 </div>
 </section>
 
-<section id="adminArea" style="display:none">
+<section id="adminArea" class="admin-dashboard" style="display:none">
 <div class="wrap">
-<div class="section-head"><div><h2>لوحة تحكم الإدارة</h2><p class="muted">إدارة العملاء والطلبات والشركاء.</p></div><button class="btn outline" onclick="logoutUser()">تسجيل الخروج</button></div>
-<div id="adminStats" class="cards" style="margin-bottom:20px"></div>
-<div class="p2-panel" style="margin-bottom:18px"><h3>الطلبات</h3><div id="adminOrders"></div></div>
+<div class="admin-hero">
+  <div><span class="admin-kicker">الإدارة</span><h2>لوحة تحكم الرفاعي</h2><p>متابعة العملاء والطلبات وأرقام التتبع والعمليات المالية.</p></div>
+  <button class="btn admin-logout" onclick="logoutUser()">تسجيل الخروج</button>
+</div>
+<nav class="admin-nav">
+  <a href="#adminCustomersPanel">العملاء</a>
+  <a href="#adminOrdersPanel">الطلبات</a>
+  <a href="#adminCommercePanel">المنتجات والعروض</a>
+  <a href="#adminPaymentsPanel">المدفوعات</a>
+</nav>
+<div id="adminStats" class="cards admin-stats" style="margin-bottom:20px"></div>
+<div id="adminCustomersPanel" class="p2-panel admin-panel" style="margin-bottom:18px">
+  <div class="admin-panel-head"><div><span class="panel-icon">👥</span><h3>العملاء المسجلون</h3></div><button class="btn outline" onclick="loadAdmin()">تحديث</button></div>
+  <div id="adminCustomers"><div class="empty">جاري تحميل العملاء...</div></div>
+</div>
+<div id="adminOrdersPanel" class="p2-panel admin-panel" style="margin-bottom:18px">
+  <div class="admin-panel-head"><div><span class="panel-icon">📦</span><h3>الطلبات وأرقام التتبع</h3></div></div>
+  <div id="adminOrders"></div>
+</div>
 
-<div class="p2-panel" style="margin-top:18px">
-<h3>إدارة الشركاء والمنتجات</h3>
+<div id="adminCommercePanel" class="p2-panel admin-panel" style="margin-top:18px">\n<h3>إدارة الشركاء والمنتجات</h3>
 <div class="phase2-grid">
 <div>
 <h4>إضافة شريك</h4>
@@ -166,7 +196,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 </div>
 </div>
 
-<div class="p2-panel" style="margin-top:18px"><h3>عمليات الدفع</h3><div id="adminPayments"></div></div>
+<div id="adminPaymentsPanel" class="p2-panel admin-panel" style="margin-top:18px"><h3>عمليات الدفع</h3><div id="adminPayments"></div></div>
 <div class="p2-panel"><h3>طلبات الشراكة</h3><div id="adminPartners"></div></div>
 </div>
 </section>
@@ -361,10 +391,12 @@ async function loadMyOrders(){
 async function loadAdmin(){
  const s=await api("/api/admin/stats");
  document.getElementById("adminStats").innerHTML=[
-  ["العملاء",s.stats.users],["كل الطلبات",s.stats.orders],["الطلبات المفتوحة",s.stats.pending],["طلبات الشراكة",s.stats.partners]
- ].map(x=>`<div class="p2-stat"><span class="muted">${x[0]}</span><b>${x[1]}</b></div>`).join("");
+  ["العملاء",s.stats.users,"👥"],["كل الطلبات",s.stats.orders,"📦"],["الطلبات المفتوحة",s.stats.pending,"⏳"],["طلبات الشراكة",s.stats.partners,"🤝"]
+ ].map(x=>`<div class="p2-stat admin-stat"><span class="stat-icon">${x[2]}</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+ const u=await api("/api/admin/users");
+ document.getElementById("adminCustomers").innerHTML=u.users.length?`<div class="admin-cards">${u.users.map(x=>`<article class="admin-record"><div class="record-title"><b>${x.name}</b><span class="user-pill">عميل #${x.id}</span></div><a class="record-phone" href="tel:${x.phone}">${x.phone}</a><div class="record-meta"><span>الطلبات: <b>${x.order_count}</b></span><span>التسجيل: ${new Date(x.created_at+"Z").toLocaleDateString("ar-SA")}</span></div></article>`).join("")}</div>`:'<div class="empty">لا يوجد عملاء مسجلون.</div>';
  const o=await api("/api/admin/orders"), labels=["تم الاستلام","قيد التأكيد","تم التجهيز","تم الشحن"];
- document.getElementById("adminOrders").innerHTML=o.orders.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>الطلب</th><th>العميل</th><th>المنتج</th><th>الوجهة</th><th>الحالة</th></tr>${o.orders.map(x=>`<tr><td>${x.order_no}</td><td>${x.name}<br>${x.phone}</td><td>${x.product}</td><td>${x.city}</td><td><select class="status-select" onchange="changeStatus('${x.order_no}',this.value)">${labels.map((l,i)=>`<option value="${i}" ${i===x.status?"selected":""}>${l}</option>`).join("")}</select></td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد طلبات.</div>';
+ document.getElementById("adminOrders").innerHTML=o.orders.length?`<div class="admin-cards">${o.orders.map(x=>`<article class="admin-record order-record"><div class="record-title"><b class="tracking-no">${x.order_no}</b><span class="user-pill">${labels[x.status]||"غير محدد"}</span></div><div><b>${x.name}</b> · <a class="record-phone" href="tel:${x.phone}">${x.phone}</a></div><p>${x.product} — ${x.city} — الكمية ${x.qty}</p><div class="record-meta"><span>${new Date(x.created_at+"Z").toLocaleString("ar-SA")}</span><select class="status-select" onchange="changeStatus('${x.order_no}',this.value)">${labels.map((l,i)=>`<option value="${i}" ${i===x.status?"selected":""}>${l}</option>`).join("")}</select></div></article>`).join("")}</div>`:'<div class="empty">لا توجد طلبات.</div>';
  const p=await api("/api/admin/partners");
  document.getElementById("adminPartners").innerHTML=p.partners.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>المرجع</th><th>الشركة</th><th>المسؤول</th><th>الجوال</th><th>المدينة</th></tr>${p.partners.map(x=>`<tr><td>${x.ref_no}</td><td>${x.company}</td><td>${x.name}</td><td>${x.phone}</td><td>${x.city||"-"}</td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد طلبات شراكة.</div>';
 }
