@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
     private ProgressBar progressBar;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean pageLoaded;
+    private long lastBackPress;
 
     private final Runnable browserFallback = () -> {
         if (!pageLoaded) {
@@ -127,7 +128,13 @@ public class MainActivity extends Activity {
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
-            super.onBackPressed();
+            long now = System.currentTimeMillis();
+            if (now - lastBackPress < 2000) {
+                super.onBackPressed();
+            } else {
+                lastBackPress = now;
+                Toast.makeText(this, "اضغط رجوع مرة أخرى لإغلاق التطبيق", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
