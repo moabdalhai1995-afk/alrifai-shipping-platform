@@ -405,6 +405,14 @@ async function changeStatus(no,status){
  catch(e){showToast(e.message)}
 }
 loadAccount();
+if(location.pathname==="/admin"){
+  setTimeout(async()=>{
+    try{
+      const me=await api("/api/me");
+      if(!me.authenticated) openAuth();
+    }catch(e){openAuth()}
+  },400);
+}
 </script>
 
 <script>
