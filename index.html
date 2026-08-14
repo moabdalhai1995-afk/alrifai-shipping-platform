@@ -23,6 +23,7 @@ section{padding:58px 0}.section-head{display:flex;justify-content:space-between;
 .track{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.track-item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}.track-item .state{font-size:24px;margin-bottom:8px}.track-item.done{border-color:#d4eadf}.track-item.done .state{color:var(--ok)}
 footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.footer-grid p{color:#bbc3ca;line-height:1.8}
 .modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-box{background:#fff;border-radius:18px;max-width:620px;width:100%;padding:28px;max-height:90vh;overflow:auto}.close{float:left;border:0;background:none;font-size:25px;cursor:pointer}
+.auth-page{padding:0;background:#fff;align-items:stretch}.auth-page .modal-box{max-width:none;min-height:100dvh;max-height:100dvh;border-radius:0;padding:0;background:linear-gradient(145deg,#fff 0%,#faf6ed 100%)}.auth-content{width:min(520px,100%);margin:auto;padding:28px 24px 48px}.auth-brand{text-align:center;margin:22px 0 34px}.auth-brand b{display:block;font-size:25px;color:var(--ink)}.auth-brand span{display:block;color:var(--gold);font-weight:800;margin-top:7px}.auth-page h2{text-align:center;font-size:34px;margin:0 0 28px}.auth-page .close{position:fixed;top:18px;left:18px;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid var(--line);z-index:2}.password-wrap{position:relative}.password-wrap input{padding-left:55px}.show-password{position:absolute;left:8px;bottom:6px;width:43px;height:40px;border:0;background:transparent;cursor:pointer;font-size:20px;border-radius:8px}.show-password:focus{outline:2px solid var(--gold)}
 .cart{position:fixed;left:20px;bottom:20px;z-index:25}.cart button{box-shadow:0 8px 25px #0002}.badge{display:inline-grid;place-items:center;min-width:23px;height:23px;border-radius:50%;background:#fff;color:var(--gold2);margin-right:5px}
 .toast{position:fixed;bottom:20px;right:20px;background:#18232d;color:#fff;padding:13px 18px;border-radius:10px;display:none;z-index:80}
 .empty{padding:35px;text-align:center;background:#fff;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
@@ -218,17 +219,18 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 
 <div class="modal" id="cartModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>سلة الطلب</h2><div id="cartItems"></div><button class="btn primary" style="width:100%;margin-top:15px" onclick="orderCart()">تحويل السلة إلى طلب</button></div></div>
 
-<div class="modal" id="authModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button>
+<div class="modal auth-page" id="authModal"><div class="modal-box"><button class="close" aria-label="إغلاق" onclick="closeModals()">×</button><div class="auth-content">
+<div class="auth-brand"><b>الرفاعي للشحن الدولي</b><span>من السعودية إلى السودان</span></div>
 <h2 id="authTitle">تسجيل الدخول</h2>
 <div class="field" id="authNameWrap" style="display:none"><label>الاسم</label><input id="authName" autocomplete="name"></div>
 <div class="field"><label id="authIdentifierLabel">رقم الجوال أو البريد الإلكتروني</label><input id="authPhone" autocomplete="username"></div>
 <div class="field" id="authEmailWrap" style="display:none"><label>البريد الإلكتروني</label><input id="authEmail" type="email" autocomplete="email"></div>
-<div class="field"><label>كلمة المرور</label><input id="authPassword" type="password" autocomplete="current-password"></div>
+<div class="field password-wrap"><label>كلمة المرور</label><input id="authPassword" type="password" autocomplete="current-password"><button class="show-password" id="passwordToggle" type="button" aria-label="إظهار كلمة المرور" onclick="togglePassword()">👁</button></div>
 <button class="btn primary" style="width:100%" onclick="submitAuth()">متابعة</button>
 <div id="googleButton" style="display:flex;justify-content:center;margin-top:14px"></div>
 <p id="verifyHint" class="muted" style="display:none;text-align:center">بعد إنشاء الحساب سنرسل رابط التفعيل إلى بريدك.</p>
 <p style="text-align:center;margin-top:15px"><button class="btn outline" id="authSwitch" onclick="toggleAuth()">إنشاء حساب جديد</button></p>
-</div></div>
+</div></div></div>
 
 <div class="modal" id="paymentModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button>
 <h2>الدفع</h2><p>المبلغ المستحق: <b id="payAmount"></b></p><input id="payQuoteNo" type="hidden">
@@ -358,6 +360,9 @@ let googleAuthReady=false;
 function openAuth(){authMode="login";document.getElementById("authModal").classList.add("show");renderAuthMode();}
 function renderAuthMode(){
  const registering=authMode==="register";
+ document.getElementById("authPassword").type="password";
+ document.getElementById("passwordToggle").textContent="👁";
+ document.getElementById("passwordToggle").setAttribute("aria-label","إظهار كلمة المرور");
  document.getElementById("authTitle").textContent=registering?"إنشاء حساب جديد":"تسجيل الدخول";
  document.getElementById("authNameWrap").style.display=registering?"block":"none";
  document.getElementById("authEmailWrap").style.display=registering?"block":"none";
@@ -368,6 +373,12 @@ function renderAuthMode(){
  document.getElementById("authSwitch").textContent=registering?"لدي حساب بالفعل":"إنشاء حساب جديد";
 }
 function toggleAuth(){authMode=authMode==="login"?"register":"login";renderAuthMode();}
+function togglePassword(){
+ const input=document.getElementById("authPassword"),button=document.getElementById("passwordToggle"),show=input.type==="password";
+ input.type=show?"text":"password";
+ button.textContent=show?"🙈":"👁";
+ button.setAttribute("aria-label",show?"إخفاء كلمة المرور":"إظهار كلمة المرور");
+}
 async function submitAuth(){
  try{
   const response=await api(authMode==="login"?"/api/auth/login":"/api/auth/register",{method:"POST",body:JSON.stringify({
