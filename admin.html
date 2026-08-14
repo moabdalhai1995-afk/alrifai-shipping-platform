@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1f33">
+<title>إدارة الرفاعي للشحن الدولي</title>
+<style>
+:root{--navy:#0b1f33;--navy2:#132e49;--gold:#c6922b;--cream:#f7f1e5;--line:#e5dfd4;--muted:#6c7580;--ok:#13795b;--danger:#b42318}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f5f7f9;color:#14202d;font-family:Tahoma,Arial,sans-serif}
+button,input,select,textarea{font:inherit}.hidden{display:none!important}.wrap{max-width:1200px;margin:auto;padding:18px}
+.topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;box-shadow:0 5px 20px #0002}.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:14px;background:var(--gold);display:grid;place-items:center;font-size:25px}.brand h1{font-size:19px;margin:0}.brand small{color:#cad4df}
+.btn{border:0;border-radius:11px;padding:11px 16px;cursor:pointer;font-weight:800}.btn-gold{background:var(--gold);color:#fff}.btn-light{background:#fff;color:var(--navy)}.btn-outline{background:transparent;border:1px solid var(--line);color:inherit}.btn-danger{background:#fff0ee;color:var(--danger)}
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:22px;padding:24px;margin:20px 0}.hero h2{margin:0 0 7px;font-size:clamp(25px,5vw,38px)}.hero p{margin:0;color:#d6dee7}
+.nav{display:flex;gap:8px;overflow:auto;margin:-5px 0 18px;padding:5px 0}.nav a{white-space:nowrap;text-decoration:none;background:#fff;color:var(--navy);border:1px solid var(--line);padding:10px 14px;border-radius:999px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px}.stat span{color:var(--muted)}.stat b{display:block;font-size:31px;margin-top:7px;color:var(--navy)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:19px;padding:18px;margin:16px 0;box-shadow:0 7px 22px #0b1f3309}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.panel h3{margin:0;font-size:21px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{border:1px solid var(--line);border-right:4px solid var(--gold);border-radius:14px;padding:14px;min-width:0}.card-head,.meta{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}.card h4{margin:0}.card p{color:var(--muted);margin:9px 0}.tag{background:var(--cream);color:#7d5816;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}.track{font-family:monospace;direction:ltr;color:var(--navy);font-weight:900}.phone{direction:ltr;display:inline-block;color:#8a621c;font-weight:800}.meta{color:var(--muted);font-size:13px;margin-top:10px}.status{max-width:190px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:700px}.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:right}.table th{background:var(--cream);color:var(--navy)}
+.empty{padding:25px;text-align:center;color:var(--muted);background:#fafafa;border-radius:12px}.loading{opacity:.65}
+.login-screen{min-height:100vh;background:linear-gradient(145deg,var(--navy),#07121e);display:grid;place-items:center;padding:20px}.login-box{width:min(440px,100%);background:#fff;border-radius:24px;padding:27px;box-shadow:0 25px 80px #0005}.login-box h1{margin:10px 0 5px;color:var(--navy)}.login-box p{color:var(--muted)}.field{margin:14px 0}.field label{display:block;font-weight:800;margin-bottom:7px}.field input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px}.error{color:var(--danger);background:#fff0ee;padding:10px;border-radius:9px;margin-top:12px}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;z-index:50;display:none}
+@media(max-width:760px){.wrap{padding:13px}.brand small{display:none}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.hero{padding:19px}.panel{padding:14px}.stat b{font-size:26px}.topbar .btn{padding:9px 11px}.brand h1{font-size:16px}}
+</style>
+</head>
+<body>
+<section id="loginScreen" class="login-screen">
+  <form id="loginForm" class="login-box">
+    <div class="logo">🚢</div>
+    <h1>دخول إدارة الرفاعي</h1>
+    <p>هذه الصفحة مخصصة للمدير فقط.</p>
+    <div class="field"><label for="phone">رقم جوال المدير</label><input id="phone" inputmode="tel" autocomplete="username" required></div>
+    <div class="field"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required></div>
+    <button class="btn btn-gold" style="width:100%" type="submit">دخول لوحة الإدارة</button>
+    <div id="loginError" class="error hidden"></div>
+  </form>
+</section>
+
+<div id="dashboard" class="hidden">
+<header class="topbar"><div class="wrap">
+  <div class="brand"><div class="logo">🚢</div><div><h1>إدارة الرفاعي للشحن الدولي</h1><small>السعودية إلى السودان</small></div></div>
+  <button class="btn btn-light" onclick="logout()">تسجيل الخروج</button>
+</div></header>
+<main class="wrap">
+  <section class="hero"><h2>لوحة المدير</h2><p>إدارة العملاء والطلبات والتتبع والمبيعات من صفحة مستقلة.</p></section>
+  <nav class="nav"><a href="#overview">نظرة عامة</a><a href="#customers">العملاء</a><a href="#orders">الطلبات</a><a href="#partners">الشركاء</a><a href="#products">المنتجات</a><a href="#quotes">العروض</a><a href="#payments">المدفوعات</a></nav>
+  <section id="overview" class="stats"></section>
+
+  <section id="customers" class="panel"><div class="panel-head"><h3>👥 جميع العملاء</h3><button class="btn btn-outline" onclick="loadAll()">تحديث</button></div><div id="customersList"></div></section>
+  <section id="orders" class="panel"><div class="panel-head"><h3>📦 جميع الطلبات وأرقام التتبع</h3></div><div id="ordersList"></div></section>
+  <section id="partners" class="panel"><div class="panel-head"><h3>🤝 طلبات الشراكة</h3></div><div id="partnersList"></div></section>
+  <section id="products" class="panel"><div class="panel-head"><h3>🛒 المنتجات والشركاء الموردون</h3></div><div id="productsList"></div></section>
+  <section id="quotes" class="panel"><div class="panel-head"><h3>🧾 عروض الأسعار</h3></div><div id="quotesList"></div></section>
+  <section id="payments" class="panel"><div class="panel-head"><h3>💳 عمليات الدفع</h3></div><div id="paymentsList"></div></section>
+</main>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function api(path,options={}){
+ const r=await fetch(path,{headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
+ const data=await r.json().catch(()=>({}));
+ if(!r.ok) throw new Error(data.error||"حدث خطأ");
+ return data;
+}
+function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
+async function boot(){
+ try{
+  const me=await api("/api/me");
+  if(me.authenticated&&me.user.role==="admin") showDashboard();
+  else $("loginScreen").classList.remove("hidden");
+ }catch(e){$("loginScreen").classList.remove("hidden")}
+}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();$("loginError").classList.add("hidden");
+ try{
+  const d=await api("/api/auth/login",{method:"POST",body:JSON.stringify({phone:$("phone").value.trim(),password:$("password").value})});
+  if(d.user.role!=="admin"){await api("/api/auth/logout",{method:"POST"});throw new Error("هذا الحساب ليس حساب مدير")}
+  showDashboard();
+ }catch(err){$("loginError").textContent=err.message;$("loginError").classList.remove("hidden")}
+});
+async function showDashboard(){
+ $("loginScreen").classList.add("hidden");$("dashboard").classList.remove("hidden");await loadAll();
+}
+async function logout(){await api("/api/auth/logout",{method:"POST"});location.reload()}
+async function loadAll(){
+ $("dashboard").classList.add("loading");
+ try{
+  const [s,u,o,p,c,q,pay]=await Promise.all([
+   api("/api/admin/stats"),api("/api/admin/users"),api("/api/admin/orders"),
+   api("/api/admin/partners"),api("/api/catalog"),api("/api/admin/quotes"),api("/api/admin/payments")
+  ]);
+  renderStats(s.stats);renderCustomers(u.users);renderOrders(o.orders);renderPartners(p.partners);
+  renderProducts(c.products);renderQuotes(q.quotes);renderPayments(pay.payments);
+ }catch(e){toast(e.message)}finally{$("dashboard").classList.remove("loading")}
+}
+function renderStats(s){
+ $("overview").innerHTML=[["العملاء",s.users,"👥"],["الطلبات",s.orders,"📦"],["المفتوحة",s.pending,"⏳"],["الشراكات",s.partners,"🤝"]]
+ .map(x=>`<div class="stat"><span>${x[2]} ${x[0]}</span><b>${x[1]}</b></div>`).join("");
+}
+function renderCustomers(rows){
+ $("customersList").innerHTML=rows.length?`<div class="grid">${rows.map(x=>`<article class="card"><div class="card-head"><h4>${esc(x.name)}</h4><span class="tag">عميل #${x.id}</span></div><a class="phone" href="tel:${esc(x.phone)}">${esc(x.phone)}</a><div class="meta"><span>عدد الطلبات: <b>${x.order_count}</b></span><span>تاريخ التسجيل: ${new Date(x.created_at+"Z").toLocaleDateString("ar-SA")}</span></div></article>`).join("")}</div>`:'<div class="empty">لا يوجد عملاء.</div>';
+}
+function renderOrders(rows){
+ const labels=["تم الاستلام","قيد التأكيد","تم التجهيز","تم الشحن"];
+ $("ordersList").innerHTML=rows.length?`<div class="grid">${rows.map(x=>`<article class="card"><div class="card-head"><span class="track">${esc(x.order_no)}</span><span class="tag">${labels[x.status]||"غير محدد"}</span></div><h4>${esc(x.name)} · <a class="phone" href="tel:${esc(x.phone)}">${esc(x.phone)}</a></h4><p>${esc(x.product)} — ${esc(x.city)} — الكمية ${x.qty}</p><div class="meta"><span>${new Date(x.created_at+"Z").toLocaleString("ar-SA")}</span><select class="status" data-order="${esc(x.order_no)}" onchange="changeOrderStatus(this)">${labels.map((l,i)=>`<option value="${i}" ${i===x.status?"selected":""}>${l}</option>`).join("")}</select></div></article>`).join("")}</div>`:'<div class="empty">لا توجد طلبات.</div>';
+}
+async function changeOrderStatus(el){try{await api("/api/admin/orders/"+encodeURIComponent(el.dataset.order)+"/status",{method:"PATCH",body:JSON.stringify({status:Number(el.value)})});toast("تم تحديث حالة الطلب");loadAll()}catch(e){toast(e.message)}}
+function table(headers,rows){return rows.length?`<div class="table-wrap"><table class="table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`:'<div class="empty">لا توجد بيانات.</div>'}
+function renderPartners(rows){$("partnersList").innerHTML=table(["المرجع","الشركة","المسؤول","الجوال","المدينة"],rows.map(x=>`<tr><td>${esc(x.ref_no)}</td><td>${esc(x.company)}</td><td>${esc(x.name)}</td><td><a class="phone" href="tel:${esc(x.phone)}">${esc(x.phone)}</a></td><td>${esc(x.city||"-")}</td></tr>`))}
+function renderProducts(rows){$("productsList").innerHTML=table(["المنتج","المورد","القسم","السعر"],rows.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.supplier_name||"-")}</td><td>${esc(x.category||"-")}</td><td>${Number(x.price).toLocaleString("ar-SA")} ${esc(x.currency)}</td></tr>`))}
+function renderQuotes(rows){$("quotesList").innerHTML=table(["العرض","رقم التتبع","العميل","المنتج","الإجمالي","الحالة"],rows.map(x=>`<tr><td>${esc(x.quote_no)}</td><td class="track">${esc(x.order_no)}</td><td>${esc(x.customer_name)}</td><td>${esc(x.product)}</td><td>${Number(x.total).toLocaleString("ar-SA")} SAR</td><td>${esc(x.status)}</td></tr>`))}
+function renderPayments(rows){
+ const states=["pending","paid","failed","refunded"];
+ $("paymentsList").innerHTML=table(["الدفع","رقم التتبع","العميل","المبلغ","الطريقة","الحالة"],rows.map(x=>`<tr><td>${esc(x.payment_no)}</td><td class="track">${esc(x.order_no)}</td><td>${esc(x.customer_name)}</td><td>${Number(x.amount).toLocaleString("ar-SA")} SAR</td><td>${esc(x.method)}</td><td><select class="status" data-payment="${esc(x.payment_no)}" onchange="changePayment(this)">${states.map(s=>`<option ${s===x.status?"selected":""}>${s}</option>`).join("")}</select></td></tr>`));
+}
+async function changePayment(el){try{await api("/api/admin/payments/"+encodeURIComponent(el.dataset.payment)+"/status",{method:"PATCH",body:JSON.stringify({status:el.value})});toast("تم تحديث عملية الدفع");loadAll()}catch(e){toast(e.message)}}
+boot();
+</script>
+</body>
+</html>
