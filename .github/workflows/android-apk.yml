@@ -2,9 +2,15 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -20,54 +26,26 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Extract Android project
-        run: |
-          rm -rf android-build
-          mkdir -p android-build
-          unzip -q AlRifaiShippingAndroid_READY.zip -d android-build
-          echo "Extracted files:"
-          find android-build -maxdepth 3 -type f | sort | head -100
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Locate Gradle project
-        id: locate
-        shell: bash
-        run: |
-          GRADLEW=$(find android-build -type f -name gradlew | head -1)
-          if [ -z "$GRADLEW" ]; then
-            echo "ERROR: gradlew was not found inside AlRifaiShippingAndroid_READY.zip"
-            exit 1
-          fi
+      - name: Install Android SDK 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-          PROJECT_DIR=$(dirname "$GRADLEW")
-          chmod +x "$GRADLEW"
-
-          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
-          echo "Android project found at: $PROJECT_DIR"
-
-      - name: Set up Gradle
+      - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
 
       - name: Build debug APK
-        working-directory: ${{ steps.locate.outputs.project_dir }}
-        run: ./gradlew assembleDebug --stacktrace
+        run: gradle :app:assembleDebug --stacktrace
 
-      - name: Locate APK
-        id: apk
-        shell: bash
-        run: |
-          APK=$(find "${{ steps.locate.outputs.project_dir }}" -type f -path "*/build/outputs/apk/debug/*.apk" | head -1)
-
-          if [ -z "$APK" ]; then
-            echo "ERROR: APK output was not found"
-            exit 1
-          fi
-
-          echo "path=$APK" >> "$GITHUB_OUTPUT"
-          echo "APK built at: $APK"
+      - name: Verify APK
+        run: test -f app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AlRifai-Shipping-APK
-          path: ${{ steps.apk.outputs.path }}
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
