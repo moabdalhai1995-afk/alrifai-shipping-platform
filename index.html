@@ -335,7 +335,7 @@ async function submitAuth(){
   loadAccount();
  }catch(e){showToast(e.message)}
 }
-async function logoutUser(){await api("/api/auth/logout",{method:"POST"});document.getElementById("accountArea").style.display="none";document.getElementById("adminArea").style.display="none";document.getElementById("loginBtn").textContent="دخول";showToast("تم تسجيل الخروج")}
+async function logoutUser(){await api("/api/auth/logout",{method:"POST"});document.getElementById("accountArea").style.display="none";document.getElementById("adminArea").style.display="none";document.getElementById("loginBtn").textContent="دخول";closeModals();openAuth();showToast("تم تسجيل الخروج")}
 async function loadAccount(){
  try{
   const me=await api("/api/me");
