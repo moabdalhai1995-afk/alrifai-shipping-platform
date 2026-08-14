@@ -6,6 +6,10 @@ const bcrypt = require("bcryptjs");
 const Database = require("better-sqlite3");
 const path = require("path");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -104,6 +108,30 @@ CREATE TABLE IF NOT EXISTS partners (
 );
 `);
 
+const userColumns = new Set(
+  db.prepare("PRAGMA table_info(users)").all().map((column) => column.name)
+);
+if (!userColumns.has("email")) db.exec("ALTER TABLE users ADD COLUMN email TEXT");
+if (!userColumns.has("email_verified")) {
+  db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
+}
+if (!userColumns.has("google_sub")) db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+    ON users(email) WHERE email IS NOT NULL;
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub
+    ON users(google_sub) WHERE google_sub IS NOT NULL;
+  CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    used_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
+`);
+
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -135,6 +163,55 @@ function orderNo() {
 function partnerNo() {
   return "PAR-" + Date.now().toString().slice(-8);
 }
+function emailTransport() {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+}
+
+async function sendVerificationEmail(userId, email) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error("SMTP is not configured");
+  }
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  db.prepare("DELETE FROM email_verification_tokens WHERE user_id=?").run(userId);
+  db.prepare(
+    "INSERT INTO email_verification_tokens(user_id,token_hash,expires_at) VALUES(?,?,?)"
+  ).run(userId, tokenHash, Date.now() + 24 * 60 * 60 * 1000);
+
+  const baseUrl = (process.env.BASE_URL || "http://localhost:" + PORT).replace(/\/$/, "");
+  const verifyUrl = baseUrl + "/api/auth/verify-email?token=" + encodeURIComponent(token);
+  await emailTransport().sendMail({
+    from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: "تأكيد البريد الإلكتروني - الرفاعي للشحن الدولي",
+    html:
+      '<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8">' +
+      "<h2>مرحباً بك في الرفاعي للشحن الدولي</h2>" +
+      "<p>اضغط الزر التالي لتأكيد بريدك وتفعيل حسابك:</p>" +
+      '<p><a href="' + verifyUrl + '" style="background:#bd8b27;color:#fff;padding:12px 22px;text-decoration:none;border-radius:8px">تأكيد البريد الإلكتروني</a></p>' +
+      "<p>صلاحية الرابط 24 ساعة.</p></div>"
+  });
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    phone: user.phone,
+    email: user.email || null,
+    emailVerified: !!user.email_verified,
+    role: user.role
+  };
+}
+
 function envAdmin() {
   const phone = (process.env.ADMIN_PHONE || "").trim();
   const password = process.env.ADMIN_PASSWORD || "";
@@ -156,7 +233,7 @@ function requireAdmin(req, res) {
 }
 
 app.get("/api/health", (req, res) =>
-  res.json({ ok: true, service: "alrifai", version: "3.1.0" })
+  res.json({ ok: true, service: "alrifai", version: "3.2.0" })
 );
 
 app.get("/api/me", (req, res) => {
@@ -172,44 +249,132 @@ app.get("/api/me", (req, res) => {
   }
 
   const u = db.prepare(
-    "SELECT id,name,phone,role,created_at FROM users WHERE id=?"
+    "SELECT id,name,phone,email,email_verified,role,created_at FROM users WHERE id=?"
   ).get(req.session.user.id);
   res.json({ authenticated: !!u, user: u || null });
 });
 
-app.post("/api/auth/register", (req, res) => {
-  const { name, phone, password } = req.body;
-  if (!name || !phone || !password || password.length < 6) {
+app.get("/api/auth/config", (req, res) => {
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || "" });
+});
+
+app.post("/api/auth/register", async (req, res) => {
+  const name = (req.body.name || "").trim();
+  const phone = (req.body.phone || "").trim();
+  const email = (req.body.email || "").trim().toLowerCase();
+  const password = req.body.password || "";
+  if (!name || !phone || !email || password.length < 6) {
     return res.status(400).json({
-      error: "الاسم والجوال وكلمة المرور (6 أحرف على الأقل) مطلوبة"
+      error: "الاسم والجوال والبريد وكلمة المرور (6 أحرف على الأقل) مطلوبة"
     });
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "البريد الإلكتروني غير صحيح" });
+  }
+
+  let userId;
   try {
     const hash = bcrypt.hashSync(password, 10);
     const info = db.prepare(
-      "INSERT INTO users(name,phone,password_hash) VALUES(?,?,?)"
-    ).run(name.trim(), phone.trim(), hash);
-    req.session.user = { id: info.lastInsertRowid, role: "customer" };
-    res.json({
+      "INSERT INTO users(name,phone,email,email_verified,password_hash) VALUES(?,?,?,0,?)"
+    ).run(name, phone, email, hash);
+    userId = Number(info.lastInsertRowid);
+    await sendVerificationEmail(userId, email);
+    res.status(201).json({
       ok: true,
-      user: {
-        id: info.lastInsertRowid,
-        name: name.trim(),
-        phone: phone.trim(),
-        role: "customer"
-      }
+      requiresVerification: true,
+      message: "أرسلنا رابط التفعيل إلى بريدك الإلكتروني"
     });
-  } catch (e) {
-    res.status(409).json({ error: "رقم الجوال مستخدم مسبقاً" });
+  } catch (error) {
+    if (String(error.message).includes("UNIQUE")) {
+      return res.status(409).json({ error: "رقم الجوال أو البريد مستخدم مسبقاً" });
+    }
+    console.error("verification email error", error);
+    res.status(502).json({
+      error: "تم إنشاء الحساب، لكن تعذر إرسال رسالة التفعيل. حاول إعادة الإرسال."
+    });
+  }
+});
+
+app.post("/api/auth/resend-verification", async (req, res) => {
+  const email = (req.body.email || "").trim().toLowerCase();
+  const user = db.prepare("SELECT id,email_verified FROM users WHERE lower(email)=?").get(email);
+  if (!user || user.email_verified) {
+    return res.json({ ok: true, message: "إذا كان الحساب يحتاج تفعيلًا فستصلك رسالة" });
+  }
+  try {
+    await sendVerificationEmail(user.id, email);
+    res.json({ ok: true, message: "تم إرسال رابط التفعيل" });
+  } catch (error) {
+    console.error("resend verification error", error);
+    res.status(502).json({ error: "تعذر إرسال رسالة التفعيل الآن" });
+  }
+});
+
+app.get("/api/auth/verify-email", (req, res) => {
+  const token = String(req.query.token || "");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const row = db.prepare(
+    "SELECT id,user_id,expires_at,used_at FROM email_verification_tokens WHERE token_hash=?"
+  ).get(tokenHash);
+  if (!row || row.used_at || row.expires_at < Date.now()) {
+    return res.redirect("/?email_verified=invalid");
+  }
+  const confirm = db.transaction(() => {
+    db.prepare("UPDATE users SET email_verified=1 WHERE id=?").run(row.user_id);
+    db.prepare("UPDATE email_verification_tokens SET used_at=CURRENT_TIMESTAMP WHERE id=?").run(row.id);
+  });
+  confirm();
+  res.redirect("/?email_verified=1");
+});
+
+app.post("/api/auth/google", async (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(503).json({ error: "تسجيل Google غير مهيأ" });
+  }
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: req.body.credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email || !payload.email_verified) {
+      return res.status(401).json({ error: "تعذر التحقق من بريد Google" });
+    }
+
+    const email = payload.email.toLowerCase();
+    let user = db.prepare(
+      "SELECT * FROM users WHERE google_sub=? OR lower(email)=?"
+    ).get(payload.sub, email);
+
+    if (user) {
+      db.prepare(
+        "UPDATE users SET google_sub=?,email=?,email_verified=1 WHERE id=?"
+      ).run(payload.sub, email, user.id);
+      user = db.prepare("SELECT * FROM users WHERE id=?").get(user.id);
+    } else {
+      const generatedPhone = "google-" + payload.sub;
+      const hash = bcrypt.hashSync(crypto.randomBytes(32).toString("hex"), 10);
+      const info = db.prepare(
+        "INSERT INTO users(name,phone,email,email_verified,google_sub,password_hash) VALUES(?,?,?,1,?,?)"
+      ).run(payload.name || email.split("@")[0], generatedPhone, email, payload.sub, hash);
+      user = db.prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
+    }
+
+    req.session.user = { id: user.id, role: user.role };
+    res.json({ ok: true, user: publicUser(user) });
+  } catch (error) {
+    console.error("google auth error", error);
+    res.status(401).json({ error: "فشل تسجيل الدخول بواسطة Google" });
   }
 });
 
 app.post("/api/auth/login", (req, res) => {
-  const phone = (req.body.phone || "").trim();
+  const identifier = (req.body.phone || req.body.email || "").trim();
   const password = req.body.password || "";
 
   const admin = envAdmin();
-  if (admin && phone === admin.phone && password === admin.password) {
+  if (admin && identifier === admin.phone && password === admin.password) {
     req.session.user = { id: 0, role: "admin" };
     return res.json({
       ok: true,
@@ -217,16 +382,21 @@ app.post("/api/auth/login", (req, res) => {
     });
   }
 
-  const u = db.prepare("SELECT * FROM users WHERE phone=?").get(phone);
-  if (!u || !bcrypt.compareSync(password, u.password_hash)) {
-    return res.status(401).json({ error: "رقم الجوال أو كلمة المرور غير صحيحة" });
+  const user = db.prepare(
+    "SELECT * FROM users WHERE phone=? OR lower(email)=lower(?)"
+  ).get(identifier, identifier);
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    return res.status(401).json({ error: "رقم الجوال أو البريد أو كلمة المرور غير صحيحة" });
+  }
+  if (user.email && !user.email_verified) {
+    return res.status(403).json({
+      error: "يرجى تأكيد البريد الإلكتروني أولاً",
+      requiresVerification: true
+    });
   }
 
-  req.session.user = { id: u.id, role: u.role };
-  res.json({
-    ok: true,
-    user: { id: u.id, name: u.name, phone: u.phone, role: u.role }
-  });
+  req.session.user = { id: user.id, role: user.role };
+  res.json({ ok: true, user: publicUser(user) });
 });
 
 app.post("/api/auth/logout", (req, res) =>
@@ -288,7 +458,7 @@ app.get("/api/profile", (req, res) => {
     });
   }
   const u = db.prepare(
-    "SELECT id,name,phone,role,created_at FROM users WHERE id=?"
+    "SELECT id,name,phone,email,email_verified,role,created_at FROM users WHERE id=?"
   ).get(req.session.user.id);
   res.json({ ok: true, user: u });
 });
@@ -316,13 +486,13 @@ app.get("/api/admin/stats", (req, res) => {
 app.get("/api/admin/users", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const users = db.prepare(`
-    SELECT u.id,u.name,u.phone,u.created_at,
+    SELECT u.id,u.name,u.phone,u.email,u.email_verified,u.created_at,
            COUNT(o.id) AS order_count,
            MAX(o.created_at) AS last_order_at
     FROM users u
     LEFT JOIN orders o ON o.user_id=u.id
     WHERE u.role='customer'
-    GROUP BY u.id,u.name,u.phone,u.created_at
+    GROUP BY u.id,u.name,u.phone,u.email,u.email_verified,u.created_at
     ORDER BY u.id DESC
   `).all();
   res.json({ ok: true, users });
