@@ -24,6 +24,7 @@ section{padding:58px 0}.section-head{display:flex;justify-content:space-between;
 footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.footer-grid p{color:#bbc3ca;line-height:1.8}
 .modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-box{background:#fff;border-radius:18px;max-width:620px;width:100%;padding:28px;max-height:90vh;overflow:auto}.close{float:left;border:0;background:none;font-size:25px;cursor:pointer}
 .auth-page{padding:0;background:#fff;align-items:stretch}.auth-page .modal-box{max-width:none;min-height:100dvh;max-height:100dvh;border-radius:0;padding:0;background:linear-gradient(145deg,#fff 0%,#faf6ed 100%)}.auth-content{width:min(520px,100%);margin:auto;padding:28px 24px 48px}.auth-brand{text-align:center;margin:22px 0 34px}.auth-brand b{display:block;font-size:25px;color:var(--ink)}.auth-brand span{display:block;color:var(--gold);font-weight:800;margin-top:7px}.auth-page h2{text-align:center;font-size:34px;margin:0 0 28px}.auth-page .close{position:fixed;top:18px;left:18px;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid var(--line);z-index:2}.password-wrap{position:relative}.password-wrap input{padding-left:55px}.show-password{position:absolute;left:8px;bottom:6px;width:43px;height:40px;border:0;background:transparent;cursor:pointer;font-size:20px;border-radius:8px}.show-password:focus{outline:2px solid var(--gold)}
+.cart-page{padding:0;background:#fff;align-items:stretch}.cart-page .modal-box{max-width:none;min-height:100dvh;max-height:100dvh;border-radius:0;padding:0;background:#f7f5f1}.cart-content{width:min(760px,100%);margin:auto;padding:22px 20px 42px}.cart-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:22px}.cart-head h2{margin:0;font-size:30px}.cart-back{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:800}.cart-product{display:grid;grid-template-columns:86px 1fr auto;align-items:center;gap:15px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:12px}.cart-product-image{width:86px;height:76px;border-radius:12px;background:#eee9df;display:grid;place-items:center;font-size:39px;overflow:hidden}.cart-product-image img{width:100%;height:100%;object-fit:cover}.cart-product h3{margin:0 0 7px}.cart-payment{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:24px}.cart-payment h3{margin:0 0 14px}.cart-pay-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.cart-pay-method{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer}.cart-pay-method:has(input:checked){border-color:var(--gold);background:#faf3e4}.cart-submit{width:100%;margin-top:18px;padding:15px;font-size:17px}@media(max-width:520px){.cart-product{grid-template-columns:72px 1fr}.cart-product-image{width:72px;height:68px}.cart-product .remove-product{grid-column:1/-1}.cart-pay-methods{grid-template-columns:1fr}}
 .cart{position:fixed;left:20px;bottom:20px;z-index:25}.cart button{box-shadow:0 8px 25px #0002}.badge{display:inline-grid;place-items:center;min-width:23px;height:23px;border-radius:50%;background:#fff;color:var(--gold2);margin-right:5px}
 .toast{position:fixed;bottom:20px;right:20px;background:#18232d;color:#fff;padding:13px 18px;border-radius:10px;display:none;z-index:80}
 .empty{padding:35px;text-align:center;background:#fff;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
@@ -217,9 +218,19 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="field"><label>اسم الشركة / المتجر *</label><input id="pCompany"></div><div class="field"><label>اسم المسؤول *</label><input id="pName"></div><div class="field"><label>رقم التواصل *</label><input id="pPhone"></div><div class="field"><label>المدينة</label><input id="pCity"></div><div class="field"><label>نوع المنتجات</label><input id="pProducts"></div><div class="field"><label>نبذة</label><textarea id="pDetails" rows="3"></textarea></div>
 <button class="btn primary" style="width:100%" onclick="submitPartner()">حفظ طلب الشراكة</button></div></div>
 
-<div class="modal" id="cartModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>سلة الطلب</h2><div id="cartItems"></div><button class="btn primary" style="width:100%;margin-top:15px" onclick="orderCart()">تحويل السلة إلى طلب</button></div></div>
+<div class="modal cart-page" id="cartModal"><div class="modal-box"><div class="cart-content">
+<div class="cart-head"><h2>سلة الطلب</h2><button class="cart-back" type="button" onclick="closeModals()">العودة للتسوق ←</button></div>
+<div id="cartItems"></div>
+<section class="cart-payment"><h3>اختر وسيلة الدفع</h3><div class="cart-pay-methods">
+<label class="cart-pay-method"><input type="radio" name="cartPayMethod" value="card" checked> البطاقة البنكية</label>
+<label class="cart-pay-method"><input type="radio" name="cartPayMethod" value="tamara"> تمارا</label>
+<label class="cart-pay-method"><input type="radio" name="cartPayMethod" value="tabby"> تابي</label>
+<label class="cart-pay-method"><input type="radio" name="cartPayMethod" value="bank_transfer"> تحويل بنكي</label>
+</div></section>
+<button class="btn primary cart-submit" onclick="orderCart()">متابعة وإرسال الطلب</button>
+</div></div></div>
 
-<div class="modal auth-page" id="authModal"><div class="modal-box"><button class="close" aria-label="إغلاق" onclick="closeModals()">×</button><div class="auth-content">
+<div class="modal auth-page" id="authModal"><div class="modal-box"><div class="auth-content">
 <div class="auth-brand"><b>الرفاعي للشحن الدولي</b><span>من السعودية إلى السودان</span></div>
 <h2 id="authTitle">تسجيل الدخول</h2>
 <div class="field" id="authNameWrap" style="display:none"><label>الاسم</label><input id="authName" autocomplete="name"></div>
@@ -257,6 +268,7 @@ const products=[
 {id:8,name:"إكسسوارات إلكترونية",cat:"إلكترونيات",icon:"🔌",desc:"ملحقات وأجهزة",price:"حسب المورد"}
 ];
 let cart=JSON.parse(localStorage.getItem("rifai_cart")||"[]");
+let currentProducts=products;
 
 async function renderProducts(){
  const q=(document.getElementById("search").value||"").trim().toLowerCase(), c=document.getElementById("category").value;
@@ -265,18 +277,19 @@ async function renderProducts(){
    const d=await api("/api/catalog");
    if(d.products && d.products.length) source=d.products.map(p=>({id:p.id,name:p.name,cat:p.category||"عام",desc:p.description||"",price:p.price?Number(p.price).toLocaleString("ar-SA")+" "+p.currency:"حسب المورد",icon:"📦"}));
  }catch(e){}
+ currentProducts=source;
  const list=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q))&&(!c||p.cat===c));
  const el=document.getElementById("productsGrid");
  el.innerHTML=list.length?list.map(p=>`<div class="product"><div class="product-img">${p.icon||"📦"}</div><div class="product-body"><span class="tag">${p.cat}</span><h3>${p.name}</h3><p class="muted">${p.desc}</p><div class="price">${p.price}</div><button class="btn primary" onclick="addCart(${p.id})">أضف للسلة</button></div></div>`).join(""):`<div class="empty" style="grid-column:1/-1">لا توجد منتجات مطابقة.</div>`;
 }
 function saveCart(){localStorage.setItem("rifai_cart",JSON.stringify(cart));document.getElementById("cartCount").textContent=cart.length}
-function addCart(id){cart.push(products.find(p=>p.id===id));saveCart();showToast("تمت إضافة المنتج إلى السلة");}
+function addCart(id){const product=currentProducts.find(p=>Number(p.id)===Number(id));if(!product)return showToast("تعذر إضافة المنتج");cart.push(product);saveCart();showToast("تمت إضافة المنتج إلى السلة");}
 function openCart(){
- document.getElementById("cartItems").innerHTML=cart.length?cart.map((p,i)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)"><span>${p.icon} ${p.name}</span><button class="btn outline" onclick="removeCart(${i})">حذف</button></div>`).join(""):`<div class="empty">السلة فارغة.</div>`;
+ document.getElementById("cartItems").innerHTML=cart.length?cart.map((p,i)=>`<article class="cart-product"><div class="cart-product-image">${p.image?`<img src="${p.image}" alt="${p.name}">`:(p.icon||"📦")}</div><div><h3>${p.name}</h3><span class="tag">${p.cat||"منتج"}</span><div class="price">${p.price||"حسب المورد"}</div></div><button class="btn outline remove-product" onclick="removeCart(${i})">حذف</button></article>`).join(""):`<div class="empty">السلة فارغة. ارجع للتسوق وأضف المنتجات المطلوبة.</div>`;
  document.getElementById("cartModal").classList.add("show");
 }
 function removeCart(i){cart.splice(i,1);saveCart();openCart()}
-function orderCart(){if(!cart.length)return showToast("السلة فارغة");document.getElementById("oProduct").value=cart.map(x=>x.name).join("، ");closeModals();document.getElementById("orderModal").classList.add("show")}
+function orderCart(){if(!cart.length)return showToast("السلة فارغة");const method=document.querySelector('input[name="cartPayMethod"]:checked');document.getElementById("oProduct").value=cart.map(x=>x.name).join("، ");document.getElementById("oDetails").value="وسيلة الدفع المفضلة: "+({card:"البطاقة البنكية",tamara:"تمارا",tabby:"تابي",bank_transfer:"تحويل بنكي"}[method.value]||method.value);closeModals();document.getElementById("orderModal").classList.add("show")}
 function openOrder(product=""){document.getElementById("oProduct").value=product;document.getElementById("orderModal").classList.add("show")}
 function openPartner(){document.getElementById("partnerModal").classList.add("show")}
 function closeModals(){document.querySelectorAll(".modal").forEach(x=>x.classList.remove("show"))}
