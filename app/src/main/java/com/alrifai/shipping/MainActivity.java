@@ -76,6 +76,11 @@ public class MainActivity extends Activity {
                 pageLoaded = true;
                 handler.removeCallbacks(browserFallback);
                 progressBar.setVisibility(View.GONE);
+                view.postDelayed(() -> view.evaluateJavascript(
+                        "fetch('/api/me').then(r=>r.json()).then(x=>{" +
+                        "if(!x.authenticated && typeof openAuth==='function') openAuth();" +
+                        "}).catch(()=>{if(typeof openAuth==='function') openAuth();})",
+                        null), 500);
             }
 
             @Override
