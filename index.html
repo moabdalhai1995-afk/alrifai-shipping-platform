@@ -409,7 +409,12 @@ if(location.pathname==="/admin"){
   setTimeout(async()=>{
     try{
       const me=await api("/api/me");
-      if(!me.authenticated) openAuth();
+      if(!me.authenticated){openAuth();return}
+      if(me.user.role!=="admin"){
+        await api("/api/auth/logout",{method:"POST"});
+        document.getElementById("accountArea").style.display="none";
+        openAuth();
+      }
     }catch(e){openAuth()}
   },400);
 }
