@@ -588,6 +588,10 @@ app.get("/api/admin/orders", (req, res) => {
   });
 });
 
+app.get(["/admin", "/admin/"], (req, res) =>
+  res.sendFile(path.join(__dirname, "admin.html"))
+);
+
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ error: "API route not found" });
