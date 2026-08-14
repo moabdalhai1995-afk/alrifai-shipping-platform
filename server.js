@@ -143,6 +143,12 @@ app.use(rateLimit({
 }));
 app.use(express.json({ limit: "200kb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/") || req.path === "/admin" || req.path === "/admin/") {
+    res.set("Cache-Control", "no-store");
+  }
+  next();
+});
 app.use(session({
   secret: process.env.SESSION_SECRET || "CHANGE_ME_BEFORE_PRODUCTION",
   resave: false,
@@ -233,7 +239,7 @@ function requireAdmin(req, res) {
 }
 
 app.get("/api/health", (req, res) =>
-  res.json({ ok: true, service: "alrifai", version: "3.2.0" })
+  res.json({ ok: true, service: "alrifai", version: "3.3.0" })
 );
 
 app.get("/api/me", (req, res) => {
