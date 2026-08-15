@@ -626,7 +626,9 @@ app.get("/api/admin/stats", (req, res) => {
   const orders = db.prepare("SELECT COUNT(*) c FROM orders").get().c;
   const pending = db.prepare("SELECT COUNT(*) c FROM orders WHERE status<3").get().c;
   const partners = db.prepare("SELECT COUNT(*) c FROM partners").get().c;
-  res.json({ ok: true, stats: { users, orders, pending, partners } });
+  const lowStock = db.prepare("SELECT COUNT(*) c FROM products_catalog WHERE active=1 AND stock_quantity BETWEEN 1 AND 5").get().c;
+  const outOfStock = db.prepare("SELECT COUNT(*) c FROM products_catalog WHERE active=1 AND stock_quantity=0").get().c;
+  res.json({ ok: true, stats: { users, orders, pending, partners, lowStock, outOfStock } });
 });
 
 app.get("/api/admin/users", (req, res) => {
@@ -851,7 +853,7 @@ app.get("/api/admin/products", (req, res) => {
   const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity,
     p.supplier_id,p.active,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
-    ORDER BY p.active DESC,p.id DESC`).all();
+    ORDER BY p.active DESC,p.stock_quantity ASC,p.id DESC`).all();
   res.json({ ok: true, products: rows });
 });
 

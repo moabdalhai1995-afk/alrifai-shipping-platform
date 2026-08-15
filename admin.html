@@ -99,7 +99,7 @@ async function loadAll(){
  }catch(e){toast(e.message)}finally{$("dashboard").classList.remove("loading")}
 }
 function renderStats(s){
- $("overview").innerHTML=[["العملاء",s.users,"👥"],["الطلبات",s.orders,"📦"],["المفتوحة",s.pending,"⏳"],["الشراكات",s.partners,"🤝"]]
+ $("overview").innerHTML=[["العملاء",s.users,"👥"],["الطلبات",s.orders,"📦"],["المفتوحة",s.pending,"⏳"],["الشراكات",s.partners,"🤝"],["مخزون منخفض",s.lowStock,"⚠️"],["نفد المخزون",s.outOfStock,"🚫"]]
  .map(x=>`<div class="stat"><span>${x[2]} ${x[0]}</span><b>${x[1]}</b></div>`).join("");
 }
 function renderCustomers(rows){
