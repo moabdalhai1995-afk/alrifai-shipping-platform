@@ -179,6 +179,18 @@ db.exec(`
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(product_id) REFERENCES products_catalog(id)
   );
+  CREATE TABLE IF NOT EXISTS support_tickets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_no TEXT NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open',
+    admin_reply TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
 `);
 
 app.disable("x-powered-by");
@@ -632,7 +644,8 @@ app.get("/api/admin/stats", (req, res) => {
   const partners = db.prepare("SELECT COUNT(*) c FROM partners").get().c;
   const lowStock = db.prepare("SELECT COUNT(*) c FROM products_catalog WHERE active=1 AND stock_quantity BETWEEN 1 AND 5").get().c;
   const outOfStock = db.prepare("SELECT COUNT(*) c FROM products_catalog WHERE active=1 AND stock_quantity=0").get().c;
-  res.json({ ok: true, stats: { users, orders, pending, partners, lowStock, outOfStock } });
+  const supportOpen = db.prepare("SELECT COUNT(*) c FROM support_tickets WHERE status IN ('open','in_progress')").get().c;
+  res.json({ ok: true, stats: { users, orders, pending, partners, lowStock, outOfStock, supportOpen } });
 });
 
 app.get("/api/admin/users", (req, res) => {
@@ -862,6 +875,49 @@ app.post("/api/favorites/:productId", (req, res) => {
 app.delete("/api/favorites/:productId", (req, res) => {
   if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
   db.prepare("DELETE FROM favorites WHERE user_id=? AND product_id=?").run(req.session.user.id, req.params.productId);
+  res.json({ ok: true });
+});
+
+app.get("/api/my-support-tickets", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  const tickets = db.prepare("SELECT ticket_no,subject,message,status,admin_reply,created_at,updated_at FROM support_tickets WHERE user_id=? ORDER BY id DESC")
+    .all(req.session.user.id);
+  res.json({ ok: true, tickets });
+});
+
+app.post("/api/my-support-tickets", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  const subject = String(req.body.subject || "").trim().slice(0, 150);
+  const message = String(req.body.message || "").trim().slice(0, 2000);
+  if (!subject || !message) return res.status(400).json({ error: "عنوان الرسالة والتفاصيل مطلوبان" });
+  const ticketNo = "SUP-" + Date.now().toString().slice(-9);
+  db.prepare("INSERT INTO support_tickets(ticket_no,user_id,subject,message) VALUES(?,?,?,?)")
+    .run(ticketNo, req.session.user.id, subject, message);
+  res.status(201).json({ ok: true, ticketNo });
+});
+
+app.get("/api/admin/support-tickets", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const tickets = db.prepare(`SELECT t.*,u.name customer_name,u.phone,u.email
+    FROM support_tickets t JOIN users u ON u.id=t.user_id ORDER BY t.id DESC`).all();
+  res.json({ ok: true, tickets });
+});
+
+app.patch("/api/admin/support-tickets/:ticketNo", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const status = String(req.body.status || "");
+  const reply = String(req.body.reply || "").trim().slice(0, 2000);
+  if (!["open", "in_progress", "resolved", "closed"].includes(status)) return res.status(400).json({ error: "حالة التذكرة غير صحيحة" });
+  const ticket = db.prepare(`SELECT t.id,t.user_id,u.name,u.email FROM support_tickets t
+    JOIN users u ON u.id=t.user_id WHERE t.ticket_no=?`).get(req.params.ticketNo);
+  if (!ticket) return res.status(404).json({ error: "التذكرة غير موجودة" });
+  db.prepare("UPDATE support_tickets SET status=?,admin_reply=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")
+    .run(status, reply || null, ticket.id);
+  const body = reply || "تم تحديث حالة طلب الدعم إلى " + status;
+  db.prepare("INSERT INTO notifications(user_id,title,body) VALUES(?,?,?)")
+    .run(ticket.user_id, "تحديث طلب الدعم " + req.params.ticketNo, body);
+  sendStatusEmail(ticket.email, ticket.name, "تحديث طلب الدعم", body)
+    .catch(error => console.error("support email error", error));
   res.json({ ok: true });
 });
 

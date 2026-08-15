@@ -165,6 +165,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div id="myPayments" style="margin-top:15px"></div>
 </div>
 <div class="p4-box"><h3>المنتجات المفضلة</h3><div id="myFavorites"><div class="empty">لا توجد منتجات مفضلة.</div></div></div>
+<div class="p4-box"><h3>خدمة العملاء</h3><div class="field"><label>عنوان الطلب</label><input id="supportSubject" placeholder="مثال: استفسار عن طلبي"></div><div class="field"><label>التفاصيل</label><textarea id="supportMessage" rows="3"></textarea></div><button class="btn primary" onclick="createSupportTicket()">إرسال للدعم</button><div id="mySupportTickets" style="margin-top:16px"></div></div>
 <div class="p4-box">
 <div class="notification-head"><h3>الإشعارات <span id="notificationBadge" class="notification-badge" style="display:none">0</span></h3><button id="readAllNotifications" class="btn outline notification-read" style="display:none" onclick="markAllNotificationsRead()">تعليم الكل كمقروء</button></div><div id="myNotifications"><div class="empty">لا توجد إشعارات.</div></div>
 </div>
@@ -503,7 +504,7 @@ async function loadAccount(){
   if(!me.authenticated){document.getElementById("loginBtn").textContent="دخول";document.getElementById("accountGuest").style.display="block";document.getElementById("accountContent").style.display="none";return}
   document.getElementById("loginBtn").textContent=me.user.role==="admin"?"لوحة الإدارة":"حسابي";
   if(me.user.role==="admin"){document.getElementById("adminArea").style.display="block";document.getElementById("accountArea").style.display="none";await loadAdmin();}
-  else {document.getElementById("accountArea").style.display="block";document.getElementById("accountGuest").style.display="none";document.getElementById("accountContent").style.display="block";document.getElementById("adminArea").style.display="none";await loadProfile();await loadMyOrders();await loadWishlist();}
+  else {document.getElementById("accountArea").style.display="block";document.getElementById("accountGuest").style.display="none";document.getElementById("accountContent").style.display="block";document.getElementById("adminArea").style.display="none";await loadProfile();await loadMyOrders();await loadWishlist();await loadSupportTickets();}
  }catch(e){}
 }
 async function loadProfile(){
@@ -523,6 +524,8 @@ async function cancelMyOrder(no){if(!confirm("هل تريد إلغاء الطل�
 async function loadWishlist(){
  try{const d=await api("/api/my-favorites");favoriteIds=new Set(d.products.map(p=>Number(p.id)));const el=document.getElementById("myFavorites");if(el)el.innerHTML=d.products.length?d.products.map(p=>`<div class="notice"><b>${p.name}</b> — ${Number(p.price).toLocaleString("ar-SA")} ${p.currency}<button class="btn outline notification-read" onclick="toggleWish(${p.id},this,event)">إزالة</button></div>`).join(""):'<div class="empty">لا توجد منتجات مفضلة.</div>';renderProducts()}catch(e){}
 }
+async function loadSupportTickets(){try{const d=await api("/api/my-support-tickets"),labels={open:"مفتوح",in_progress:"قيد المعالجة",resolved:"تم الحل",closed:"مغلق"};document.getElementById("mySupportTickets").innerHTML=d.tickets.length?d.tickets.map(t=>`<div class="notice"><b>${t.ticket_no} — ${t.subject}</b><br>${t.message}<br><span class="tag">${labels[t.status]||t.status}</span>${t.admin_reply?`<p><b>رد الدعم:</b> ${t.admin_reply}</p>`:""}</div>`).join(""):'<div class="empty">لا توجد طلبات دعم.</div>'}catch(e){}}
+async function createSupportTicket(){try{const d=await api("/api/my-support-tickets",{method:"POST",body:JSON.stringify({subject:supportSubject.value,message:supportMessage.value})});supportSubject.value="";supportMessage.value="";showToast("تم إرسال طلب الدعم "+d.ticketNo);loadSupportTickets()}catch(e){showToast(e.message)}}
 async function loadAdmin(){
  const s=await api("/api/admin/stats");
  document.getElementById("adminStats").innerHTML=[
