@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -45,14 +46,20 @@ public class MainActivity extends Activity {
 
         webView = findViewById(R.id.webView);
         progressBar = findViewById(R.id.progressBar);
+        WebView.setWebContentsDebuggingEnabled(false);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
+        settings.setDatabaseEnabled(false);
+        settings.setAllowFileAccess(false);
+        settings.setAllowContentAccess(false);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            settings.setSafeBrowsingEnabled(true);
+        }
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
@@ -97,10 +104,16 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view,
                                                     WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if ("alrifai-shipping-platform.onrender.com".equals(uri.getHost())) {
+                if ("https".equalsIgnoreCase(uri.getScheme()) &&
+                        "alrifai-shipping-platform.onrender.com".equalsIgnoreCase(uri.getHost())) {
                     return false;
                 }
-                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                } catch (Exception ignored) {
+                    Toast.makeText(MainActivity.this,
+                            "تعذر فتح الرابط الخارجي", Toast.LENGTH_SHORT).show();
+                }
                 return true;
             }
         });
