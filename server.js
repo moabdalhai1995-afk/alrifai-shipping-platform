@@ -126,6 +126,13 @@ const productColumns = new Set(
 );
 if (!productColumns.has("image_url")) db.exec("ALTER TABLE products_catalog ADD COLUMN image_url TEXT");
 
+const partnerColumns = new Set(
+  db.prepare("PRAGMA table_info(partners)").all().map((column) => column.name)
+);
+if (!partnerColumns.has("status")) {
+  db.exec("ALTER TABLE partners ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'");
+}
+
 const userColumns = new Set(
   db.prepare("PRAGMA table_info(users)").all().map((column) => column.name)
 );
@@ -625,6 +632,18 @@ app.get("/api/admin/partners", (req, res) => {
     ok: true,
     partners: db.prepare("SELECT * FROM partners ORDER BY id DESC").all()
   });
+});
+
+app.patch("/api/admin/partners/:refNo/status", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const status = String(req.body.status || "");
+  if (!["pending", "contacted", "approved", "rejected"].includes(status)) {
+    return res.status(400).json({ error: "حالة طلب الشراكة غير صحيحة" });
+  }
+  const info = db.prepare("UPDATE partners SET status=? WHERE ref_no=?")
+    .run(status, req.params.refNo);
+  if (!info.changes) return res.status(404).json({ error: "طلب الشراكة غير موجود" });
+  res.json({ ok: true });
 });
 
 app.get("/api/my-quotes", (req, res) => {
