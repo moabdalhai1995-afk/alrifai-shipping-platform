@@ -565,6 +565,22 @@ app.get("/api/my-orders", (req, res) => {
   res.json({ ok: true, orders: rows });
 });
 
+app.post("/api/my-orders/:orderNo/cancel", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  const order = db.prepare("SELECT id,status FROM orders WHERE order_no=? AND user_id=?")
+    .get(req.params.orderNo, req.session.user.id);
+  if (!order) return res.status(404).json({ error: "الطلب غير موجود" });
+  if (order.status > 1) return res.status(409).json({ error: "لا يمكن إلغاء الطلب بعد بدء التجهيز" });
+  db.transaction(() => {
+    const items = db.prepare("SELECT product_id,qty FROM order_items WHERE order_id=? AND product_id IS NOT NULL").all(order.id);
+    for (const item of items) db.prepare("UPDATE products_catalog SET stock_quantity=stock_quantity+? WHERE id=?").run(item.qty, item.product_id);
+    db.prepare("UPDATE orders SET status=4 WHERE id=?").run(order.id);
+    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
+      .run(req.session.user.id, order.id, "تم إلغاء الطلب", "تم إلغاء الطلب " + req.params.orderNo + " وإعادة المنتجات إلى المخزون.");
+  })();
+  res.json({ ok: true });
+});
+
 app.post("/api/partners", (req, res) => {
   const { company, name, phone, city = "", products = "", details = "" } = req.body;
   if (!company || !name || !phone) {
@@ -631,15 +647,22 @@ app.get("/api/admin/users", (req, res) => {
 app.patch("/api/admin/orders/:orderNo/status", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const status = Number(req.body.status);
-  if (!Number.isInteger(status) || status < 0 || status > 3) {
+  if (!Number.isInteger(status) || status < 0 || status > 4) {
     return res.status(400).json({ error: "حالة الطلب غير صحيحة" });
   }
   const order = db.prepare(`SELECT o.id,o.user_id,o.status,o.name,u.email
     FROM orders o LEFT JOIN users u ON u.id=o.user_id WHERE o.order_no=?`).get(req.params.orderNo);
   if (!order) return res.status(404).json({ error: "الطلب غير موجود" });
-  db.prepare("UPDATE orders SET status=? WHERE id=?").run(status, order.id);
+  if (order.status === 4 && status !== 4) return res.status(409).json({ error: "لا يمكن إعادة فتح الطلب الملغي" });
+  db.transaction(() => {
+    if (status === 4 && order.status !== 4) {
+      const items = db.prepare("SELECT product_id,qty FROM order_items WHERE order_id=? AND product_id IS NOT NULL").all(order.id);
+      for (const item of items) db.prepare("UPDATE products_catalog SET stock_quantity=stock_quantity+? WHERE id=?").run(item.qty, item.product_id);
+    }
+    db.prepare("UPDATE orders SET status=? WHERE id=?").run(status, order.id);
+  })();
   if (order.user_id && order.status !== status) {
-    const labels = ["تم استلام طلبك", "طلبك قيد التأكيد", "تم تجهيز طلبك", "تم شحن طلبك"];
+    const labels = ["تم استلام طلبك", "طلبك قيد التأكيد", "تم تجهيز طلبك", "تم شحن طلبك", "تم إلغاء الطلب"];
     const message = "تم تحديث حالة الطلب " + req.params.orderNo + " إلى: " + labels[status];
     db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
       .run(order.user_id, order.id, labels[status], message);
