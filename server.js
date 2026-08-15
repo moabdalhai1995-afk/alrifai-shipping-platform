@@ -778,6 +778,15 @@ app.get("/api/catalog", (req, res) => {
   res.json({ ok: true, products: rows });
 });
 
+app.get("/api/admin/products", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,
+    p.supplier_id,p.active,s.name supplier_name
+    FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
+    ORDER BY p.active DESC,p.id DESC`).all();
+  res.json({ ok: true, products: rows });
+});
+
 app.post("/api/admin/suppliers", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const { name, phone = "", city = "", details = "" } = req.body;
