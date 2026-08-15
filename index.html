@@ -265,6 +265,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="field" id="authEmailWrap" style="display:none"><label>البريد الإلكتروني</label><input id="authEmail" type="email" autocomplete="email"></div>
 <div class="field password-wrap"><label>كلمة المرور</label><input id="authPassword" type="password" autocomplete="current-password"><button class="show-password" id="passwordToggle" type="button" aria-label="إظهار كلمة المرور" onclick="togglePassword()">👁</button></div>
 <button class="btn primary" style="width:100%" onclick="submitAuth()">متابعة</button>
+<p id="forgotPasswordLink" style="text-align:center;margin:12px 0 0"><button class="btn outline" onclick="openForgotPassword()">نسيت كلمة المرور؟</button></p>
 <div id="googleButton" style="display:flex;justify-content:center;margin-top:14px"></div>
 <p id="verifyHint" class="muted" style="display:none;text-align:center">بعد إنشاء الحساب سنرسل رابط التفعيل إلى بريدك.</p>
 <p style="text-align:center;margin-top:15px"><button class="btn outline" id="authSwitch" onclick="toggleAuth()">إنشاء حساب جديد</button></p>
@@ -428,6 +429,18 @@ function renderAuthMode(){
  document.getElementById("authSwitch").textContent=registering?"لدي حساب بالفعل":"إنشاء حساب جديد";
 }
 function toggleAuth(){authMode=authMode==="login"?"register":"login";renderAuthMode();}
+function openForgotPassword(){
+ const email=prompt("أدخل البريد الإلكتروني المسجل في حسابك");
+ if(!email)return;
+ api("/api/auth/forgot-password",{method:"POST",body:JSON.stringify({email})})
+  .then(d=>showToast(d.message)).catch(e=>showToast(e.message));
+}
+async function resetPasswordFromLink(token){
+ const password=prompt("أدخل كلمة المرور الجديدة (6 أحرف على الأقل)");
+ if(!password)return;
+ try{const d=await api("/api/auth/reset-password",{method:"POST",body:JSON.stringify({token,password})});history.replaceState({},"",location.pathname);showToast(d.message);openAuth()}
+ catch(e){showToast(e.message)}
+}
 function togglePassword(){
  const input=document.getElementById("authPassword"),button=document.getElementById("passwordToggle"),show=input.type==="password";
  input.type=show?"text":"password";
@@ -516,6 +529,8 @@ async function changeStatus(no,status){
 }
 loadAccount();
 initGoogleAuth();
+const resetToken=new URLSearchParams(location.search).get("reset_token");
+if(resetToken)setTimeout(()=>resetPasswordFromLink(resetToken),300);
 const verificationState=new URLSearchParams(location.search).get("email_verified");
 if(verificationState==="1"){
  setTimeout(()=>{openAuth();showToast("تم تأكيد البريد الإلكتروني، يمكنك تسجيل الدخول الآن")},400);
