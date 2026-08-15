@@ -5,6 +5,7 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const Database = require("better-sqlite3");
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { OAuth2Client } = require("google-auth-library");
@@ -794,6 +795,36 @@ app.get("/api/admin/orders", (req, res) => {
       (SELECT json_group_array(json_object('name',i.name,'category',i.category,'qty',i.qty,'unit_price',i.unit_price,'currency',i.currency)) FROM order_items i WHERE i.order_id=o.id) items_json
       FROM orders o ORDER BY o.id DESC`).all()
   });
+});
+
+app.get("/api/admin/backup", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const backupPath = path.join(
+    "/tmp", "alrifai-backup-" + Date.now() + "-" + crypto.randomBytes(4).toString("hex") + ".db"
+  );
+  try {
+    await db.backup(backupPath);
+    const name = "alrifai-backup-" + new Date().toISOString().slice(0, 10) + ".db";
+    res.download(backupPath, name, () => fs.unlink(backupPath, () => {}));
+  } catch (error) {
+    fs.unlink(backupPath, () => {});
+    console.error("database backup error", error);
+    if (!res.headersSent) res.status(500).json({ error: "تعذر إنشاء النسخة الاحتياطية" });
+  }
+});
+
+app.get("/api/admin/orders.csv", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const rows = db.prepare("SELECT order_no,name,phone,product,city,qty,status,details,created_at FROM orders ORDER BY id DESC").all();
+  const quote = value => '"' + String(value ?? "").replaceAll('"', '""') + '"';
+  const labels = ["تم الاستلام", "قيد التأكيد", "تم التجهيز", "تم الشحن"];
+  const csv = [
+    ["رقم الطلب","العميل","الجوال","المنتج","المدينة","الكمية","الحالة","التفاصيل","التاريخ"].map(quote).join(","),
+    ...rows.map(row => [row.order_no,row.name,row.phone,row.product,row.city,row.qty,labels[row.status] || row.status,row.details,row.created_at].map(quote).join(","))
+  ].join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", "attachment; filename=alrifai-orders.csv");
+  res.send("\ufeff" + csv);
 });
 
 app.get(["/admin", "/admin/"], (req, res) =>
