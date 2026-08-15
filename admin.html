@@ -19,8 +19,8 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.wrap{m
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{border:1px solid var(--line);border-right:4px solid var(--gold);border-radius:14px;padding:14px;min-width:0}.card-head,.meta{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}.card h4{margin:0}.card p{color:var(--muted);margin:9px 0}.tag{background:var(--cream);color:#7d5816;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}.track{font-family:monospace;direction:ltr;color:var(--navy);font-weight:900}.phone{direction:ltr;display:inline-block;color:#8a621c;font-weight:800}.meta{color:var(--muted);font-size:13px;margin-top:10px}.status{max-width:190px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff}
 .table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:700px}.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:right}.table th{background:var(--cream);color:var(--navy)}
 .empty{padding:25px;text-align:center;color:var(--muted);background:#fafafa;border-radius:12px}.loading{opacity:.65}
-.login-screen{min-height:100vh;background:linear-gradient(145deg,var(--navy),#07121e);display:grid;place-items:center;padding:20px}.login-box{width:min(440px,100%);background:#fff;border-radius:24px;padding:27px;box-shadow:0 25px 80px #0005}.login-box h1{margin:10px 0 5px;color:var(--navy)}.login-box p{color:var(--muted)}.field{margin:14px 0}.field label{display:block;font-weight:800;margin-bottom:7px}.field input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px}.error{color:var(--danger);background:#fff0ee;padding:10px;border-radius:9px;margin-top:12px}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;z-index:50;display:none}.filters{display:flex;gap:8px;flex-wrap:wrap}.filters input,.filters select{min-width:180px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
-@media(max-width:760px){.wrap{padding:13px}.brand small{display:none}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.hero{padding:19px}.panel{padding:14px}.stat b{font-size:26px}.topbar .btn{padding:9px 11px}.brand h1{font-size:16px}}
+.login-screen{min-height:100vh;background:linear-gradient(145deg,var(--navy),#07121e);display:grid;place-items:center;padding:20px}.login-box{width:min(440px,100%);background:#fff;border-radius:24px;padding:27px;box-shadow:0 25px 80px #0005}.login-box h1{margin:10px 0 5px;color:var(--navy)}.login-box p{color:var(--muted)}.field{margin:14px 0}.field label{display:block;font-weight:800;margin-bottom:7px}.field input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px}.password-field{position:relative}.password-field input{padding-left:54px}.password-toggle{position:absolute;left:7px;bottom:6px;width:42px;height:40px;border:0;background:transparent;cursor:pointer}.error{color:var(--danger);background:#fff0ee;padding:10px;border-radius:9px;margin-top:12px}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;z-index:50;display:none}.filters{display:flex;gap:8px;flex-wrap:wrap}.filters input,.filters select{min-width:180px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px}.form-grid input,.form-grid select,.form-grid textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff}.form-grid textarea{grid-column:1/-1}.subpanel{background:#faf8f4;border:1px solid var(--line);padding:14px;border-radius:14px;margin-bottom:14px}.subpanel h4{margin:0 0 11px}
+@media(max-width:760px){.wrap{padding:13px}.brand small{display:none}.stats{grid-template-columns:repeat(2,1fr)}.grid,.form-grid{grid-template-columns:1fr}.form-grid textarea{grid-column:auto}.hero{padding:19px}.panel{padding:14px}.stat b{font-size:26px}.topbar .btn{padding:9px 11px}.brand h1{font-size:16px}}
 </style>
 </head>
 <body>
@@ -30,7 +30,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.wrap{m
     <h1>دخول إدارة الرفاعي</h1>
     <p>هذه الصفحة مخصصة للمدير فقط.</p>
     <div class="field"><label for="phone">رقم جوال المدير</label><input id="phone" inputmode="tel" autocomplete="username" required></div>
-    <div class="field"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required></div>
+    <div class="field password-field"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" onclick="togglePassword()">👁</button></div>
     <button class="btn btn-gold" style="width:100%" type="submit">دخول لوحة الإدارة</button>
     <div id="loginError" class="error hidden"></div>
   </form>
@@ -49,8 +49,8 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.wrap{m
   <section id="customers" class="panel"><div class="panel-head"><h3>👥 جميع العملاء</h3><button class="btn btn-outline" onclick="loadAll()">تحديث</button></div><div id="customersList"></div></section>
   <section id="orders" class="panel"><div class="panel-head"><h3>📦 جميع الطلبات وأرقام التتبع</h3><div class="filters"><input id="orderSearch" type="search" placeholder="بحث بالاسم أو الجوال أو رقم التتبع"><select id="orderStatus"><option value="">كل الحالات</option><option value="0">تم الاستلام</option><option value="1">قيد التأكيد</option><option value="2">تم التجهيز</option><option value="3">تم الشحن</option></select></div></div><div id="ordersList"></div></section>
   <section id="partners" class="panel"><div class="panel-head"><h3>🤝 طلبات الشراكة</h3></div><div id="partnersList"></div></section>
-  <section id="products" class="panel"><div class="panel-head"><h3>🛒 المنتجات والشركاء الموردون</h3></div><div id="productsList"></div></section>
-  <section id="quotes" class="panel"><div class="panel-head"><h3>🧾 عروض الأسعار</h3></div><div id="quotesList"></div></section>
+  <section id="products" class="panel"><div class="panel-head"><h3>🛒 المنتجات والشركاء الموردون</h3></div><div class="subpanel"><h4>إضافة مورد</h4><form id="supplierForm" class="form-grid"><input id="supplierName" placeholder="اسم المورد" required><input id="supplierPhone" placeholder="الجوال"><input id="supplierCity" placeholder="المدينة"><button class="btn btn-gold">إضافة المورد</button></form></div><div class="subpanel"><h4>إضافة منتج للمتجر</h4><form id="productForm" class="form-grid"><input id="productName" placeholder="اسم المنتج" required><select id="productCategory"><option>أجهزة منزلية</option><option>تكييف</option><option>أثاث</option><option>إلكترونيات</option></select><select id="productSupplier"><option value="">بدون مورد</option></select><input id="productPrice" type="number" min="0" step="0.01" placeholder="السعر بالريال"><textarea id="productDescription" placeholder="وصف المنتج"></textarea><button class="btn btn-gold">نشر المنتج</button></form></div><div id="productsList"></div></section>
+  <section id="quotes" class="panel"><div class="panel-head"><h3>🧾 عروض الأسعار</h3></div><div class="subpanel"><h4>إنشاء عرض سعر لطلب</h4><form id="quoteForm" class="form-grid"><select id="quoteOrder" required><option value="">اختر الطلب</option></select><input id="quoteProductTotal" type="number" min="0" placeholder="قيمة المنتجات"><input id="quoteShipping" type="number" min="0" placeholder="تكلفة الشحن"><input id="quoteService" type="number" min="0" placeholder="رسوم الخدمة"><textarea id="quoteNotes" placeholder="ملاحظات العرض"></textarea><button class="btn btn-gold">إنشاء العرض</button></form></div><div id="quotesList"></div></section>
   <section id="payments" class="panel"><div class="panel-head"><h3>💳 عمليات الدفع</h3></div><div id="paymentsList"></div></section>
 </main>
 </div>
@@ -59,6 +59,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.wrap{m
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let allOrders=[];
+function togglePassword(){const input=$("password");input.type=input.type==="password"?"text":"password"}
 async function api(path,options={}){
  const r=await fetch(path,{headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
  const data=await r.json().catch(()=>({}));
@@ -88,12 +89,12 @@ async function logout(){await api("/api/auth/logout",{method:"POST"});location.r
 async function loadAll(){
  $("dashboard").classList.add("loading");
  try{
-  const [s,u,o,p,c,q,pay]=await Promise.all([
+  const [s,u,o,p,c,q,pay,sup]=await Promise.all([
    api("/api/admin/stats"),api("/api/admin/users"),api("/api/admin/orders"),
-   api("/api/admin/partners"),api("/api/catalog"),api("/api/admin/quotes"),api("/api/admin/payments")
+   api("/api/admin/partners"),api("/api/catalog"),api("/api/admin/quotes"),api("/api/admin/payments"),api("/api/admin/suppliers")
   ]);
   allOrders=o.orders;renderStats(s.stats);renderCustomers(u.users);filterOrders();renderPartners(p.partners);
-  renderProducts(c.products);renderQuotes(q.quotes);renderPayments(pay.payments);
+  renderProducts(c.products);renderQuotes(q.quotes);renderPayments(pay.payments);fillOperations(o.orders,sup.suppliers);
  }catch(e){toast(e.message)}finally{$("dashboard").classList.remove("loading")}
 }
 function renderStats(s){
@@ -122,6 +123,13 @@ function renderPayments(rows){
  const states=["pending","paid","failed","refunded"];
  $("paymentsList").innerHTML=table(["الدفع","رقم التتبع","العميل","المبلغ","الطريقة","الحالة"],rows.map(x=>`<tr><td>${esc(x.payment_no)}</td><td class="track">${esc(x.order_no)}</td><td>${esc(x.customer_name)}</td><td>${Number(x.amount).toLocaleString("ar-SA")} SAR</td><td>${esc(x.method)}</td><td><select class="status" data-payment="${esc(x.payment_no)}" onchange="changePayment(this)">${states.map(s=>`<option ${s===x.status?"selected":""}>${s}</option>`).join("")}</select></td></tr>`));
 }
+function fillOperations(orders,suppliers){
+ $("productSupplier").innerHTML='<option value="">بدون مورد</option>'+suppliers.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
+ $("quoteOrder").innerHTML='<option value="">اختر الطلب</option>'+orders.map(x=>`<option value="${x.id}">${esc(x.order_no)} — ${esc(x.name)} — ${esc(x.product)}</option>`).join("");
+}
+$("supplierForm").addEventListener("submit",async e=>{e.preventDefault();try{await api("/api/admin/suppliers",{method:"POST",body:JSON.stringify({name:$("supplierName").value.trim(),phone:$("supplierPhone").value.trim(),city:$("supplierCity").value.trim()})});e.target.reset();toast("تمت إضافة المورد");loadAll()}catch(err){toast(err.message)}});
+$("productForm").addEventListener("submit",async e=>{e.preventDefault();try{await api("/api/admin/products",{method:"POST",body:JSON.stringify({name:$("productName").value.trim(),category:$("productCategory").value,supplier_id:$("productSupplier").value||null,price:Number($("productPrice").value)||0,description:$("productDescription").value.trim()})});e.target.reset();toast("تم نشر المنتج في المتجر");loadAll()}catch(err){toast(err.message)}});
+$("quoteForm").addEventListener("submit",async e=>{e.preventDefault();try{const d=await api("/api/admin/quotes",{method:"POST",body:JSON.stringify({order_id:Number($("quoteOrder").value),product_total:Number($("quoteProductTotal").value)||0,shipping_total:Number($("quoteShipping").value)||0,service_fee:Number($("quoteService").value)||0,notes:$("quoteNotes").value.trim()})});e.target.reset();toast("تم إنشاء العرض "+d.quoteNo);loadAll()}catch(err){toast(err.message)}});
 async function changePayment(el){try{await api("/api/admin/payments/"+encodeURIComponent(el.dataset.payment)+"/status",{method:"PATCH",body:JSON.stringify({status:el.value})});toast("تم تحديث عملية الدفع");loadAll()}catch(e){toast(e.message)}}
 boot();
 </script>
