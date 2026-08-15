@@ -35,3 +35,20 @@ npm start
 - ربط بوابة دفع فعلية وحسابات التاجر لـ Tamara/Tabby/البطاقات.
 - ضبط Webhooks للتحقق من نجاح الدفع من مزود الدفع، وليس من المتصفح.
 - إضافة سياسة الخصوصية والشروط والاسترجاع.
+# ربط WhatsApp Cloud API
+
+أضف المتغيرات التالية في إعدادات Render ولا تضع القيم السرية داخل المستودع:
+
+- `WHATSAPP_ACCESS_TOKEN`: رمز وصول دائم من Meta.
+- `WHATSAPP_PHONE_NUMBER_ID`: معرّف رقم واتساب التجاري.
+- `WHATSAPP_VERIFY_TOKEN`: قيمة سرية تختارها وتستخدمها نفسها عند إعداد Webhook في Meta.
+- `WHATSAPP_APP_SECRET`: App Secret للتحقق من توقيع رسائل Webhook.
+- `WHATSAPP_STATUS_TEMPLATE`: اسم قالب Meta المعتمد لإشعارات حالة الطلب.
+- `WHATSAPP_TEMPLATE_LANGUAGE`: لغة القالب، والقيمة الافتراضية `ar`.
+- `WHATSAPP_API_VERSION`: إصدار Graph API، والقيمة الافتراضية `v23.0`.
+
+رابط Webhook في Meta:
+
+`https://alrifai-shipping-platform.onrender.com/api/whatsapp/webhook`
+
+اشترك في حقل `messages`. يجب أن يحتوي قالب الحالة على ثلاثة متغيرات بهذا الترتيب: اسم العميل، رقم الطلب، حالة الطلب.

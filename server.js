@@ -191,6 +191,19 @@ db.exec(`
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
   );
+  CREATE TABLE IF NOT EXISTS whatsapp_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    wamid TEXT UNIQUE,
+    direction TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    customer_name TEXT,
+    body TEXT,
+    message_type TEXT NOT NULL DEFAULT 'text',
+    order_no TEXT,
+    status TEXT NOT NULL DEFAULT 'received',
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 app.disable("x-powered-by");
@@ -202,7 +215,7 @@ app.use(rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 }));
-app.use(express.json({ limit: "200kb" }));
+app.use(express.json({ limit: "200kb", verify: (req, res, buffer) => { req.rawBody = buffer; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/") || req.path === "/admin" || req.path === "/admin/") {
@@ -298,6 +311,63 @@ async function sendStatusEmail(email, customerName, title, message) {
   });
 }
 
+function whatsappConfig() {
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN || "";
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || "";
+  return {
+    enabled: !!(accessToken && phoneNumberId && process.env.WHATSAPP_VERIFY_TOKEN),
+    accessToken,
+    phoneNumberId,
+    verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || "",
+    apiVersion: process.env.WHATSAPP_API_VERSION || "v23.0",
+    statusTemplate: process.env.WHATSAPP_STATUS_TEMPLATE || "",
+    templateLanguage: process.env.WHATSAPP_TEMPLATE_LANGUAGE || "ar"
+  };
+}
+
+function normalizeWhatsAppPhone(value) {
+  let phone = String(value || "").replace(/\D/g, "");
+  if (phone.startsWith("00")) phone = phone.slice(2);
+  if (phone.startsWith("0")) phone = "966" + phone.slice(1);
+  return phone;
+}
+
+async function sendWhatsApp(payload, meta = {}) {
+  const config = whatsappConfig();
+  const phone = normalizeWhatsAppPhone(payload.to);
+  if (!config.enabled) return { ok: false, skipped: true, error: "WhatsApp غير مفعّل" };
+  const response = await fetch(`https://graph.facebook.com/${config.apiVersion}/${config.phoneNumberId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${config.accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", ...payload, to: phone })
+  });
+  const data = await response.json().catch(() => ({}));
+  const wamid = data.messages?.[0]?.id || null;
+  const error = response.ok ? null : data.error?.message || "تعذر إرسال رسالة واتساب";
+  db.prepare(`INSERT INTO whatsapp_messages(wamid,direction,phone,customer_name,body,message_type,order_no,status,error)
+    VALUES(?,?,?,?,?,?,?,?,?)`).run(wamid, "outbound", phone, meta.customerName || "", meta.body || "",
+      payload.type || "text", meta.orderNo || null, response.ok ? "sent" : "failed", error);
+  if (!response.ok) throw new Error(error);
+  return { ok: true, wamid };
+}
+
+async function sendWhatsAppOrderStatus(order, status) {
+  const labels = ["تم استلام طلبك", "طلبك قيد التأكيد", "تم تجهيز طلبك", "تم شحن طلبك", "تم إلغاء الطلب"];
+  const config = whatsappConfig();
+  const body = `مرحباً ${order.name}، تم تحديث الطلب ${order.order_no}: ${labels[status]}. تابع طلبك من المنصة.`;
+  if (config.statusTemplate) {
+    return sendWhatsApp({
+      to: order.phone,
+      type: "template",
+      template: { name: config.statusTemplate, language: { code: config.templateLanguage }, components: [{
+        type: "body", parameters: [order.name, order.order_no, labels[status]].map(text => ({ type: "text", text }))
+      }] }
+    }, { customerName: order.name, body, orderNo: order.order_no });
+  }
+  return sendWhatsApp({ to: order.phone, type: "text", text: { preview_url: false, body } },
+    { customerName: order.name, body, orderNo: order.order_no });
+}
+
 function publicUser(user) {
   return {
     id: user.id,
@@ -353,6 +423,41 @@ app.get("/api/me", (req, res) => {
 
 app.get("/api/auth/config", (req, res) => {
   res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || "" });
+});
+
+app.get("/api/whatsapp/webhook", (req, res) => {
+  const config = whatsappConfig();
+  if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === config.verifyToken) {
+    return res.status(200).send(req.query["hub.challenge"] || "");
+  }
+  res.sendStatus(403);
+});
+
+app.post("/api/whatsapp/webhook", (req, res) => {
+  const appSecret = process.env.WHATSAPP_APP_SECRET || "";
+  const signature = req.get("x-hub-signature-256") || "";
+  if (appSecret) {
+    const expected = "sha256=" + crypto.createHmac("sha256", appSecret).update(req.rawBody || "").digest("hex");
+    const valid = signature.length === expected.length && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    if (!valid) return res.sendStatus(401);
+  }
+  res.sendStatus(200);
+  try {
+    for (const entry of req.body.entry || []) for (const change of entry.changes || []) {
+      const value = change.value || {};
+      const names = new Map((value.contacts || []).map(contact => [contact.wa_id, contact.profile?.name || ""]));
+      for (const message of value.messages || []) {
+        const body = message.text?.body || message.button?.text || message.interactive?.button_reply?.title || `[${message.type || "message"}]`;
+        const orderNo = body.match(/RIF-[A-Z0-9-]+/i)?.[0]?.toUpperCase() || null;
+        db.prepare(`INSERT OR IGNORE INTO whatsapp_messages(wamid,direction,phone,customer_name,body,message_type,order_no,status)
+          VALUES(?,?,?,?,?,?,?,'received')`).run(message.id, "inbound", message.from, names.get(message.from) || "", body, message.type || "text", orderNo);
+      }
+      for (const receipt of value.statuses || []) {
+        db.prepare("UPDATE whatsapp_messages SET status=?,error=? WHERE wamid=?")
+          .run(receipt.status || "unknown", receipt.errors?.[0]?.title || null, receipt.id);
+      }
+    }
+  } catch (error) { console.error("WhatsApp webhook error", error); }
 });
 
 app.post("/api/auth/register", async (req, res) => {
@@ -694,7 +799,7 @@ app.patch("/api/admin/orders/:orderNo/status", (req, res) => {
   if (!Number.isInteger(status) || status < 0 || status > 4) {
     return res.status(400).json({ error: "حالة الطلب غير صحيحة" });
   }
-  const order = db.prepare(`SELECT o.id,o.user_id,o.status,o.name,u.email
+  const order = db.prepare(`SELECT o.id,o.order_no,o.user_id,o.status,o.name,o.phone,u.email
     FROM orders o LEFT JOIN users u ON u.id=o.user_id WHERE o.order_no=?`).get(req.params.orderNo);
   if (!order) return res.status(404).json({ error: "الطلب غير موجود" });
   if (order.status === 4 && status !== 4) return res.status(409).json({ error: "لا يمكن إعادة فتح الطلب الملغي" });
@@ -705,15 +810,37 @@ app.patch("/api/admin/orders/:orderNo/status", (req, res) => {
     }
     db.prepare("UPDATE orders SET status=? WHERE id=?").run(status, order.id);
   })();
-  if (order.user_id && order.status !== status) {
+  if (order.status !== status) {
     const labels = ["تم استلام طلبك", "طلبك قيد التأكيد", "تم تجهيز طلبك", "تم شحن طلبك", "تم إلغاء الطلب"];
     const message = "تم تحديث حالة الطلب " + req.params.orderNo + " إلى: " + labels[status];
-    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
-      .run(order.user_id, order.id, labels[status], message);
-    sendStatusEmail(order.email, order.name, labels[status], message)
-      .catch(error => console.error("order status email error", error));
+    if (order.user_id) {
+      db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
+        .run(order.user_id, order.id, labels[status], message);
+      sendStatusEmail(order.email, order.name, labels[status], message)
+        .catch(error => console.error("order status email error", error));
+    }
+    sendWhatsAppOrderStatus(order, status)
+      .catch(error => console.error("order status WhatsApp error", error));
   }
   res.json({ ok: true });
+});
+
+app.get("/api/admin/whatsapp", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const config = whatsappConfig();
+  const messages = db.prepare("SELECT * FROM whatsapp_messages ORDER BY id DESC LIMIT 200").all();
+  res.json({ ok: true, enabled: config.enabled, phoneNumberId: config.phoneNumberId ? "••••" + config.phoneNumberId.slice(-4) : "", messages });
+});
+
+app.post("/api/admin/whatsapp/reply", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const phone = normalizeWhatsAppPhone(req.body.phone);
+  const body = String(req.body.message || "").trim().slice(0, 4000);
+  if (!phone || !body) return res.status(400).json({ error: "الجوال والرسالة مطلوبان" });
+  try {
+    const result = await sendWhatsApp({ to: phone, type: "text", text: { preview_url: false, body } }, { body });
+    res.json(result);
+  } catch (error) { res.status(502).json({ error: error.message }); }
 });
 
 app.get("/api/admin/partners", (req, res) => {
