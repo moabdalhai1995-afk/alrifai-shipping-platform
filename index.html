@@ -151,6 +151,8 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="field"><label>الاسم</label><input id="profileName"></div>
 <div class="field"><label>الجوال</label><input id="profilePhone" disabled></div>
 <div class="field"><label>البريد الإلكتروني</label><input id="profileEmail" disabled></div>
+<div class="field"><label>مدينة الوصول الافتراضية</label><select id="profileCity"><option>الخرطوم</option><option>الجزيرة</option><option>عطبرة</option><option>شندي</option></select></div>
+<div class="field"><label>عنوان التوصيل</label><textarea id="profileAddress" rows="3" placeholder="الحي، الشارع، أقرب معلم"></textarea></div>
 <button class="btn primary" onclick="saveProfile()">حفظ التعديل</button>
 </div>
 <div class="p2-panel">
@@ -240,6 +242,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="modal" id="orderModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>طلب شراء وشحن</h2>
 <div class="field"><label>الاسم *</label><input id="oName"></div><div class="field"><label>رقم الجوال / واتساب *</label><input id="oPhone"></div>
 <div class="field"><label>المنتج *</label><input id="oProduct"></div><div class="field"><label>مدينة الوصول *</label><select id="oCity"><option>الخرطوم</option><option>الجزيرة</option><option>عطبرة</option><option>شندي</option></select></div>
+<div class="field"><label>عنوان التوصيل</label><textarea id="oAddress" rows="2" placeholder="الحي، الشارع، أقرب معلم"></textarea></div>
 <div class="field"><label>الكمية</label><input id="oQty" type="number" min="1" value="1"></div><div class="field"><label>التفاصيل</label><textarea id="oDetails" rows="3"></textarea></div>
 <button class="btn primary" style="width:100%" onclick="submitOrder()">حفظ وإرسال الطلب</button></div></div>
 
@@ -300,6 +303,7 @@ const products=[
 let cart=JSON.parse(localStorage.getItem("rifai_cart")||"[]");
 let currentProducts=products;
 let favoriteIds=new Set();
+let savedProfile=null;
 
 async function renderProducts(){
  const q=(document.getElementById("search").value||"").trim().toLowerCase(), c=document.getElementById("category").value;
@@ -328,8 +332,9 @@ function openCart(){
  document.getElementById("cartModal").classList.add("show");
 }
 function removeCart(i){cart.splice(i,1);saveCart();openCart()}
-function orderCart(){if(!cart.length)return showToast("السلة فارغة");const method=document.querySelector('input[name="cartPayMethod"]:checked');document.getElementById("oProduct").value=cart.map(x=>x.name).join("، ");document.getElementById("oDetails").value="وسيلة الدفع المفضلة: "+({card:"البطاقة البنكية",tamara:"تمارا",tabby:"تابي",bank_transfer:"تحويل بنكي"}[method.value]||method.value);closeModals();document.getElementById("orderModal").classList.add("show")}
-function openOrder(product=""){document.getElementById("oProduct").value=product;document.getElementById("orderModal").classList.add("show")}
+function fillSavedDelivery(){if(!savedProfile)return;oName.value=savedProfile.name||oName.value;oPhone.value=savedProfile.phone||oPhone.value;oCity.value=savedProfile.delivery_city||oCity.value;oAddress.value=savedProfile.delivery_address||oAddress.value}
+function orderCart(){if(!cart.length)return showToast("السلة فارغة");const method=document.querySelector('input[name="cartPayMethod"]:checked');document.getElementById("oProduct").value=cart.map(x=>x.name).join("، ");document.getElementById("oDetails").value="وسيلة الدفع المفضلة: "+({card:"البطاقة البنكية",tamara:"تمارا",tabby:"تابي",bank_transfer:"تحويل بنكي"}[method.value]||method.value);fillSavedDelivery();closeModals();document.getElementById("orderModal").classList.add("show")}
+function openOrder(product=""){document.getElementById("oProduct").value=product;fillSavedDelivery();document.getElementById("orderModal").classList.add("show")}
 function goToTracking(){document.getElementById("track").scrollIntoView({behavior:"smooth"});setTimeout(()=>document.getElementById("trackId").focus(),500)}
 function openPartner(){document.getElementById("partnerModal").classList.add("show")}
 function closeModals(){document.querySelectorAll(".modal").forEach(x=>x.classList.remove("show"))}
@@ -380,7 +385,7 @@ async function submitOrder(){
     const grouped=cart.reduce((map,item)=>{const key=String(item.id);if(map[key])map[key].qty++;else map[key]={...item,qty:1,unitPrice:Number(String(item.price||"").replace(/[^0-9.]/g,""))||0,currency:"SAR"};return map},{});
     const d=await api("/api/orders",{method:"POST",body:JSON.stringify({
       name:oName.value.trim(), phone:oPhone.value.trim(), product:oProduct.value.trim(),
-      city:oCity.value, qty:Number(oQty.value)||1, details:oDetails.value.trim(),items:Object.values(grouped)
+      city:oCity.value, qty:Number(oQty.value)||1, details:(oAddress.value.trim()?"عنوان التوصيل: "+oAddress.value.trim()+"\n":"")+oDetails.value.trim(),items:Object.values(grouped)
     })});
     cart=[];saveCart();closeModals(); showToast("تم إنشاء الطلب "+d.orderNo);
     document.getElementById("trackId").value=d.orderNo; trackOrder();
@@ -502,10 +507,10 @@ async function loadAccount(){
  }catch(e){}
 }
 async function loadProfile(){
- const d=await api("/api/profile");profileName.value=d.user.name;profilePhone.value=d.user.phone;profileEmail.value=d.user.email||"";
+ const d=await api("/api/profile");savedProfile=d.user;profileName.value=d.user.name;profilePhone.value=d.user.phone;profileEmail.value=d.user.email||"";profileCity.value=d.user.delivery_city||"الخرطوم";profileAddress.value=d.user.delivery_address||"";
 }
 async function saveProfile(){
- try{await api("/api/profile",{method:"PUT",body:JSON.stringify({name:profileName.value})});showToast("تم حفظ البيانات")}
+ try{await api("/api/profile",{method:"PUT",body:JSON.stringify({name:profileName.value,delivery_city:profileCity.value,delivery_address:profileAddress.value})});savedProfile={...(savedProfile||{}),name:profileName.value,delivery_city:profileCity.value,delivery_address:profileAddress.value};showToast("تم حفظ البيانات والعنوان")}
  catch(e){showToast(e.message)}
 }
 async function loadMyOrders(){

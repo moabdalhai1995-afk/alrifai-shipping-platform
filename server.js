@@ -142,6 +142,8 @@ if (!userColumns.has("email_verified")) {
   db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
 }
 if (!userColumns.has("google_sub")) db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+if (!userColumns.has("delivery_city")) db.exec("ALTER TABLE users ADD COLUMN delivery_city TEXT");
+if (!userColumns.has("delivery_address")) db.exec("ALTER TABLE users ADD COLUMN delivery_address TEXT");
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
     ON users(email) WHERE email IS NOT NULL;
@@ -328,7 +330,7 @@ app.get("/api/me", (req, res) => {
   }
 
   const u = db.prepare(
-    "SELECT id,name,phone,email,email_verified,role,created_at FROM users WHERE id=?"
+    "SELECT id,name,phone,email,email_verified,delivery_city,delivery_address,role,created_at FROM users WHERE id=?"
   ).get(req.session.user.id);
   res.json({ authenticated: !!u, user: u || null });
 });
@@ -595,9 +597,10 @@ app.put("/api/profile", (req, res) => {
   if (req.session.user.id === 0) {
     return res.status(400).json({ error: "بيانات المدير تُدار من متغيرات Render" });
   }
-  const { name } = req.body;
+  const { name, delivery_city = "", delivery_address = "" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "الاسم مطلوب" });
-  db.prepare("UPDATE users SET name=? WHERE id=?").run(name.trim(), req.session.user.id);
+  db.prepare("UPDATE users SET name=?,delivery_city=?,delivery_address=? WHERE id=?")
+    .run(name.trim(), String(delivery_city).trim().slice(0, 100), String(delivery_address).trim().slice(0, 500), req.session.user.id);
   res.json({ ok: true });
 });
 
