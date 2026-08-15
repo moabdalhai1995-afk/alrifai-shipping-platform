@@ -709,6 +709,21 @@ app.get("/api/my-quotes", (req, res) => {
   res.json({ ok: true, quotes: rows });
 });
 
+app.get("/api/quotes/:quoteNo/invoice", (req, res) => {
+  if (!req.session.user) return res.status(401).send("يجب تسجيل الدخول");
+  const q = db.prepare(`SELECT q.*,o.order_no,o.product,o.city,o.name customer_name,o.phone,o.user_id
+    FROM quotes q JOIN orders o ON o.id=q.order_id WHERE q.quote_no=?`).get(req.params.quoteNo);
+  if (!q || (req.session.user.role !== "admin" && q.user_id !== req.session.user.id)) {
+    return res.status(404).send("عرض السعر غير موجود");
+  }
+  const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[char]);
+  const labels = { pending:"ساري", accepted:"معتمد", cancelled:"ملغي", expired:"منتهي" };
+  const money = value => Number(value || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2 });
+  res.type("html").send(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safe(q.quote_no)}</title><style>body{font-family:Tahoma,Arial,sans-serif;color:#17212b;margin:0;background:#f5f2ec}.sheet{max-width:760px;margin:28px auto;background:#fff;padding:38px;border:1px solid #ddd;border-radius:14px}.head{display:flex;justify-content:space-between;gap:20px;border-bottom:3px solid #b8872d;padding-bottom:18px}.brand{font-size:23px;font-weight:900}.gold{color:#9a6e1f}.meta{line-height:1.9}.table{width:100%;border-collapse:collapse;margin:28px 0}.table th,.table td{padding:13px;border-bottom:1px solid #ddd;text-align:right}.total{font-size:22px;font-weight:900}.actions{text-align:center;margin:20px}.actions button{padding:12px 24px;border:0;border-radius:8px;background:#b8872d;color:#fff;font-weight:800}@media print{body{background:#fff}.sheet{border:0;margin:0;max-width:none}.actions{display:none}}</style></head><body><div class="actions"><button onclick="print()">طباعة / حفظ PDF</button></div><main class="sheet"><div class="head"><div><div class="brand">الرفاعي للشحن الدولي</div><div class="gold">عرض سعر شراء وشحن</div></div><div class="meta">رقم العرض: <b>${safe(q.quote_no)}</b><br>رقم الطلب: <b>${safe(q.order_no)}</b><br>الحالة: ${safe(labels[q.status] || q.status)}</div></div><div class="meta"><h3>بيانات العميل</h3>الاسم: ${safe(q.customer_name)}<br>الجوال: ${safe(q.phone)}<br>الوجهة: ${safe(q.city)}<br>المنتج: ${safe(q.product)}</div><table class="table"><tr><th>البند</th><th>القيمة</th></tr><tr><td>قيمة المنتجات</td><td>${money(q.product_total)} ريال</td></tr><tr><td>تكلفة الشحن</td><td>${money(q.shipping_total)} ريال</td></tr><tr><td>رسوم الخدمة</td><td>${money(q.service_fee)} ريال</td></tr><tr class="total"><td>الإجمالي</td><td>${money(q.total)} ريال</td></tr></table>${q.notes?`<p><b>ملاحظات:</b> ${safe(q.notes)}</p>`:""}<p>تاريخ الإصدار: ${safe(q.created_at)}${q.expires_at?`<br>صالح حتى: ${safe(q.expires_at)}`:""}</p></main></body></html>`);
+});
+
 app.post("/api/quotes/:quoteNo/accept", (req, res) => {
   if (!req.session.user || req.session.user.id === 0) {
     return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
