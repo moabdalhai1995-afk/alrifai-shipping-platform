@@ -369,11 +369,12 @@ async function api(path, options={}) {
 async function submitOrder(){
   if(!oName.value.trim()||!oPhone.value.trim()||!oProduct.value.trim()) return showToast("يرجى تعبئة الاسم والجوال والمنتج");
   try {
+    const grouped=cart.reduce((map,item)=>{const key=String(item.id);if(map[key])map[key].qty++;else map[key]={...item,qty:1,unitPrice:Number(String(item.price||"").replace(/[^0-9.]/g,""))||0,currency:"SAR"};return map},{});
     const d=await api("/api/orders",{method:"POST",body:JSON.stringify({
       name:oName.value.trim(), phone:oPhone.value.trim(), product:oProduct.value.trim(),
-      city:oCity.value, qty:Number(oQty.value)||1, details:oDetails.value.trim()
+      city:oCity.value, qty:Number(oQty.value)||1, details:oDetails.value.trim(),items:Object.values(grouped)
     })});
-    closeModals(); showToast("تم إنشاء الطلب "+d.orderNo);
+    cart=[];saveCart();closeModals(); showToast("تم إنشاء الطلب "+d.orderNo);
     document.getElementById("trackId").value=d.orderNo; trackOrder();
   } catch(e) { showToast(e.message); }
 }

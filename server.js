@@ -50,6 +50,17 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(order_id) REFERENCES orders(id)
 );
+CREATE TABLE IF NOT EXISTS order_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER NOT NULL,
+  product_id INTEGER,
+  name TEXT NOT NULL,
+  category TEXT,
+  unit_price REAL NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'SAR',
+  qty INTEGER NOT NULL DEFAULT 1,
+  FOREIGN KEY(order_id) REFERENCES orders(id)
+);
 CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
@@ -410,17 +421,29 @@ app.post("/api/auth/logout", (req, res) =>
 );
 
 app.post("/api/orders", (req, res) => {
-  const { name, phone, product, city, qty = 1, details = "" } = req.body;
+  const { name, phone, product, city, qty = 1, details = "", items = [] } = req.body;
   if (!name || !phone || !product || !city) {
     return res.status(400).json({ error: "البيانات الأساسية للطلب مطلوبة" });
   }
   const no = orderNo();
   const userId = req.session.user?.id > 0 ? req.session.user.id : null;
-  const info = db.prepare(`INSERT INTO orders(order_no,user_id,name,phone,product,city,qty,details)
-    VALUES(?,?,?,?,?,?,?,?)`).run(
-      no, userId, name, phone, product, city,
-      Math.max(1, Number(qty) || 1), details
+  const safeItems = Array.isArray(items) ? items.slice(0, 100).filter(x => x && x.name) : [];
+  const createOrder = db.transaction(() => {
+    const info = db.prepare(`INSERT INTO orders(order_no,user_id,name,phone,product,city,qty,details)
+      VALUES(?,?,?,?,?,?,?,?)`).run(
+        no, userId, name, phone, product, city,
+        safeItems.length ? safeItems.reduce((sum, x) => sum + Math.max(1, Number(x.qty) || 1), 0) : Math.max(1, Number(qty) || 1), details
+      );
+    const insertItem = db.prepare(`INSERT INTO order_items(order_id,product_id,name,category,unit_price,currency,qty)
+      VALUES(?,?,?,?,?,?,?)`);
+    for (const item of safeItems) insertItem.run(
+      info.lastInsertRowid, Number(item.id) || null, String(item.name).slice(0, 200),
+      String(item.cat || "").slice(0, 100), Number(item.unitPrice) || 0,
+      String(item.currency || "SAR").slice(0, 10), Math.max(1, Number(item.qty) || 1)
     );
+    return info;
+  });
+  const info = createOrder();
   res.status(201).json({ ok: true, orderNo: no, id: info.lastInsertRowid, status: 0 });
 });
 
@@ -429,6 +452,7 @@ app.get("/api/orders/:orderNo", (req, res) => {
     "SELECT order_no,name,phone,product,city,qty,details,status,created_at FROM orders WHERE order_no=?"
   ).get(req.params.orderNo);
   if (!o) return res.status(404).json({ error: "لم يتم العثور على الطلب" });
+  o.items = db.prepare("SELECT product_id,name,category,unit_price,currency,qty FROM order_items WHERE order_id=(SELECT id FROM orders WHERE order_no=?) ORDER BY id").all(req.params.orderNo);
   res.json({ ok: true, order: o });
 });
 
@@ -760,7 +784,9 @@ app.get("/api/admin/orders", (req, res) => {
   if (!requireAdmin(req, res)) return;
   res.json({
     ok: true,
-    orders: db.prepare("SELECT * FROM orders ORDER BY id DESC").all()
+    orders: db.prepare(`SELECT o.*,
+      (SELECT json_group_array(json_object('name',i.name,'category',i.category,'qty',i.qty,'unit_price',i.unit_price,'currency',i.currency)) FROM order_items i WHERE i.order_id=o.id) items_json
+      FROM orders o ORDER BY o.id DESC`).all()
   });
 });
 
