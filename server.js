@@ -165,6 +165,14 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
   );
+  CREATE TABLE IF NOT EXISTS favorites (
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(user_id,product_id),
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(product_id) REFERENCES products_catalog(id)
+  );
 `);
 
 app.disable("x-powered-by");
@@ -780,6 +788,28 @@ app.patch("/api/admin/payments/:paymentNo/status", (req, res) => {
     sendStatusEmail(payment.email, payment.name, labels[status], message)
       .catch(error => console.error("payment status email error", error));
   }
+  res.json({ ok: true });
+});
+
+app.get("/api/my-favorites", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  const products = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity
+    FROM favorites f JOIN products_catalog p ON p.id=f.product_id
+    WHERE f.user_id=? AND p.active=1 ORDER BY f.created_at DESC`).all(req.session.user.id);
+  res.json({ ok: true, products });
+});
+
+app.post("/api/favorites/:productId", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  const product = db.prepare("SELECT id FROM products_catalog WHERE id=? AND active=1").get(req.params.productId);
+  if (!product) return res.status(404).json({ error: "المنتج غير موجود" });
+  db.prepare("INSERT OR IGNORE INTO favorites(user_id,product_id) VALUES(?,?)").run(req.session.user.id, product.id);
+  res.json({ ok: true });
+});
+
+app.delete("/api/favorites/:productId", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  db.prepare("DELETE FROM favorites WHERE user_id=? AND product_id=?").run(req.session.user.id, req.params.productId);
   res.json({ ok: true });
 });
 
