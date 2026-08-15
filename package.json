@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node --require ./reset-preload.js server.js",
-    "dev": "node --require ./reset-preload.js server.js"
+    "dev": "node --require ./reset-preload.js server.js",
+    "check": "node --check server.js && node scripts/check-html-js.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
