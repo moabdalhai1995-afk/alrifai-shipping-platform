@@ -619,7 +619,7 @@ app.get("/api/profile", (req, res) => {
     });
   }
   const u = db.prepare(
-    "SELECT id,name,phone,email,email_verified,role,created_at FROM users WHERE id=?"
+    "SELECT id,name,phone,email,email_verified,delivery_city,delivery_address,role,created_at FROM users WHERE id=?"
   ).get(req.session.user.id);
   res.json({ ok: true, user: u });
 });
@@ -634,6 +634,31 @@ app.put("/api/profile", (req, res) => {
   db.prepare("UPDATE users SET name=?,delivery_city=?,delivery_address=? WHERE id=?")
     .run(name.trim(), String(delivery_city).trim().slice(0, 100), String(delivery_address).trim().slice(0, 500), req.session.user.id);
   res.json({ ok: true });
+});
+
+app.delete("/api/profile", (req, res) => {
+  if (!req.session.user || req.session.user.id === 0 || req.session.user.role !== "customer") {
+    return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
+  }
+  const userId = req.session.user.id;
+  const user = db.prepare("SELECT id FROM users WHERE id=? AND role='customer'").get(userId);
+  if (!user) return res.status(404).json({ error: "الحساب غير موجود" });
+
+  db.transaction(() => {
+    db.prepare("DELETE FROM favorites WHERE user_id=?").run(userId);
+    db.prepare("DELETE FROM email_verification_tokens WHERE user_id=?").run(userId);
+    db.prepare("DELETE FROM password_reset_tokens WHERE user_id=?").run(userId);
+    db.prepare("DELETE FROM notifications WHERE user_id=?").run(userId);
+    db.prepare("DELETE FROM support_tickets WHERE user_id=?").run(userId);
+    db.prepare("UPDATE orders SET user_id=NULL,name='عميل محذوف',phone='',city='',details='' WHERE user_id=?").run(userId);
+    db.prepare("DELETE FROM users WHERE id=?").run(userId);
+  })();
+
+  req.session.destroy((error) => {
+    if (error) return res.status(500).json({ error: "حُذف الحساب وتعذر إنهاء الجلسة؛ أغلق التطبيق وأعد فتحه" });
+    res.clearCookie("connect.sid");
+    res.json({ ok: true });
+  });
 });
 
 app.get("/api/admin/stats", (req, res) => {
