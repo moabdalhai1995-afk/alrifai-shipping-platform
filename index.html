@@ -407,7 +407,7 @@ async function trackOrder(){
   try {
     const d=await api("/api/orders/"+encodeURIComponent(id)), o=d.order;
     const states=["تم استلام الطلب","جاري تأكيد السعر والتوفر","تم الشراء والتجهيز","تم الشحن"];
-    el.innerHTML=`<div class="track">${states.map((s,i)=>`<div class="track-item ${i<=o.status?"done":""}"><div class="state">${i<=o.status?"✓":"○"}</div><b>${s}</b></div>`).join("")}</div><p class="muted">الطلب: <b>${o.order_no}</b> — ${o.product} — الوجهة: ${o.city}</p>`;
+    el.innerHTML=o.status===4?`<div class="empty">تم إلغاء الطلب <b>${o.order_no}</b></div>`:`<div class="track">${states.map((s,i)=>`<div class="track-item ${i<=o.status?"done":""}"><div class="state">${i<=o.status?"✓":"○"}</div><b>${s}</b></div>`).join("")}</div><p class="muted">الطلب: <b>${o.order_no}</b> — ${o.product} — الوجهة: ${o.city}</p>`;
   } catch(e) { el.innerHTML='<div class="empty">'+e.message+'</div>'; }
 }
 </script>
@@ -516,9 +516,10 @@ async function saveProfile(){
 async function loadMyOrders(){
  const d=await api("/api/my-orders");const el=document.getElementById("myOrders");
  if(!d.orders.length){el.innerHTML='<div class="empty">لا توجد طلبات حتى الآن.</div>';return}
- const labels=["مستلم","قيد التأكيد","تم التجهيز","تم الشحن"];
- el.innerHTML=d.orders.map(o=>`<div style="padding:12px 0;border-bottom:1px solid var(--line)"><b>${o.order_no}</b><br>${o.product} — ${o.city}<br><span class="user-pill">${labels[o.status]} · ${o.created_at}</span></div>`).join("");
+ const labels=["مستلم","قيد التأكيد","تم التجهيز","تم الشحن","ملغي"];
+ el.innerHTML=d.orders.map(o=>`<div style="padding:12px 0;border-bottom:1px solid var(--line)"><b>${o.order_no}</b><br>${o.product} — ${o.city}<br><span class="user-pill">${labels[o.status]} · ${o.created_at}</span>${o.status<=1?`<br><button class="btn outline notification-read" onclick="cancelMyOrder('${o.order_no}')">إلغاء الطلب</button>`:""}</div>`).join("");
 }
+async function cancelMyOrder(no){if(!confirm("هل تريد إلغاء الطلب؟"))return;try{await api("/api/my-orders/"+encodeURIComponent(no)+"/cancel",{method:"POST"});showToast("تم إلغاء الطلب");await loadMyOrders();await loadPhase4Customer()}catch(e){showToast(e.message)}}
 async function loadWishlist(){
  try{const d=await api("/api/my-favorites");favoriteIds=new Set(d.products.map(p=>Number(p.id)));const el=document.getElementById("myFavorites");if(el)el.innerHTML=d.products.length?d.products.map(p=>`<div class="notice"><b>${p.name}</b> — ${Number(p.price).toLocaleString("ar-SA")} ${p.currency}<button class="btn outline notification-read" onclick="toggleWish(${p.id},this,event)">إزالة</button></div>`).join(""):'<div class="empty">لا توجد منتجات مفضلة.</div>';renderProducts()}catch(e){}
 }
@@ -529,7 +530,7 @@ async function loadAdmin(){
  ].map(x=>`<div class="p2-stat admin-stat"><span class="stat-icon">${x[2]}</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
  const u=await api("/api/admin/users");
  document.getElementById("adminCustomers").innerHTML=u.users.length?`<div class="admin-cards">${u.users.map(x=>`<article class="admin-record"><div class="record-title"><b>${x.name}</b><span class="user-pill">عميل #${x.id}</span></div><a class="record-phone" href="tel:${x.phone}">${x.phone}</a><div class="record-meta"><span>الطلبات: <b>${x.order_count}</b></span><span>التسجيل: ${new Date(x.created_at+"Z").toLocaleDateString("ar-SA")}</span></div></article>`).join("")}</div>`:'<div class="empty">لا يوجد عملاء مسجلون.</div>';
- const o=await api("/api/admin/orders"), labels=["تم الاستلام","قيد التأكيد","تم التجهيز","تم الشحن"];
+ const o=await api("/api/admin/orders"), labels=["تم الاستلام","قيد التأكيد","تم التجهيز","تم الشحن","ملغي"];
  document.getElementById("adminOrders").innerHTML=o.orders.length?`<div class="admin-cards">${o.orders.map(x=>`<article class="admin-record order-record"><div class="record-title"><b class="tracking-no">${x.order_no}</b><span class="user-pill">${labels[x.status]||"غير محدد"}</span></div><div><b>${x.name}</b> · <a class="record-phone" href="tel:${x.phone}">${x.phone}</a></div><p>${x.product} — ${x.city} — الكمية ${x.qty}</p><div class="record-meta"><span>${new Date(x.created_at+"Z").toLocaleString("ar-SA")}</span><select class="status-select" onchange="changeStatus('${x.order_no}',this.value)">${labels.map((l,i)=>`<option value="${i}" ${i===x.status?"selected":""}>${l}</option>`).join("")}</select></div></article>`).join("")}</div>`:'<div class="empty">لا توجد طلبات.</div>';
  const p=await api("/api/admin/partners");
  document.getElementById("adminPartners").innerHTML=p.partners.length?`<div style="overflow:auto"><table class="admin-table"><tr><th>المرجع</th><th>الشركة</th><th>المسؤول</th><th>الجوال</th><th>المدينة</th></tr>${p.partners.map(x=>`<tr><td>${x.ref_no}</td><td>${x.company}</td><td>${x.name}</td><td>${x.phone}</td><td>${x.city||"-"}</td></tr>`).join("")}</table></div>`:'<div class="empty">لا توجد طلبات شراكة.</div>';
