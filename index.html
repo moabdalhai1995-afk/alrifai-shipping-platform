@@ -607,6 +607,7 @@ async function loadPhase4Customer(){
   if(!q.quotes.length){el.innerHTML='<div class="empty">لا توجد عروض أسعار حتى الآن.</div>'}
   else el.innerHTML=q.quotes.map(x=>{const labels={pending:"بانتظار الاعتماد",accepted:"تم الاعتماد",cancelled:"ملغي",expired:"منتهي"};return `<div class="notice"><b>${x.quote_no}</b> — الطلب ${x.order_no}<br>المنتج: ${x.product}<br><b>${Number(x.total).toLocaleString("ar-SA")} SAR</b><br>
    الحالة: ${labels[x.status]||x.status}${x.expires_at?` · صالح حتى ${new Date(x.expires_at.replace(" ","T")+"Z").toLocaleDateString("ar-SA")}`:""}
+   <br><a class="btn outline" style="display:inline-block;margin-top:8px" target="_blank" href="/api/quotes/${encodeURIComponent(x.quote_no)}/invoice">عرض وطباعة الفاتورة</a>
    ${x.status==="pending"?`<button class="btn primary" style="margin-top:8px" onclick="acceptQuote('${x.quote_no}')">اعتماد العرض</button>`:x.status==="accepted"?`<button class="btn outline" style="margin-top:8px" onclick="openPayment('${x.quote_no}',${Number(x.total)})">الانتقال للدفع</button>`:""}
    </div>`}).join("");
   const p=await api("/api/my-payments");
