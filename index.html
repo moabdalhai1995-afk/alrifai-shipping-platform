@@ -226,7 +226,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="p2-panel"><h3>طلبات الشراكة</h3><div id="adminPartners"></div></div>
 </div>
 </section>
-<footer><div class="wrap footer-grid"><div><h2>الرفاعي للشحن الدولي</h2><p>منصة تربط العملاء في السودان بمنتجات الشركات والمتاجر السعودية، مع تنسيق الشراء والتجهيز والشحن.</p></div><div><b>روابط</b><p><a href="#products">المنتجات</a><br><a href="#calculator">حاسبة الشحن</a><br><a href="#track">تتبع الطلب</a></p></div><div><b>تواصل</b><p>واتساب: <a href="https://wa.me/?text=السلام عليكم، أريد الاستفسار عن الشحن عبر منصة الرفاعي" target="_blank">فتح واتساب</a><br>الرياض – السعودية</p></div></div></footer>
+<footer><div class="wrap footer-grid"><div><h2>الرفاعي للشحن الدولي</h2><p>منصة تربط العملاء في السودان بمنتجات الشركات والمتاجر السعودية، مع تنسيق الشراء والتجهيز والشحن.</p></div><div><b>روابط</b><p><a href="#products">المنتجات</a><br><a href="#calculator">حاسبة الشحن</a><br><a href="#track">تتبع الطلب</a></p></div><div><b>تواصل</b><p>واتساب: <a href="https://wa.me/966540407193?text=السلام عليكم، أريد الاستفسار عن الشحن عبر منصة الرفاعي" target="_blank">0540407193</a><br>الرياض – السعودية</p></div></div></footer>
 
 <div class="cart"><button class="btn primary" onclick="openCart()">🛒 السلة <span id="cartCount" class="badge">0</span></button></div>
 <nav class="mobile-nav" aria-label="التنقل السفلي"><a href="#"><i>⌂</i>الرئيسية</a><a href="#products"><i>▦</i>الأقسام</a><button onclick="goToTracking()"><i>⌖</i>التتبع</button><button onclick="openCart()"><i>🛒</i>السلة</button><button onclick="openAuth()"><i>♙</i>حسابي</button></nav>
@@ -298,7 +298,7 @@ async function renderProducts(){
  let source=products;
  try{
    const d=await api("/api/catalog");
-   if(d.products && d.products.length) source=d.products.map(p=>({id:p.id,name:p.name,cat:p.category||"عام",desc:p.description||"",price:p.price?Number(p.price).toLocaleString("ar-SA")+" "+p.currency:"حسب المورد",icon:"📦"}));
+   if(d.products && d.products.length) source=d.products.map(p=>({id:p.id,name:p.name,cat:p.category||"عام",desc:p.description||"",price:p.price?Number(p.price).toLocaleString("ar-SA")+" "+p.currency:"حسب المورد",image:p.image_url||"",icon:"📦"}));
  }catch(e){}
  currentProducts=source;
  let list=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q))&&(!c||p.cat===c));
