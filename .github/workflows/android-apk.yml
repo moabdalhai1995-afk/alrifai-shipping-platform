@@ -45,13 +45,39 @@ jobs:
           test -n "$KEYSTORE_BASE64"
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/alrifai-release.jks"
 
-      - name: Build signed release APK and AAB
+      - name: Resolve and verify signing credentials
         if: github.event_name != 'pull_request'
         env:
-          ALRIFAI_KEYSTORE_PATH: ${{ runner.temp }}/alrifai-release.jks
-          ALRIFAI_KEYSTORE_PASSWORD: ${{ secrets.ALRIFAI_KEYSTORE_PASSWORD }}
-          ALRIFAI_KEY_ALIAS: ${{ secrets.ALRIFAI_KEY_ALIAS }}
-          ALRIFAI_KEY_PASSWORD: ${{ secrets.ALRIFAI_KEY_PASSWORD }}
+          STORE_PASSWORD_INPUT: ${{ secrets.ALRIFAI_KEYSTORE_PASSWORD }}
+          KEY_ALIAS_INPUT: ${{ secrets.ALRIFAI_KEY_ALIAS }}
+          KEY_PASSWORD_INPUT: ${{ secrets.ALRIFAI_KEY_PASSWORD }}
+        run: |
+          STORE_PASSWORD="$(printf '%s' "$STORE_PASSWORD_INPUT" | tr -d '\r\n')"
+          KEY_ALIAS="$(printf '%s' "$KEY_ALIAS_INPUT" | tr -d '\r\n')"
+          KEY_PASSWORD="$(printf '%s' "$KEY_PASSWORD_INPUT" | tr -d '\r\n')"
+          mkdir -p "$RUNNER_TEMP/signing-test"
+          echo verification > "$RUNNER_TEMP/signing-test/content.txt"
+          jar --create --file "$RUNNER_TEMP/signing-test.jar" -C "$RUNNER_TEMP/signing-test" .
+          if jarsigner -keystore "$RUNNER_TEMP/alrifai-release.jks" -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" "$RUNNER_TEMP/signing-test.jar" "$KEY_ALIAS" >/dev/null 2>&1; then
+            RESOLVED_KEY_PASSWORD="$KEY_PASSWORD"
+          else
+            jar --create --file "$RUNNER_TEMP/signing-test.jar" -C "$RUNNER_TEMP/signing-test" .
+            if ! jarsigner -keystore "$RUNNER_TEMP/alrifai-release.jks" -storepass "$STORE_PASSWORD" -keypass "$STORE_PASSWORD" "$RUNNER_TEMP/signing-test.jar" "$KEY_ALIAS" >/dev/null 2>&1; then
+              echo "Signing credentials do not unlock the selected key" >&2
+              exit 1
+            fi
+            RESOLVED_KEY_PASSWORD="$STORE_PASSWORD"
+          fi
+          echo "::add-mask::$STORE_PASSWORD"
+          echo "::add-mask::$KEY_ALIAS"
+          echo "::add-mask::$RESOLVED_KEY_PASSWORD"
+          printf 'ALRIFAI_KEYSTORE_PATH=%s\n' "$RUNNER_TEMP/alrifai-release.jks" >> "$GITHUB_ENV"
+          printf 'ALRIFAI_KEYSTORE_PASSWORD=%s\n' "$STORE_PASSWORD" >> "$GITHUB_ENV"
+          printf 'ALRIFAI_KEY_ALIAS=%s\n' "$KEY_ALIAS" >> "$GITHUB_ENV"
+          printf 'ALRIFAI_KEY_PASSWORD=%s\n' "$RESOLVED_KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK and AAB
+        if: github.event_name != 'pull_request'
         run: gradle :app:assembleRelease :app:bundleRelease --stacktrace
 
       - name: Build PR test APK
