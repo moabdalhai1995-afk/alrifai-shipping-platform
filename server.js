@@ -125,6 +125,7 @@ const productColumns = new Set(
   db.prepare("PRAGMA table_info(products_catalog)").all().map((column) => column.name)
 );
 if (!productColumns.has("image_url")) db.exec("ALTER TABLE products_catalog ADD COLUMN image_url TEXT");
+if (!productColumns.has("stock_quantity")) db.exec("ALTER TABLE products_catalog ADD COLUMN stock_quantity INTEGER NOT NULL DEFAULT 100");
 
 const partnerColumns = new Set(
   db.prepare("PRAGMA table_info(partners)").all().map((column) => column.name)
@@ -506,6 +507,15 @@ app.post("/api/orders", (req, res) => {
   const userId = req.session.user?.id > 0 ? req.session.user.id : null;
   const safeItems = Array.isArray(items) ? items.slice(0, 100).filter(x => x && x.name) : [];
   const createOrder = db.transaction(() => {
+    const requested = new Map();
+    for (const item of safeItems) {
+      const productId = Number(item.id) || 0, itemQty = Math.max(1, Number(item.qty) || 1);
+      if (productId) requested.set(productId, (requested.get(productId) || 0) + itemQty);
+    }
+    for (const [productId, itemQty] of requested) {
+      const catalogItem = db.prepare("SELECT stock_quantity,active FROM products_catalog WHERE id=?").get(productId);
+      if (catalogItem && (!catalogItem.active || catalogItem.stock_quantity < itemQty)) throw new Error("الكمية المطلوبة غير متوفرة لأحد المنتجات");
+    }
     const info = db.prepare(`INSERT INTO orders(order_no,user_id,name,phone,product,city,qty,details)
       VALUES(?,?,?,?,?,?,?,?)`).run(
         no, userId, name, phone, product, city,
@@ -518,9 +528,11 @@ app.post("/api/orders", (req, res) => {
       String(item.cat || "").slice(0, 100), Number(item.unitPrice) || 0,
       String(item.currency || "SAR").slice(0, 10), Math.max(1, Number(item.qty) || 1)
     );
+    for (const [productId, itemQty] of requested) db.prepare("UPDATE products_catalog SET stock_quantity=stock_quantity-? WHERE id=?").run(itemQty, productId);
     return info;
   });
-  const info = createOrder();
+  let info;
+  try { info = createOrder(); } catch (error) { return res.status(409).json({ error: error.message }); }
   res.status(201).json({ ok: true, orderNo: no, id: info.lastInsertRowid, status: 0 });
 });
 
@@ -772,7 +784,7 @@ app.patch("/api/admin/payments/:paymentNo/status", (req, res) => {
 });
 
 app.get("/api/catalog", (req, res) => {
-  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.supplier_id,s.name supplier_name
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity,p.supplier_id,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
     WHERE p.active=1 ORDER BY p.id DESC`).all();
   res.json({ ok: true, products: rows });
@@ -780,7 +792,7 @@ app.get("/api/catalog", (req, res) => {
 
 app.get("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity,
     p.supplier_id,p.active,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
     ORDER BY p.active DESC,p.id DESC`).all();
@@ -809,28 +821,29 @@ app.post("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const {
     supplier_id = null, name, category = "", description = "", image_url = "",
-    price = 0, currency = "SAR"
+    price = 0, currency = "SAR", stock_quantity = 0
   } = req.body;
   if (!name) return res.status(400).json({ error: "اسم المنتج مطلوب" });
-  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,image_url,price,currency)
-    VALUES(?,?,?,?,?,?,?)`).run(
-      supplier_id || null, name, category, description, image_url, Number(price) || 0, currency
+  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,image_url,price,currency,stock_quantity)
+    VALUES(?,?,?,?,?,?,?,?)`).run(
+      supplier_id || null, name, category, description, image_url, Number(price) || 0, currency, Math.max(0, Number(stock_quantity) || 0)
     );
   res.status(201).json({ ok: true, id: info.lastInsertRowid });
 });
 
 app.patch("/api/admin/products/:id", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const { supplier_id, name, category, description, image_url, price, currency, active } = req.body;
+  const { supplier_id, name, category, description, image_url, price, currency, active, stock_quantity } = req.body;
   const info = db.prepare(`UPDATE products_catalog
     SET supplier_id=CASE WHEN ? THEN ? ELSE supplier_id END,name=COALESCE(?,name),category=COALESCE(?,category),
         description=COALESCE(?,description),image_url=COALESCE(?,image_url),price=COALESCE(?,price),
-        currency=COALESCE(?,currency),active=COALESCE(?,active)
+        currency=COALESCE(?,currency),active=COALESCE(?,active),stock_quantity=COALESCE(?,stock_quantity)
     WHERE id=?`).run(
       supplier_id !== undefined ? 1 : 0, supplier_id || null, name, category, description, image_url,
       price === undefined ? null : Number(price),
       currency,
       active === undefined ? null : Number(active),
+      stock_quantity === undefined ? null : Math.max(0, Number(stock_quantity) || 0),
       req.params.id
     );
   if (!info.changes) return res.status(404).json({ error: "المنتج غير موجود" });
