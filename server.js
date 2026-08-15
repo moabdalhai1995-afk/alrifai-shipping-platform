@@ -572,7 +572,7 @@ async function askOpenAiForAdmin(message) {
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: openAiModel(), store: false, max_output_tokens: 1800,
-      instructions: "أنت مساعد مدير منصة الرفاعي للشحن الدولي. أجب بالعربية باختصار واعتمد فقط على بيانات التشغيل المقدمة. اقترح إجراءات عملية عند الحاجة. لا تزعم تنفيذ أي إجراء. كل إجراء يحتاج موافقة المدير. لا تطلب أو تعرض كلمات مرور أو مفاتيح سرية. عند اقتراح رد واتساب استخدم آخر أربعة أرقام المتاحة في حقل phone.",
+      instructions: "أنت مساعد التشغيل المخوّل لمنصة الرفاعي للشحن الدولي. أجب بالعربية باختصار واعتمد فقط على بيانات التشغيل المقدمة. اقترح إجراءات عملية قابلة للتنفيذ تلقائيًا عند الحاجة. لا تزعم نجاح أي إجراء قبل وصول نتيجة التنفيذ من الخادم. لا تطلب أو تعرض كلمات مرور أو مفاتيح سرية. لا تقترح حذف البيانات أو تغيير المدفوعات أو الصلاحيات. عند اقتراح رد واتساب استخدم آخر أربعة أرقام المتاحة في حقل phone.",
       input: `بيانات التشغيل الحالية:\n${JSON.stringify(adminAiSnapshot())}\n\nطلب المدير:\n${message}`,
       text: { format: { type: "json_schema", name: "admin_assistant", strict: true, schema } }
     })
@@ -582,6 +582,24 @@ async function askOpenAiForAdmin(message) {
   const outputText = data.output?.flatMap(item => item.content || []).find(item => item.type === "output_text")?.text;
   if (!outputText) throw new Error("لم يصل رد صالح من المساعد");
   return JSON.parse(outputText);
+}
+
+async function executeAiAction(action) {
+  const payload = typeof action.payload === "string" ? JSON.parse(action.payload) : action.payload;
+  if (action.action_type === "create_task") {
+    const info = db.prepare("INSERT INTO admin_tasks(title,details,priority,source) VALUES(?,?,?,'ai')")
+      .run(payload.title.slice(0, 200), payload.details.slice(0, 2000), payload.priority);
+    return { taskId: info.lastInsertRowid };
+  }
+  if (action.action_type === "draft_whatsapp") {
+    if (!payload.phone || !payload.message) throw new Error("رقم العميل ونص الرسالة مطلوبان");
+    const phone = resolveAiWhatsAppPhone(payload.phone);
+    return sendWhatsApp(
+      { to: phone, type: "text", text: { preview_url: false, body: payload.message } },
+      { body: payload.message }
+    );
+  }
+  throw new Error("نوع الإجراء غير مسموح");
 }
 
 app.get("/api/health", (req, res) =>
@@ -1030,8 +1048,9 @@ app.post("/api/admin/whatsapp/reply", async (req, res) => {
 
 app.get("/api/admin/ai", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  res.json({ ok: true, enabled: true, mode: "local_free",
-    model: "مساعد محلي مجاني",
+  const connected = !!process.env.OPENAI_API_KEY;
+  res.json({ ok: true, enabled: true, mode: connected ? "openai_autonomous" : "local_fallback",
+    model: connected ? `${openAiModel()} · تنفيذ تلقائي` : "مساعد محلي احتياطي",
     messages: db.prepare("SELECT * FROM ai_messages ORDER BY id DESC LIMIT 30").all().reverse(),
     actions: db.prepare("SELECT * FROM ai_actions WHERE status='pending' ORDER BY id DESC LIMIT 30").all(),
     tasks: db.prepare("SELECT * FROM admin_tasks ORDER BY status='completed',id DESC LIMIT 100").all()
@@ -1044,13 +1063,31 @@ app.post("/api/admin/ai/chat", async (req, res) => {
   if (!message) return res.status(400).json({ error: "اكتب طلبك للمساعد" });
   try {
     db.prepare("INSERT INTO ai_messages(role,body) VALUES('user',?)").run(message);
-    const answer = localAdminAnswer(message);
+    let answer;
+    try {
+      answer = process.env.OPENAI_API_KEY ? await askOpenAiForAdmin(message) : localAdminAnswer(message);
+    } catch (openAiError) {
+      console.error("OpenAI fallback", openAiError);
+      answer = localAdminAnswer(message);
+      answer.reply = `تعذر الاتصال مؤقتًا بـ ChatGPT، وتم تشغيل المساعد الاحتياطي.\n\n${answer.reply}`;
+    }
     db.prepare("INSERT INTO ai_messages(role,body) VALUES('assistant',?)").run(answer.reply);
     const insert = db.prepare("INSERT INTO ai_actions(action_type,title,payload) VALUES(?,?,?)");
-    const actions = answer.proposed_actions.slice(0, 10).map(action => {
+    const actions = [];
+    for (const action of answer.proposed_actions.slice(0, 10)) {
       const info = insert.run(action.type, action.title.slice(0, 200), JSON.stringify(action));
-      return { id: info.lastInsertRowid, ...action, status: "pending" };
-    });
+      const saved = { id: Number(info.lastInsertRowid), action_type: action.type, payload: action };
+      try {
+        const result = await executeAiAction(saved);
+        db.prepare("UPDATE ai_actions SET status='confirmed',result=?,confirmed_at=CURRENT_TIMESTAMP WHERE id=?")
+          .run(JSON.stringify(result), saved.id);
+        actions.push({ id: saved.id, ...action, status: "confirmed", result });
+      } catch (executionError) {
+        db.prepare("UPDATE ai_actions SET status='failed',result=?,confirmed_at=CURRENT_TIMESTAMP WHERE id=?")
+          .run(JSON.stringify({ error: executionError.message }), saved.id);
+        actions.push({ id: saved.id, ...action, status: "failed", error: executionError.message });
+      }
+    }
     res.json({ ok: true, reply: answer.reply, actions });
   } catch (error) {
     console.error("admin AI error", error);
@@ -1064,16 +1101,7 @@ app.post("/api/admin/ai/actions/:id/confirm", async (req, res) => {
   if (!action) return res.status(404).json({ error: "الاقتراح غير موجود أو تمت معالجته" });
   const payload = JSON.parse(action.payload);
   try {
-    let result;
-    if (action.action_type === "create_task") {
-      const info = db.prepare("INSERT INTO admin_tasks(title,details,priority,source) VALUES(?,?,?,'ai')")
-        .run(payload.title.slice(0, 200), payload.details.slice(0, 2000), payload.priority);
-      result = { taskId: info.lastInsertRowid };
-    } else if (action.action_type === "draft_whatsapp") {
-      if (!payload.phone || !payload.message) throw new Error("رقم العميل ونص الرسالة مطلوبان");
-      const phone = resolveAiWhatsAppPhone(payload.phone);
-      result = await sendWhatsApp({ to: phone, type: "text", text: { preview_url: false, body: payload.message } }, { body: payload.message });
-    } else throw new Error("نوع الإجراء غير مسموح");
+    const result = await executeAiAction({ ...action, payload });
     db.prepare("UPDATE ai_actions SET status='confirmed',result=?,confirmed_at=CURRENT_TIMESTAMP WHERE id=?")
       .run(JSON.stringify(result), action.id);
     res.json({ ok: true, result });
