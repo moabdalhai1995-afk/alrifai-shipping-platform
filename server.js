@@ -251,6 +251,19 @@ async function sendPasswordResetEmail(userId, email) {
   });
 }
 
+async function sendStatusEmail(email, customerName, title, message) {
+  if (!email || !process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+  const safe = value => String(value || "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[char]);
+  await emailTransport().sendMail({
+    from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: title + " - الرفاعي للشحن الدولي",
+    html: '<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>' + safe(title) + '</h2><p>مرحباً ' + safe(customerName) + '،</p><p>' + safe(message) + '</p><p>يمكنك فتح حسابك في منصة الرفاعي لمتابعة التفاصيل.</p></div>'
+  });
+}
+
 function publicUser(user) {
   return {
     id: user.id,
@@ -591,15 +604,17 @@ app.patch("/api/admin/orders/:orderNo/status", (req, res) => {
   if (!Number.isInteger(status) || status < 0 || status > 3) {
     return res.status(400).json({ error: "حالة الطلب غير صحيحة" });
   }
-  const order = db.prepare("SELECT id,user_id,status FROM orders WHERE order_no=?").get(req.params.orderNo);
+  const order = db.prepare(`SELECT o.id,o.user_id,o.status,o.name,u.email
+    FROM orders o LEFT JOIN users u ON u.id=o.user_id WHERE o.order_no=?`).get(req.params.orderNo);
   if (!order) return res.status(404).json({ error: "الطلب غير موجود" });
   db.prepare("UPDATE orders SET status=? WHERE id=?").run(status, order.id);
   if (order.user_id && order.status !== status) {
     const labels = ["تم استلام طلبك", "طلبك قيد التأكيد", "تم تجهيز طلبك", "تم شحن طلبك"];
-    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)").run(
-      order.user_id, order.id, labels[status],
-      "تم تحديث حالة الطلب " + req.params.orderNo + " إلى: " + labels[status]
-    );
+    const message = "تم تحديث حالة الطلب " + req.params.orderNo + " إلى: " + labels[status];
+    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
+      .run(order.user_id, order.id, labels[status], message);
+    sendStatusEmail(order.email, order.name, labels[status], message)
+      .catch(error => console.error("order status email error", error));
   }
   res.json({ ok: true });
 });
@@ -721,16 +736,18 @@ app.patch("/api/admin/payments/:paymentNo/status", (req, res) => {
   if (!allowed.includes(status)) {
     return res.status(400).json({ error: "حالة الدفع غير صحيحة" });
   }
-  const payment = db.prepare(`SELECT p.id,p.order_id,p.status,o.user_id,o.order_no
-    FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.payment_no=?`).get(req.params.paymentNo);
+  const payment = db.prepare(`SELECT p.id,p.order_id,p.status,o.user_id,o.order_no,o.name,u.email
+    FROM payments p JOIN orders o ON o.id=p.order_id LEFT JOIN users u ON u.id=o.user_id
+    WHERE p.payment_no=?`).get(req.params.paymentNo);
   if (!payment) return res.status(404).json({ error: "عملية الدفع غير موجودة" });
   db.prepare("UPDATE payments SET status=? WHERE id=?").run(status, payment.id);
   if (payment.user_id && payment.status !== status) {
     const labels = { pending:"قيد المراجعة", paid:"تم تأكيد الدفع", failed:"تعذر الدفع", refunded:"تم رد المبلغ" };
-    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)").run(
-      payment.user_id, payment.order_id, labels[status],
-      "حالة الدفع " + req.params.paymentNo + " للطلب " + payment.order_no + ": " + labels[status]
-    );
+    const message = "حالة الدفع " + req.params.paymentNo + " للطلب " + payment.order_no + ": " + labels[status];
+    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
+      .run(payment.user_id, payment.order_id, labels[status], message);
+    sendStatusEmail(payment.email, payment.name, labels[status], message)
+      .catch(error => console.error("payment status email error", error));
   }
   res.json({ ok: true });
 });
