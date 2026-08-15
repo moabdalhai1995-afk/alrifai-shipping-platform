@@ -812,13 +812,13 @@ app.post("/api/admin/products", (req, res) => {
 
 app.patch("/api/admin/products/:id", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const { name, category, description, image_url, price, currency, active } = req.body;
+  const { supplier_id, name, category, description, image_url, price, currency, active } = req.body;
   const info = db.prepare(`UPDATE products_catalog
-    SET name=COALESCE(?,name),category=COALESCE(?,category),
+    SET supplier_id=CASE WHEN ? THEN ? ELSE supplier_id END,name=COALESCE(?,name),category=COALESCE(?,category),
         description=COALESCE(?,description),image_url=COALESCE(?,image_url),price=COALESCE(?,price),
         currency=COALESCE(?,currency),active=COALESCE(?,active)
     WHERE id=?`).run(
-      name, category, description, image_url,
+      supplier_id !== undefined ? 1 : 0, supplier_id || null, name, category, description, image_url,
       price === undefined ? null : Number(price),
       currency,
       active === undefined ? null : Number(active),
