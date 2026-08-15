@@ -230,7 +230,49 @@ db.exec(`
     body TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS accounting_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('asset','liability','equity','revenue','expense')),
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS journal_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_no TEXT NOT NULL UNIQUE,
+    entry_date TEXT NOT NULL,
+    description TEXT NOT NULL,
+    reference TEXT,
+    created_by INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS journal_lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL,
+    debit REAL NOT NULL DEFAULT 0 CHECK(debit >= 0),
+    credit REAL NOT NULL DEFAULT 0 CHECK(credit >= 0),
+    memo TEXT,
+    FOREIGN KEY(entry_id) REFERENCES journal_entries(id),
+    FOREIGN KEY(account_id) REFERENCES accounting_accounts(id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_journal_entries_date ON journal_entries(entry_date);
+  CREATE INDEX IF NOT EXISTS idx_journal_lines_entry ON journal_lines(entry_id);
 `);
+
+const defaultAccountingAccounts = [
+  ["1000", "الصندوق", "asset"], ["1100", "البنك", "asset"],
+  ["1200", "العملاء والمدينون", "asset"], ["2000", "الموردون والدائنون", "liability"],
+  ["2100", "مستحقات الشحن", "liability"], ["3000", "رأس المال", "equity"],
+  ["4000", "إيرادات المبيعات", "revenue"], ["4100", "إيرادات الشحن والخدمات", "revenue"],
+  ["5000", "تكلفة المشتريات", "expense"], ["5100", "مصروفات الشحن", "expense"],
+  ["5200", "المصروفات التشغيلية", "expense"]
+];
+const insertAccountingAccount = db.prepare(
+  "INSERT OR IGNORE INTO accounting_accounts(code,name,type) VALUES(?,?,?)"
+);
+db.transaction(() => defaultAccountingAccounts.forEach(account => insertAccountingAccount.run(...account)))();
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -244,7 +286,7 @@ app.use(rateLimit({
 app.use(express.json({ limit: "200kb", verify: (req, res, buffer) => { req.rawBody = buffer; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api/") || req.path === "/admin" || req.path === "/admin/") {
+  if (req.path.startsWith("/api/") || ["/admin", "/admin/", "/accounting", "/accounting/"].includes(req.path)) {
     res.set("Cache-Control", "no-store");
   }
   next();
@@ -420,6 +462,14 @@ function envAdmin() {
 function requireAdmin(req, res) {
   if (!req.session.user || req.session.user.role !== "admin") {
     res.status(403).json({ error: "صلاحية المدير مطلوبة" });
+    return false;
+  }
+  return true;
+}
+
+function requireAccounting(req, res) {
+  if (!req.session.user || !["admin", "accountant"].includes(req.session.user.role)) {
+    res.status(403).json({ error: "صلاحية المحاسب أو المدير مطلوبة" });
     return false;
   }
   return true;
@@ -1429,6 +1479,102 @@ app.get("/api/admin/orders", (req, res) => {
   });
 });
 
+function accountingDateFilter(query) {
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(String(query.from || "")) ? String(query.from) : "0000-01-01";
+  const to = /^\d{4}-\d{2}-\d{2}$/.test(String(query.to || "")) ? String(query.to) : "9999-12-31";
+  return { from, to };
+}
+
+app.get("/api/accounting/accounts", (req, res) => {
+  if (!requireAccounting(req, res)) return;
+  const accounts = db.prepare("SELECT id,code,name,type FROM accounting_accounts WHERE active=1 ORDER BY code").all();
+  res.json({ ok: true, accounts });
+});
+
+app.get("/api/accounting/report", (req, res) => {
+  if (!requireAccounting(req, res)) return;
+  const { from, to } = accountingDateFilter(req.query);
+  const accounts = db.prepare(`
+    SELECT a.id,a.code,a.name,a.type,
+           ROUND(COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN l.debit ELSE 0 END),0),2) debit,
+           ROUND(COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN l.credit ELSE 0 END),0),2) credit
+    FROM accounting_accounts a
+    LEFT JOIN journal_lines l ON l.account_id=a.id
+    LEFT JOIN journal_entries e ON e.id=l.entry_id AND e.entry_date BETWEEN ? AND ?
+    WHERE a.active=1
+    GROUP BY a.id,a.code,a.name,a.type ORDER BY a.code
+  `).all(from, to).map(account => ({
+    ...account,
+    balance: ["asset", "expense"].includes(account.type)
+      ? Number((account.debit - account.credit).toFixed(2))
+      : Number((account.credit - account.debit).toFixed(2))
+  }));
+  const total = type => Number(accounts.filter(a => a.type === type).reduce((sum, a) => sum + a.balance, 0).toFixed(2));
+  const summary = { assets: total("asset"), liabilities: total("liability"), equity: total("equity"), revenue: total("revenue"), expenses: total("expense") };
+  summary.netProfit = Number((summary.revenue - summary.expenses).toFixed(2));
+  const totals = accounts.reduce((sum, a) => ({ debit: sum.debit + a.debit, credit: sum.credit + a.credit }), { debit: 0, credit: 0 });
+  totals.debit = Number(totals.debit.toFixed(2)); totals.credit = Number(totals.credit.toFixed(2));
+  res.json({ ok: true, from, to, summary, totals, accounts });
+});
+
+app.get("/api/accounting/journal-entries", (req, res) => {
+  if (!requireAccounting(req, res)) return;
+  const { from, to } = accountingDateFilter(req.query);
+  const entries = db.prepare(`
+    SELECT e.id,e.entry_no,e.entry_date,e.description,e.reference,e.created_at,
+           ROUND(SUM(l.debit),2) total,
+           json_group_array(json_object('account_id',a.id,'code',a.code,'account',a.name,'debit',l.debit,'credit',l.credit,'memo',l.memo)) lines
+    FROM journal_entries e JOIN journal_lines l ON l.entry_id=e.id
+    JOIN accounting_accounts a ON a.id=l.account_id
+    WHERE e.entry_date BETWEEN ? AND ?
+    GROUP BY e.id ORDER BY e.entry_date DESC,e.id DESC LIMIT 500
+  `).all(from, to).map(entry => ({ ...entry, lines: JSON.parse(entry.lines) }));
+  res.json({ ok: true, entries });
+});
+
+app.post("/api/accounting/journal-entries", (req, res) => {
+  if (!requireAccounting(req, res)) return;
+  const entryDate = String(req.body.entry_date || "");
+  const description = String(req.body.description || "").trim();
+  const reference = String(req.body.reference || "").trim().slice(0, 100);
+  const lines = Array.isArray(req.body.lines) ? req.body.lines.map(line => ({
+    account_id: Number(line.account_id), debit: Number(line.debit) || 0,
+    credit: Number(line.credit) || 0, memo: String(line.memo || "").trim().slice(0, 200)
+  })).filter(line => line.account_id && (line.debit > 0 || line.credit > 0)) : [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || !description) return res.status(400).json({ error: "تاريخ القيد والبيان مطلوبان" });
+  if (lines.length < 2 || lines.some(line => line.debit < 0 || line.credit < 0 || (line.debit > 0 && line.credit > 0))) {
+    return res.status(400).json({ error: "القيد يحتاج سطرين على الأقل، وكل سطر مدين أو دائن فقط" });
+  }
+  const debit = lines.reduce((sum, line) => sum + line.debit, 0);
+  const credit = lines.reduce((sum, line) => sum + line.credit, 0);
+  if (debit <= 0 || Math.abs(debit - credit) > 0.005) return res.status(400).json({ error: "إجمالي المدين يجب أن يساوي إجمالي الدائن" });
+  const ids = [...new Set(lines.map(line => line.account_id))];
+  const validAccounts = db.prepare(`SELECT COUNT(*) count FROM accounting_accounts WHERE active=1 AND id IN (${ids.map(() => "?").join(",")})`).get(...ids).count;
+  if (validAccounts !== ids.length) return res.status(400).json({ error: "أحد الحسابات المختارة غير صالح" });
+  const entryNo = "JE-" + entryDate.replaceAll("-", "") + "-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+  db.transaction(() => {
+    const entry = db.prepare("INSERT INTO journal_entries(entry_no,entry_date,description,reference,created_by) VALUES(?,?,?,?,?)")
+      .run(entryNo, entryDate, description, reference || null, req.session.user.id);
+    const insertLine = db.prepare("INSERT INTO journal_lines(entry_id,account_id,debit,credit,memo) VALUES(?,?,?,?,?)");
+    lines.forEach(line => insertLine.run(entry.lastInsertRowid, line.account_id, line.debit, line.credit, line.memo || null));
+  })();
+  res.status(201).json({ ok: true, entryNo });
+});
+
+app.get("/api/accounting/report.csv", (req, res) => {
+  if (!requireAccounting(req, res)) return;
+  const { from, to } = accountingDateFilter(req.query);
+  const rows = db.prepare(`SELECT e.entry_no,e.entry_date,e.description,e.reference,a.code,a.name,l.debit,l.credit
+    FROM journal_entries e JOIN journal_lines l ON l.entry_id=e.id JOIN accounting_accounts a ON a.id=l.account_id
+    WHERE e.entry_date BETWEEN ? AND ? ORDER BY e.entry_date,e.id,l.id`).all(from, to);
+  const quote = value => '"' + String(value ?? "").replaceAll('"', '""') + '"';
+  const csv = [["رقم القيد","التاريخ","البيان","المرجع","رمز الحساب","الحساب","مدين","دائن"].map(quote).join(","),
+    ...rows.map(row => [row.entry_no,row.entry_date,row.description,row.reference,row.code,row.name,row.debit,row.credit].map(quote).join(","))].join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", "attachment; filename=alrifai-general-ledger.csv");
+  res.send("\ufeff" + csv);
+});
+
 app.get("/api/admin/backup", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const backupPath = path.join(
@@ -1461,6 +1607,9 @@ app.get("/api/admin/orders.csv", (req, res) => {
 
 app.get(["/admin", "/admin/"], (req, res) =>
   res.sendFile(path.join(__dirname, "admin.html"))
+);
+app.get(["/accounting", "/accounting/"], (req, res) =>
+  res.sendFile(path.join(__dirname, "accounting.html"))
 );
 
 app.use((req, res, next) => {
