@@ -526,7 +526,7 @@ async function loadWishlist(){
 async function loadAdmin(){
  const s=await api("/api/admin/stats");
  document.getElementById("adminStats").innerHTML=[
-  ["العملاء",s.stats.users,"👥"],["كل الطلبات",s.stats.orders,"📦"],["الطلبات المفتوحة",s.stats.pending,"⏳"],["طلبات الشراكة",s.stats.partners,"🤝"]
+  ["العملاء",s.stats.users,"👥"],["كل الطلبات",s.stats.orders,"📦"],["الطلبات المفتوحة",s.stats.pending,"⏳"],["طلبات الشراكة",s.stats.partners,"🤝"],["مخزون منخفض",s.stats.lowStock,"⚠️"],["نفد المخزون",s.stats.outOfStock,"🚫"]
  ].map(x=>`<div class="p2-stat admin-stat"><span class="stat-icon">${x[2]}</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
  const u=await api("/api/admin/users");
  document.getElementById("adminCustomers").innerHTML=u.users.length?`<div class="admin-cards">${u.users.map(x=>`<article class="admin-record"><div class="record-title"><b>${x.name}</b><span class="user-pill">عميل #${x.id}</span></div><a class="record-phone" href="tel:${x.phone}">${x.phone}</a><div class="record-meta"><span>الطلبات: <b>${x.order_count}</b></span><span>التسجيل: ${new Date(x.created_at+"Z").toLocaleDateString("ar-SA")}</span></div></article>`).join("")}</div>`:'<div class="empty">لا يوجد عملاء مسجلون.</div>';
