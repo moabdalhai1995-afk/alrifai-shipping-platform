@@ -1021,6 +1021,16 @@ app.post("/api/admin/ai/actions/:id/reject", (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete("/api/admin/ai/history", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const result = db.transaction(() => {
+    const messages = db.prepare("DELETE FROM ai_messages").run().changes;
+    const actions = db.prepare("DELETE FROM ai_actions WHERE status IN ('pending','rejected')").run().changes;
+    return { messages, actions };
+  })();
+  res.json({ ok: true, ...result });
+});
+
 app.patch("/api/admin/tasks/:id", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const status = String(req.body.status || "");
