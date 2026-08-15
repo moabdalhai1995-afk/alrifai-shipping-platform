@@ -134,6 +134,10 @@ if (!partnerColumns.has("status")) {
   db.exec("ALTER TABLE partners ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'");
 }
 
+const quoteColumns = new Set(db.prepare("PRAGMA table_info(quotes)").all().map(column => column.name));
+if (!quoteColumns.has("expires_at")) db.exec("ALTER TABLE quotes ADD COLUMN expires_at TEXT");
+db.exec("UPDATE quotes SET expires_at=datetime('now','+7 days') WHERE expires_at IS NULL AND status='pending'");
+
 const userColumns = new Set(
   db.prepare("PRAGMA table_info(users)").all().map((column) => column.name)
 );
@@ -698,7 +702,7 @@ app.get("/api/my-quotes", (req, res) => {
   if (!req.session.user || req.session.user.id === 0) {
     return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
   }
-  const rows = db.prepare(`SELECT q.quote_no,q.product_total,q.shipping_total,q.service_fee,q.total,q.status,q.notes,q.created_at,
+  const rows = db.prepare(`SELECT q.quote_no,q.product_total,q.shipping_total,q.service_fee,q.total,q.status,q.notes,q.created_at,q.expires_at,
     o.order_no,o.product,o.city,o.id order_id
     FROM quotes q JOIN orders o ON o.id=q.order_id
     WHERE o.user_id=? ORDER BY q.id DESC`).all(req.session.user.id);
@@ -714,6 +718,11 @@ app.post("/api/quotes/:quoteNo/accept", (req, res) => {
   ).get(req.params.quoteNo);
   if (!q || q.user_id !== req.session.user.id) {
     return res.status(404).json({ error: "عرض السعر غير موجود" });
+  }
+  if (q.status !== "pending") return res.status(409).json({ error: "عرض السعر غير متاح للاعتماد" });
+  if (q.expires_at && new Date(q.expires_at.replace(" ", "T") + "Z").getTime() < Date.now()) {
+    db.prepare("UPDATE quotes SET status='expired' WHERE id=?").run(q.id);
+    return res.status(409).json({ error: "انتهت صلاحية عرض السعر" });
   }
   db.prepare("UPDATE quotes SET status='accepted' WHERE id=?").run(q.id);
   db.prepare(
@@ -939,8 +948,8 @@ app.post("/api/admin/quotes", (req, res) => {
   const sf = Number(service_fee) || 0;
   const total = pt + st + sf;
   const qno = "Q-" + Date.now().toString().slice(-9);
-  const info = db.prepare(`INSERT INTO quotes(quote_no,order_id,product_total,shipping_total,service_fee,total,notes)
-    VALUES(?,?,?,?,?,?,?)`).run(qno, order_id, pt, st, sf, total, notes);
+  const info = db.prepare(`INSERT INTO quotes(quote_no,order_id,product_total,shipping_total,service_fee,total,notes,expires_at)
+    VALUES(?,?,?,?,?,?,?,datetime('now','+7 days'))`).run(qno, order_id, pt, st, sf, total, notes);
   res.status(201).json({ ok: true, quoteNo: qno, total, id: info.lastInsertRowid });
 });
 
@@ -949,6 +958,17 @@ app.get("/api/admin/quotes", (req, res) => {
   const rows = db.prepare(`SELECT q.*,o.order_no,o.name customer_name,o.product
     FROM quotes q JOIN orders o ON o.id=q.order_id ORDER BY q.id DESC`).all();
   res.json({ ok: true, quotes: rows });
+});
+
+app.patch("/api/admin/quotes/:quoteNo/status", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const status = String(req.body.status || "");
+  if (!["pending", "cancelled"].includes(status)) return res.status(400).json({ error: "حالة العرض غير صحيحة" });
+  const quote = db.prepare("SELECT id,status FROM quotes WHERE quote_no=?").get(req.params.quoteNo);
+  if (!quote) return res.status(404).json({ error: "عرض السعر غير موجود" });
+  if (quote.status === "accepted") return res.status(409).json({ error: "لا يمكن تغيير عرض تم اعتماده" });
+  db.prepare("UPDATE quotes SET status=? WHERE id=?").run(status, quote.id);
+  res.json({ ok: true });
 });
 
 app.post("/api/setup/admin", (req, res) => {
