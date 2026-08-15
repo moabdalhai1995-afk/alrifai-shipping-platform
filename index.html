@@ -87,9 +87,9 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <header><div class="wrap nav">
 <div class="brand">الرفاعي للشحن الدولي<span>من السعودية إلى السودان</span></div>
 <nav><a href="/products.html">المنتجات</a><a href="#calculator">حاسبة الشحن</a><a href="#how">كيف تعمل</a><a href="/tracking.html">تتبع</a><a href="/partners.html">للشركاء</a></nav>
-<div class="actions"><button class="btn outline" id="loginBtn" onclick="openAccount()">دخول</button><button class="btn outline" onclick="openPartner()">انضم كشريك</button><button class="btn primary top-track" onclick="goToTracking()">📦 تتبع الطلب</button><button class="btn outline order-top" onclick="openOrder()">اطلب الآن</button></div>
+<div class="actions"><button class="btn outline" id="loginBtn" onclick="location.href='/account.html'">دخول</button><button class="btn outline" onclick="location.href='/partners.html'">انضم كشريك</button><button class="btn primary top-track" onclick="location.href='/tracking.html'">📦 تتبع الطلب</button><button class="btn outline order-top" onclick="openOrder()">اطلب الآن</button></div>
 </div></header>
-<div class="search-shell"><div class="wrap search-row"><div class="store-search">⌕<input id="topSearch" placeholder="ابحث في آلاف المنتجات والعروض" oninput="syncSearch(this.value)"></div><button class="header-icon" onclick="openCart()" aria-label="السلة">🛒<span class="mini-badge" id="topCartCount">0</span></button></div></div>
+<div class="search-shell"><div class="wrap search-row"><div class="store-search">⌕<input id="topSearch" placeholder="ابحث في آلاف المنتجات والعروض" oninput="syncSearch(this.value)"></div><button class="header-icon" onclick="location.href='/cart.html'" aria-label="السلة">🛒<span class="mini-badge" id="topCartCount">0</span></button></div></div>
 
 <main>
 <section class="hero"><div class="wrap hero-grid">
@@ -238,8 +238,8 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 </section>
 <footer><div class="wrap footer-grid"><div><h2>الرفاعي للشحن الدولي</h2><p>منصة تربط العملاء في السودان بمنتجات الشركات والمتاجر السعودية، مع تنسيق الشراء والتجهيز والشحن.</p></div><div><b>روابط وسياسات</b><p><a href="/products.html">المنتجات</a><br><a href="#calculator">حاسبة الشحن</a><br><a href="/tracking.html">تتبع الطلب</a><br><a href="/partners.html">الشراكات</a><br><a href="/privacy.html">سياسة الخصوصية</a><br><a href="/delete-account.html">طلب حذف الحساب</a><br><a href="/terms.html">الشروط والإلغاء والاسترداد</a></p></div><div><b>تواصل</b><p>واتساب: <a href="https://wa.me/966540407193?text=السلام عليكم، أريد الاستفسار عن الشحن عبر منصة الرفاعي" target="_blank">0540407193</a><br>الرياض – السعودية</p></div></div></footer>
 
-<div class="cart"><button class="btn primary" onclick="openCart()">🛒 السلة <span id="cartCount" class="badge">0</span></button></div>
-<nav class="mobile-nav" aria-label="التنقل السفلي"><a href="#"><i>⌂</i>الرئيسية</a><a href="/products.html"><i>▦</i>الأقسام</a><a href="/tracking.html"><i>⌖</i>التتبع</a><button onclick="openCart()"><i>🛒</i>السلة</button><button onclick="openAccount()"><i>♙</i>حسابي</button></nav>
+<div class="cart"><button class="btn primary" onclick="location.href='/cart.html'">🛒 السلة <span id="cartCount" class="badge">0</span></button></div>
+<nav class="mobile-nav" aria-label="التنقل السفلي"><a href="#"><i>⌂</i>الرئيسية</a><a href="/products.html"><i>▦</i>الأقسام</a><a href="/tracking.html"><i>⌖</i>التتبع</a><a href="/cart.html"><i>🛒</i>السلة</a><a href="/account.html"><i>♙</i>حسابي</a></nav>
 
 <div class="modal" id="orderModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>طلب شراء وشحن</h2>
 <div class="field"><label>الاسم *</label><input id="oName"></div><div class="field"><label>رقم الجوال / واتساب *</label><input id="oPhone"></div>
