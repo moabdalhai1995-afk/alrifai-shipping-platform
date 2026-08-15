@@ -16,12 +16,16 @@ android {
 
     signingConfigs {
         release {
-            def storePath = System.getenv('ALRIFAI_KEYSTORE_PATH')
+            def cleanEnv = { name ->
+                def value = System.getenv(name)
+                value == null ? null : value.trim()
+            }
+            def storePath = cleanEnv('ALRIFAI_KEYSTORE_PATH')
             if (storePath) {
                 storeFile file(storePath)
-                storePassword System.getenv('ALRIFAI_KEYSTORE_PASSWORD')
-                keyAlias System.getenv('ALRIFAI_KEY_ALIAS')
-                keyPassword System.getenv('ALRIFAI_KEY_PASSWORD')
+                storePassword cleanEnv('ALRIFAI_KEYSTORE_PASSWORD')
+                keyAlias cleanEnv('ALRIFAI_KEY_ALIAS')
+                keyPassword cleanEnv('ALRIFAI_KEY_PASSWORD')
             }
         }
     }
