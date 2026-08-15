@@ -66,6 +66,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 .p4-box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
 .pay-methods{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.pay-method{border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;background:#fff}.pay-method:hover{border-color:var(--gold)}.pay-method input{margin-left:7px}
 .notice{padding:12px;border-radius:10px;background:#f8f3e8;margin:10px 0}
+.notification-unread{border-right:4px solid var(--gold);background:#fff7e7}.notification-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.notification-badge{display:inline-grid;place-items:center;min-width:25px;height:25px;padding:0 7px;border-radius:999px;background:#d91d2b;color:#fff;font-size:12px}.notification-read{font-size:12px;padding:7px 10px}
 @media(max-width:700px){.pay-methods{grid-template-columns:1fr 1fr}}
 </style>
 <style>
@@ -162,7 +163,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div id="myPayments" style="margin-top:15px"></div>
 </div>
 <div class="p4-box">
-<h3>الإشعارات</h3><div id="myNotifications"><div class="empty">لا توجد إشعارات.</div></div>
+<div class="notification-head"><h3>الإشعارات <span id="notificationBadge" class="notification-badge" style="display:none">0</span></h3><button id="readAllNotifications" class="btn outline notification-read" style="display:none" onclick="markAllNotificationsRead()">تعليم الكل كمقروء</button></div><div id="myNotifications"><div class="empty">لا توجد إشعارات.</div></div>
 </div>
 </div>
 </div>
@@ -600,8 +601,14 @@ async function loadPhase4Customer(){
   const p=await api("/api/my-payments");
   document.getElementById("myPayments").innerHTML=p.payments.length?'<h4>عمليات الدفع</h4>'+p.payments.map(x=>`<div class="notice">${x.payment_no} — ${x.order_no} — ${Number(x.amount).toLocaleString("ar-SA")} SAR — ${x.status}</div>`).join(""):"";
   const n=await api("/api/notifications");
-  document.getElementById("myNotifications").innerHTML=n.notifications.length?n.notifications.map(x=>`<div class="notice"><b>${x.title}</b><br>${x.body}<div class="small muted">${x.created_at}</div></div>`).join(""):'<div class="empty">لا توجد إشعارات.</div>';
+  const unread=n.notifications.filter(x=>!x.read_at),badge=document.getElementById("notificationBadge"),readAll=document.getElementById("readAllNotifications");
+  badge.textContent=unread.length;badge.style.display=unread.length?"inline-grid":"none";readAll.style.display=unread.length?"inline-block":"none";
+  document.getElementById("myNotifications").innerHTML=n.notifications.length?n.notifications.map(x=>`<div class="notice ${x.read_at?"":"notification-unread"}"><b>${x.title}</b><br>${x.body}<div class="small muted">${new Date(x.created_at+"Z").toLocaleString("ar-SA")}</div>${x.read_at?"":`<button class="btn outline notification-read" onclick="markNotificationRead(${x.id})">تمت القراءة</button>`}</div>`).join(""):'<div class="empty">لا توجد إشعارات.</div>';
  }catch(e){}
+}
+async function markNotificationRead(id){try{await api("/api/notifications/"+id+"/read",{method:"PATCH"});await loadPhase4Customer()}catch(e){showToast(e.message)}}
+async function markAllNotificationsRead(){
+ try{const n=await api("/api/notifications");await Promise.all(n.notifications.filter(x=>!x.read_at).map(x=>api("/api/notifications/"+x.id+"/read",{method:"PATCH"})));await loadPhase4Customer()}catch(e){showToast(e.message)}
 }
 async function acceptQuote(no){try{await api("/api/quotes/"+encodeURIComponent(no)+"/accept",{method:"POST"});showToast("تم اعتماد عرض السعر");loadPhase4Customer()}catch(e){showToast(e.message)}}
 function openPayment(no,total){
