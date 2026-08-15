@@ -154,6 +154,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="field"><label>مدينة الوصول الافتراضية</label><select id="profileCity"><option>الخرطوم</option><option>الجزيرة</option><option>عطبرة</option><option>شندي</option></select></div>
 <div class="field"><label>عنوان التوصيل</label><textarea id="profileAddress" rows="3" placeholder="الحي، الشارع، أقرب معلم"></textarea></div>
 <button class="btn primary" onclick="saveProfile()">حفظ التعديل</button>
+<div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)"><h3 style="color:#a12222">حذف الحساب</h3><p class="muted small">سيتم حذف بياناتك الشخصية نهائيًا مع إبقاء سجلات الطلبات مجهّلة للأغراض التشغيلية والمحاسبية.</p><button class="btn outline" style="color:#a12222;border-color:#e3b5b5" onclick="deleteAccount()">حذف حسابي نهائيًا</button></div>
 </div>
 <div class="p2-panel">
 <h3>طلباتي</h3><div id="myOrders"><div class="empty">جاري التحميل...</div></div>
@@ -235,7 +236,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="p2-panel"><h3>طلبات الشراكة</h3><div id="adminPartners"></div></div>
 </div>
 </section>
-<footer><div class="wrap footer-grid"><div><h2>الرفاعي للشحن الدولي</h2><p>منصة تربط العملاء في السودان بمنتجات الشركات والمتاجر السعودية، مع تنسيق الشراء والتجهيز والشحن.</p></div><div><b>روابط</b><p><a href="#products">المنتجات</a><br><a href="#calculator">حاسبة الشحن</a><br><a href="#track">تتبع الطلب</a></p></div><div><b>تواصل</b><p>واتساب: <a href="https://wa.me/966540407193?text=السلام عليكم، أريد الاستفسار عن الشحن عبر منصة الرفاعي" target="_blank">0540407193</a><br>الرياض – السعودية</p></div></div></footer>
+<footer><div class="wrap footer-grid"><div><h2>الرفاعي للشحن الدولي</h2><p>منصة تربط العملاء في السودان بمنتجات الشركات والمتاجر السعودية، مع تنسيق الشراء والتجهيز والشحن.</p></div><div><b>روابط</b><p><a href="#products">المنتجات</a><br><a href="#calculator">حاسبة الشحن</a><br><a href="#track">تتبع الطلب</a><br><a href="/privacy.html">سياسة الخصوصية وحذف الحساب</a></p></div><div><b>تواصل</b><p>واتساب: <a href="https://wa.me/966540407193?text=السلام عليكم، أريد الاستفسار عن الشحن عبر منصة الرفاعي" target="_blank">0540407193</a><br>الرياض – السعودية</p></div></div></footer>
 
 <div class="cart"><button class="btn primary" onclick="openCart()">🛒 السلة <span id="cartCount" class="badge">0</span></button></div>
 <nav class="mobile-nav" aria-label="التنقل السفلي"><a href="#"><i>⌂</i>الرئيسية</a><a href="#products"><i>▦</i>الأقسام</a><button onclick="goToTracking()"><i>⌖</i>التتبع</button><button onclick="openCart()"><i>🛒</i>السلة</button><button onclick="openAccount()"><i>♙</i>حسابي</button></nav>
@@ -512,6 +513,13 @@ async function loadProfile(){
 }
 async function saveProfile(){
  try{await api("/api/profile",{method:"PUT",body:JSON.stringify({name:profileName.value,delivery_city:profileCity.value,delivery_address:profileAddress.value})});savedProfile={...(savedProfile||{}),name:profileName.value,delivery_city:profileCity.value,delivery_address:profileAddress.value};showToast("تم حفظ البيانات والعنوان")}
+ catch(e){showToast(e.message)}
+}
+async function deleteAccount(){
+ if(!confirm("هل أنت متأكد من حذف حسابك وبياناتك الشخصية نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."))return;
+ const confirmation=prompt('للتأكيد، اكتب كلمة "حذف"');
+ if(confirmation!=="حذف"){showToast("لم يتم حذف الحساب");return}
+ try{await api("/api/profile",{method:"DELETE"});savedProfile=null;cart=[];favoriteIds=new Set();localStorage.removeItem("alrifaiCart");document.getElementById("adminArea").style.display="none";document.getElementById("loginBtn").textContent="دخول";document.getElementById("accountGuest").style.display="block";document.getElementById("accountContent").style.display="none";renderCartCount();renderProducts();showToast("تم حذف الحساب والبيانات الشخصية")}
  catch(e){showToast(e.message)}
 }
 async function loadMyOrders(){
