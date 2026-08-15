@@ -204,6 +204,32 @@ db.exec(`
     error TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS admin_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    details TEXT,
+    priority TEXT NOT NULL DEFAULT 'medium',
+    status TEXT NOT NULL DEFAULT 'pending',
+    source TEXT NOT NULL DEFAULT 'manual',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS ai_actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    result TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    confirmed_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS ai_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 app.disable("x-powered-by");
@@ -397,6 +423,64 @@ function requireAdmin(req, res) {
     return false;
   }
   return true;
+}
+
+function adminAiSnapshot() {
+  return {
+    stats: {
+      customers: db.prepare("SELECT COUNT(*) c FROM users WHERE role='customer'").get().c,
+      openOrders: db.prepare("SELECT COUNT(*) c FROM orders WHERE status BETWEEN 0 AND 2").get().c,
+      shippedOrders: db.prepare("SELECT COUNT(*) c FROM orders WHERE status=3").get().c,
+      lowStock: db.prepare("SELECT COUNT(*) c FROM products_catalog WHERE active=1 AND stock_quantity<=5").get().c,
+      openSupport: db.prepare("SELECT COUNT(*) c FROM support_tickets WHERE status IN ('open','in_progress')").get().c,
+      unreadWhatsApp: db.prepare("SELECT COUNT(*) c FROM whatsapp_messages WHERE direction='inbound' AND status='received'").get().c
+    },
+    recentOrders: db.prepare("SELECT order_no,name,product,city,status,created_at FROM orders ORDER BY id DESC LIMIT 20").all(),
+    lowStockProducts: db.prepare("SELECT name,category,stock_quantity FROM products_catalog WHERE active=1 AND stock_quantity<=5 ORDER BY stock_quantity LIMIT 20").all(),
+    support: db.prepare("SELECT ticket_no,subject,message,status,created_at FROM support_tickets WHERE status IN ('open','in_progress') ORDER BY id DESC LIMIT 15").all(),
+    whatsapp: db.prepare("SELECT substr(phone,-4) phone_last4,customer_name,body,order_no,created_at FROM whatsapp_messages WHERE direction='inbound' ORDER BY id DESC LIMIT 15").all(),
+    tasks: db.prepare("SELECT id,title,priority,status,created_at FROM admin_tasks WHERE status!='completed' ORDER BY id DESC LIMIT 30").all()
+  };
+}
+
+function resolveAiWhatsAppPhone(value) {
+  const digits = normalizeWhatsAppPhone(value);
+  if (digits.length >= 8) return digits;
+  const matches = db.prepare("SELECT DISTINCT phone FROM whatsapp_messages WHERE phone LIKE ? ORDER BY id DESC LIMIT 2")
+    .all("%" + digits);
+  if (matches.length !== 1) throw new Error("تعذر تحديد العميل بأمان؛ افتح محادثة واتساب ورد منها مباشرة");
+  return matches[0].phone;
+}
+
+async function askOpenAiForAdmin(message) {
+  if (!process.env.OPENAI_API_KEY) throw new Error("مفتاح OpenAI غير مضاف في إعدادات الخادم");
+  const schema = {
+    type: "object",
+    properties: {
+      reply: { type: "string" },
+      proposed_actions: { type: "array", items: { type: "object", properties: {
+        type: { type: "string", enum: ["create_task", "draft_whatsapp"] },
+        title: { type: "string" }, details: { type: "string" },
+        priority: { type: "string", enum: ["low", "medium", "high"] },
+        phone: { type: ["string", "null"] }, message: { type: ["string", "null"] }
+      }, required: ["type","title","details","priority","phone","message"], additionalProperties: false } }
+    }, required: ["reply","proposed_actions"], additionalProperties: false
+  };
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || "gpt-5.6-luna", store: false, max_output_tokens: 1800,
+      instructions: "أنت مساعد مدير منصة الرفاعي للشحن الدولي. أجب بالعربية باختصار واعتمد فقط على بيانات التشغيل المقدمة. اقترح إجراءات عملية عند الحاجة. لا تزعم تنفيذ أي إجراء. كل إجراء يحتاج موافقة المدير. لا تطلب أو تعرض كلمات مرور أو مفاتيح سرية. عند اقتراح رد واتساب استخدم آخر أربعة أرقام المتاحة في حقل phone.",
+      input: `بيانات التشغيل الحالية:\n${JSON.stringify(adminAiSnapshot())}\n\nطلب المدير:\n${message}`,
+      text: { format: { type: "json_schema", name: "admin_assistant", strict: true, schema } }
+    })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || "تعذر الاتصال بخدمة OpenAI");
+  const outputText = data.output?.flatMap(item => item.content || []).find(item => item.type === "output_text")?.text;
+  if (!outputText) throw new Error("لم يصل رد صالح من المساعد");
+  return JSON.parse(outputText);
 }
 
 app.get("/api/health", (req, res) =>
@@ -841,6 +925,75 @@ app.post("/api/admin/whatsapp/reply", async (req, res) => {
     const result = await sendWhatsApp({ to: phone, type: "text", text: { preview_url: false, body } }, { body });
     res.json(result);
   } catch (error) { res.status(502).json({ error: error.message }); }
+});
+
+app.get("/api/admin/ai", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  res.json({ ok: true, enabled: !!process.env.OPENAI_API_KEY,
+    model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
+    messages: db.prepare("SELECT * FROM ai_messages ORDER BY id DESC LIMIT 30").all().reverse(),
+    actions: db.prepare("SELECT * FROM ai_actions WHERE status='pending' ORDER BY id DESC LIMIT 30").all(),
+    tasks: db.prepare("SELECT * FROM admin_tasks ORDER BY status='completed',id DESC LIMIT 100").all()
+  });
+});
+
+app.post("/api/admin/ai/chat", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const message = String(req.body.message || "").trim().slice(0, 2000);
+  if (!message) return res.status(400).json({ error: "اكتب طلبك للمساعد" });
+  try {
+    db.prepare("INSERT INTO ai_messages(role,body) VALUES('user',?)").run(message);
+    const answer = await askOpenAiForAdmin(message);
+    db.prepare("INSERT INTO ai_messages(role,body) VALUES('assistant',?)").run(answer.reply);
+    const insert = db.prepare("INSERT INTO ai_actions(action_type,title,payload) VALUES(?,?,?)");
+    const actions = answer.proposed_actions.slice(0, 10).map(action => {
+      const info = insert.run(action.type, action.title.slice(0, 200), JSON.stringify(action));
+      return { id: info.lastInsertRowid, ...action, status: "pending" };
+    });
+    res.json({ ok: true, reply: answer.reply, actions });
+  } catch (error) {
+    console.error("admin AI error", error);
+    res.status(502).json({ error: error.message });
+  }
+});
+
+app.post("/api/admin/ai/actions/:id/confirm", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const action = db.prepare("SELECT * FROM ai_actions WHERE id=? AND status='pending'").get(req.params.id);
+  if (!action) return res.status(404).json({ error: "الاقتراح غير موجود أو تمت معالجته" });
+  const payload = JSON.parse(action.payload);
+  try {
+    let result;
+    if (action.action_type === "create_task") {
+      const info = db.prepare("INSERT INTO admin_tasks(title,details,priority,source) VALUES(?,?,?,'ai')")
+        .run(payload.title.slice(0, 200), payload.details.slice(0, 2000), payload.priority);
+      result = { taskId: info.lastInsertRowid };
+    } else if (action.action_type === "draft_whatsapp") {
+      if (!payload.phone || !payload.message) throw new Error("رقم العميل ونص الرسالة مطلوبان");
+      const phone = resolveAiWhatsAppPhone(payload.phone);
+      result = await sendWhatsApp({ to: phone, type: "text", text: { preview_url: false, body: payload.message } }, { body: payload.message });
+    } else throw new Error("نوع الإجراء غير مسموح");
+    db.prepare("UPDATE ai_actions SET status='confirmed',result=?,confirmed_at=CURRENT_TIMESTAMP WHERE id=?")
+      .run(JSON.stringify(result), action.id);
+    res.json({ ok: true, result });
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+app.post("/api/admin/ai/actions/:id/reject", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const info = db.prepare("UPDATE ai_actions SET status='rejected',confirmed_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending'").run(req.params.id);
+  if (!info.changes) return res.status(404).json({ error: "الاقتراح غير موجود أو تمت معالجته" });
+  res.json({ ok: true });
+});
+
+app.patch("/api/admin/tasks/:id", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const status = String(req.body.status || "");
+  if (!["pending","in_progress","completed"].includes(status)) return res.status(400).json({ error: "حالة المهمة غير صحيحة" });
+  const info = db.prepare("UPDATE admin_tasks SET status=?,completed_at=CASE WHEN ?='completed' THEN CURRENT_TIMESTAMP ELSE NULL END WHERE id=?")
+    .run(status, status, req.params.id);
+  if (!info.changes) return res.status(404).json({ error: "المهمة غير موجودة" });
+  res.json({ ok: true });
 });
 
 app.get("/api/admin/partners", (req, res) => {
