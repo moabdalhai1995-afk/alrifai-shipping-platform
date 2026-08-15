@@ -591,10 +591,16 @@ app.patch("/api/admin/orders/:orderNo/status", (req, res) => {
   if (!Number.isInteger(status) || status < 0 || status > 3) {
     return res.status(400).json({ error: "حالة الطلب غير صحيحة" });
   }
-  const info = db.prepare(
-    "UPDATE orders SET status=? WHERE order_no=?"
-  ).run(status, req.params.orderNo);
-  if (!info.changes) return res.status(404).json({ error: "الطلب غير موجود" });
+  const order = db.prepare("SELECT id,user_id,status FROM orders WHERE order_no=?").get(req.params.orderNo);
+  if (!order) return res.status(404).json({ error: "الطلب غير موجود" });
+  db.prepare("UPDATE orders SET status=? WHERE id=?").run(status, order.id);
+  if (order.user_id && order.status !== status) {
+    const labels = ["تم استلام طلبك", "طلبك قيد التأكيد", "تم تجهيز طلبك", "تم شحن طلبك"];
+    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)").run(
+      order.user_id, order.id, labels[status],
+      "تم تحديث حالة الطلب " + req.params.orderNo + " إلى: " + labels[status]
+    );
+  }
   res.json({ ok: true });
 });
 
@@ -715,10 +721,17 @@ app.patch("/api/admin/payments/:paymentNo/status", (req, res) => {
   if (!allowed.includes(status)) {
     return res.status(400).json({ error: "حالة الدفع غير صحيحة" });
   }
-  const info = db.prepare(
-    "UPDATE payments SET status=? WHERE payment_no=?"
-  ).run(status, req.params.paymentNo);
-  if (!info.changes) return res.status(404).json({ error: "عملية الدفع غير موجودة" });
+  const payment = db.prepare(`SELECT p.id,p.order_id,p.status,o.user_id,o.order_no
+    FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.payment_no=?`).get(req.params.paymentNo);
+  if (!payment) return res.status(404).json({ error: "عملية الدفع غير موجودة" });
+  db.prepare("UPDATE payments SET status=? WHERE id=?").run(status, payment.id);
+  if (payment.user_id && payment.status !== status) {
+    const labels = { pending:"قيد المراجعة", paid:"تم تأكيد الدفع", failed:"تعذر الدفع", refunded:"تم رد المبلغ" };
+    db.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)").run(
+      payment.user_id, payment.order_id, labels[status],
+      "حالة الدفع " + req.params.paymentNo + " للطلب " + payment.order_no + ": " + labels[status]
+    );
+  }
   res.json({ ok: true });
 });
 
