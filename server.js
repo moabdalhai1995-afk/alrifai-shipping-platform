@@ -458,6 +458,35 @@ function resolveAiWhatsAppPhone(value) {
   return matches[0].phone;
 }
 
+function localAdminAnswer(message) {
+  const data = adminAiSnapshot();
+  const s = data.stats;
+  const actions = [];
+  const priorities = [];
+  if (s.openOrders) {
+    priorities.push(`متابعة ${s.openOrders} طلب مفتوح وتسريع انتقاله للمرحلة التالية`);
+    actions.push({ type: "create_task", title: "متابعة الطلبات المفتوحة", details: `راجع ${s.openOrders} طلب مفتوح وحدّث الحالات المتأخرة.`, priority: "high", phone: null, message: null });
+  }
+  if (s.lowStock) {
+    priorities.push(`معالجة ${s.lowStock} منتج منخفض أو نافد المخزون`);
+    actions.push({ type: "create_task", title: "تحديث المخزون المنخفض", details: `راجع المنتجات منخفضة المخزون وعددها ${s.lowStock} وتواصل مع الموردين.`, priority: "high", phone: null, message: null });
+  }
+  if (s.openSupport || s.unreadWhatsApp) {
+    priorities.push(`الرد على ${s.openSupport} طلب دعم و${s.unreadWhatsApp} رسالة واتساب`);
+    actions.push({ type: "create_task", title: "معالجة رسائل العملاء", details: `عالج طلبات الدعم المفتوحة (${s.openSupport}) ورسائل واتساب الجديدة (${s.unreadWhatsApp}).`, priority: "medium", phone: null, message: null });
+  }
+  if (!priorities.length) priorities.push("لا توجد حالات عاجلة؛ راجع الطلبات الجديدة والمبيعات اليوم");
+  const normalized = message.toLowerCase();
+  let focus = "";
+  if (normalized.includes("مخزون")) focus = `\n\nالمخزون المنخفض:\n${data.lowStockProducts.length ? data.lowStockProducts.map(p => `• ${p.name}: ${p.stock_quantity}`).join("\n") : "لا توجد منتجات منخفضة المخزون."}`;
+  else if (normalized.includes("طلب")) focus = `\n\nآخر الطلبات:\n${data.recentOrders.length ? data.recentOrders.slice(0, 8).map(o => `• ${o.order_no} — ${o.name} — الحالة ${o.status}`).join("\n") : "لا توجد طلبات."}`;
+  else if (normalized.includes("دعم") || normalized.includes("رسائل")) focus = `\n\nخدمة العملاء: ${s.openSupport} طلب دعم مفتوح و${s.unreadWhatsApp} رسالة واتساب جديدة.`;
+  return {
+    reply: `ملخص التشغيل:\n• العملاء: ${s.customers}\n• الطلبات المفتوحة: ${s.openOrders}\n• الطلبات المشحونة: ${s.shippedOrders}\n• المخزون المنخفض: ${s.lowStock}\n• الدعم المفتوح: ${s.openSupport}\n\nأهم الأولويات:\n${priorities.slice(0, 3).map((p, i) => `${i + 1}. ${p}`).join("\n")}${focus}`,
+    proposed_actions: actions.slice(0, 3)
+  };
+}
+
 async function askOpenAiForAdmin(message) {
   if (!process.env.OPENAI_API_KEY) throw new Error("مفتاح OpenAI غير مضاف في إعدادات الخادم");
   const schema = {
@@ -935,8 +964,8 @@ app.post("/api/admin/whatsapp/reply", async (req, res) => {
 
 app.get("/api/admin/ai", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  res.json({ ok: true, enabled: !!process.env.OPENAI_API_KEY,
-    model: openAiModel(),
+  res.json({ ok: true, enabled: true, mode: "local_free",
+    model: "مساعد محلي مجاني",
     messages: db.prepare("SELECT * FROM ai_messages ORDER BY id DESC LIMIT 30").all().reverse(),
     actions: db.prepare("SELECT * FROM ai_actions WHERE status='pending' ORDER BY id DESC LIMIT 30").all(),
     tasks: db.prepare("SELECT * FROM admin_tasks ORDER BY status='completed',id DESC LIMIT 100").all()
@@ -949,7 +978,7 @@ app.post("/api/admin/ai/chat", async (req, res) => {
   if (!message) return res.status(400).json({ error: "اكتب طلبك للمساعد" });
   try {
     db.prepare("INSERT INTO ai_messages(role,body) VALUES('user',?)").run(message);
-    const answer = await askOpenAiForAdmin(message);
+    const answer = localAdminAnswer(message);
     db.prepare("INSERT INTO ai_messages(role,body) VALUES('assistant',?)").run(answer.reply);
     const insert = db.prepare("INSERT INTO ai_actions(action_type,title,payload) VALUES(?,?,?)");
     const actions = answer.proposed_actions.slice(0, 10).map(action => {
