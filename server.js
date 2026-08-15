@@ -148,6 +148,15 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
   );
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    used_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
 `);
 
 app.disable("x-powered-by");
@@ -222,6 +231,23 @@ async function sendVerificationEmail(userId, email) {
       "<p>اضغط الزر التالي لتأكيد بريدك وتفعيل حسابك:</p>" +
       '<p><a href="' + verifyUrl + '" style="background:#bd8b27;color:#fff;padding:12px 22px;text-decoration:none;border-radius:8px">تأكيد البريد الإلكتروني</a></p>' +
       "<p>صلاحية الرابط 24 ساعة.</p></div>"
+  });
+}
+
+async function sendPasswordResetEmail(userId, email) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) throw new Error("SMTP is not configured");
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  db.prepare("DELETE FROM password_reset_tokens WHERE user_id=?").run(userId);
+  db.prepare("INSERT INTO password_reset_tokens(user_id,token_hash,expires_at) VALUES(?,?,?)")
+    .run(userId, tokenHash, Date.now() + 60 * 60 * 1000);
+  const baseUrl = (process.env.BASE_URL || "http://localhost:" + PORT).replace(/\/$/, "");
+  const resetUrl = baseUrl + "/?reset_token=" + encodeURIComponent(token);
+  await emailTransport().sendMail({
+    from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: "استعادة كلمة المرور - الرفاعي للشحن الدولي",
+    html: '<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>استعادة كلمة المرور</h2><p>اضغط الزر التالي لإنشاء كلمة مرور جديدة:</p><p><a href="' + resetUrl + '" style="background:#bd8b27;color:#fff;padding:12px 22px;text-decoration:none;border-radius:8px">تغيير كلمة المرور</a></p><p>صلاحية الرابط ساعة واحدة. تجاهل الرسالة إن لم تطلبها.</p></div>'
   });
 }
 
@@ -426,6 +452,30 @@ app.post("/api/auth/login", (req, res) => {
 app.post("/api/auth/logout", (req, res) =>
   req.session.destroy(() => res.json({ ok: true }))
 );
+
+app.post("/api/auth/forgot-password", async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const user = db.prepare("SELECT id,email FROM users WHERE lower(email)=?").get(email);
+  if (user) {
+    try { await sendPasswordResetEmail(user.id, user.email); }
+    catch (error) { console.error("password reset email error", error); }
+  }
+  res.json({ ok: true, message: "إذا كان البريد مسجلاً فستصلك رسالة الاستعادة" });
+});
+
+app.post("/api/auth/reset-password", (req, res) => {
+  const token = String(req.body.token || "");
+  const password = String(req.body.password || "");
+  if (password.length < 6) return res.status(400).json({ error: "كلمة المرور يجب ألا تقل عن 6 أحرف" });
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const row = db.prepare("SELECT id,user_id,expires_at,used_at FROM password_reset_tokens WHERE token_hash=?").get(tokenHash);
+  if (!row || row.used_at || row.expires_at < Date.now()) return res.status(400).json({ error: "رابط الاستعادة غير صالح أو منتهي" });
+  db.transaction(() => {
+    db.prepare("UPDATE users SET password_hash=? WHERE id=?").run(bcrypt.hashSync(password, 10), row.user_id);
+    db.prepare("UPDATE password_reset_tokens SET used_at=CURRENT_TIMESTAMP WHERE id=?").run(row.id);
+  })();
+  res.json({ ok: true, message: "تم تغيير كلمة المرور بنجاح" });
+});
 
 app.post("/api/orders", (req, res) => {
   const { name, phone, product, city, qty = 1, details = "", items = [] } = req.body;
