@@ -443,6 +443,12 @@ function adminAiSnapshot() {
   };
 }
 
+function openAiModel() {
+  const configured = String(process.env.OPENAI_MODEL || "").trim();
+  if (!configured || configured.startsWith("sk-") || !/^[a-zA-Z0-9._-]+$/.test(configured)) return "gpt-5.6-luna";
+  return configured;
+}
+
 function resolveAiWhatsAppPhone(value) {
   const digits = normalizeWhatsAppPhone(value);
   if (digits.length >= 8) return digits;
@@ -470,7 +476,7 @@ async function askOpenAiForAdmin(message) {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-5.6-luna", store: false, max_output_tokens: 1800,
+      model: openAiModel(), store: false, max_output_tokens: 1800,
       instructions: "أنت مساعد مدير منصة الرفاعي للشحن الدولي. أجب بالعربية باختصار واعتمد فقط على بيانات التشغيل المقدمة. اقترح إجراءات عملية عند الحاجة. لا تزعم تنفيذ أي إجراء. كل إجراء يحتاج موافقة المدير. لا تطلب أو تعرض كلمات مرور أو مفاتيح سرية. عند اقتراح رد واتساب استخدم آخر أربعة أرقام المتاحة في حقل phone.",
       input: `بيانات التشغيل الحالية:\n${JSON.stringify(adminAiSnapshot())}\n\nطلب المدير:\n${message}`,
       text: { format: { type: "json_schema", name: "admin_assistant", strict: true, schema } }
@@ -930,7 +936,7 @@ app.post("/api/admin/whatsapp/reply", async (req, res) => {
 app.get("/api/admin/ai", (req, res) => {
   if (!requireAdmin(req, res)) return;
   res.json({ ok: true, enabled: !!process.env.OPENAI_API_KEY,
-    model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
+    model: openAiModel(),
     messages: db.prepare("SELECT * FROM ai_messages ORDER BY id DESC LIMIT 30").all().reverse(),
     actions: db.prepare("SELECT * FROM ai_actions WHERE status='pending' ORDER BY id DESC LIMIT 30").all(),
     tasks: db.prepare("SELECT * FROM admin_tasks ORDER BY status='completed',id DESC LIMIT 100").all()
