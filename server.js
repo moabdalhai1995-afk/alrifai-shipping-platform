@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS products_catalog (
   name TEXT NOT NULL,
   category TEXT,
   description TEXT,
+  image_url TEXT,
   price REAL NOT NULL DEFAULT 0,
   currency TEXT NOT NULL DEFAULT 'SAR',
   active INTEGER NOT NULL DEFAULT 1,
@@ -118,6 +119,11 @@ CREATE TABLE IF NOT EXISTS partners (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 `);
+
+const productColumns = new Set(
+  db.prepare("PRAGMA table_info(products_catalog)").all().map((column) => column.name)
+);
+if (!productColumns.has("image_url")) db.exec("ALTER TABLE products_catalog ADD COLUMN image_url TEXT");
 
 const userColumns = new Set(
   db.prepare("PRAGMA table_info(users)").all().map((column) => column.name)
@@ -666,7 +672,7 @@ app.patch("/api/admin/payments/:paymentNo/status", (req, res) => {
 });
 
 app.get("/api/catalog", (req, res) => {
-  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.price,p.currency,p.supplier_id,s.name supplier_name
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.supplier_id,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
     WHERE p.active=1 ORDER BY p.id DESC`).all();
   res.json({ ok: true, products: rows });
@@ -693,26 +699,26 @@ app.get("/api/admin/suppliers", (req, res) => {
 app.post("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const {
-    supplier_id = null, name, category = "", description = "",
+    supplier_id = null, name, category = "", description = "", image_url = "",
     price = 0, currency = "SAR"
   } = req.body;
   if (!name) return res.status(400).json({ error: "اسم المنتج مطلوب" });
-  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,price,currency)
-    VALUES(?,?,?,?,?,?)`).run(
-      supplier_id || null, name, category, description, Number(price) || 0, currency
+  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,image_url,price,currency)
+    VALUES(?,?,?,?,?,?,?)`).run(
+      supplier_id || null, name, category, description, image_url, Number(price) || 0, currency
     );
   res.status(201).json({ ok: true, id: info.lastInsertRowid });
 });
 
 app.patch("/api/admin/products/:id", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const { name, category, description, price, currency, active } = req.body;
+  const { name, category, description, image_url, price, currency, active } = req.body;
   const info = db.prepare(`UPDATE products_catalog
     SET name=COALESCE(?,name),category=COALESCE(?,category),
-        description=COALESCE(?,description),price=COALESCE(?,price),
+        description=COALESCE(?,description),image_url=COALESCE(?,image_url),price=COALESCE(?,price),
         currency=COALESCE(?,currency),active=COALESCE(?,active)
     WHERE id=?`).run(
-      name, category, description,
+      name, category, description, image_url,
       price === undefined ? null : Number(price),
       currency,
       active === undefined ? null : Number(active),
