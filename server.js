@@ -875,6 +875,18 @@ app.get("/api/admin/suppliers", (req, res) => {
   });
 });
 
+app.patch("/api/admin/suppliers/:id", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { name, phone, city, active } = req.body;
+  const info = db.prepare(`UPDATE suppliers SET name=COALESCE(?,name),phone=COALESCE(?,phone),
+    city=COALESCE(?,city),active=COALESCE(?,active) WHERE id=?`).run(
+      name || null, phone === undefined ? null : phone, city === undefined ? null : city,
+      active === undefined ? null : Number(active), req.params.id
+    );
+  if (!info.changes) return res.status(404).json({ error: "المورد غير موجود" });
+  res.json({ ok: true });
+});
+
 app.post("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const {
