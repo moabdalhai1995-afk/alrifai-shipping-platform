@@ -1,0 +1,45 @@
+name: Platform checks
+
+on:
+  pull_request:
+    paths:
+      - "**.js"
+      - "**.html"
+      - "package.json"
+      - ".github/workflows/platform-checks.yml"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check JavaScript
+        run: npm run check
+      - name: Start server and verify health
+        env:
+          DB_FILE: /tmp/alrifai-ci.db
+          PORT: "3100"
+          SESSION_SECRET: ci-only-secret
+        run: |
+          node server.js > /tmp/alrifai-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if curl --fail --silent http://127.0.0.1:3100/api/health | grep --quiet '"ok":true'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/alrifai-server.log
+          exit 1
