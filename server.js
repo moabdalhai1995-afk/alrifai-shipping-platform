@@ -1,5 +1,6 @@
 const express = require("express");
 const helmet = require("helmet");
+const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
@@ -277,6 +278,7 @@ db.transaction(() => defaultAccountingAccounts.forEach(account => insertAccounti
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
+app.use(compression({ threshold: 1024 }));
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
@@ -302,7 +304,21 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 * 7
   }
 }));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, {
+  etag: true,
+  lastModified: true,
+  maxAge: "1h",
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".html")) {
+      // Always revalidate pages so deployed updates appear without clearing app data.
+      res.setHeader("Cache-Control", "no-cache");
+      return;
+    }
+    if (/\.(?:css|js|png|jpe?g|gif|svg|webp|ico|woff2?)$/i.test(filePath)) {
+      res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+    }
+  }
+}));
 
 function orderNo() {
   return "RIF-" + Date.now().toString().slice(-8) + "-" +
