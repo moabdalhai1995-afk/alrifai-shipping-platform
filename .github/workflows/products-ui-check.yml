@@ -18,8 +18,16 @@ jobs:
         run: |
           grep --quiet 'category-strip-shell' products.html
           grep --quiet 'category-chip active' products.html
+          grep --quiet 'category-thumb' products.html
+          grep --quiet 'categoryImage(category)' products.html
           grep --quiet 'buildCategories()' products.html
           grep --quiet 'activeCategory' products.html
+          python - <<'PY'
+          from pathlib import Path
+          html = Path('products.html').read_text(encoding='utf-8')
+          if html.index('category-strip-shell') > html.index('<header class="top">'):
+              raise SystemExit('Category strip must appear before the main header')
+          PY
           if grep --quiet '<select id="category"' products.html; then
             echo 'Legacy category dropdown must not return'
             exit 1
