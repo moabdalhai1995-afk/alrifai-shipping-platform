@@ -70,6 +70,41 @@ jobs:
           curl --fail --silent http://127.0.0.1:3100/api/me | grep --quiet '"authenticated":false'
           curl --fail --silent http://127.0.0.1:3100/api/auth/config | grep --quiet '"googleClientId"'
 
+          node - <<'NODE'
+          const Database = require("better-sqlite3");
+          const bcrypt = require("bcryptjs");
+          const db = new Database("/tmp/alrifai-ci.db");
+          db.prepare("DELETE FROM users WHERE phone=?").run("0502223344");
+          const hash = bcrypt.hashSync("CI-Customer-Password-2026", 10);
+          db.prepare("INSERT INTO users(name,phone,email,email_verified,password_hash,role) VALUES(?,?,?,?,?,'customer')")
+            .run("CI Customer", "0502223344", "customer-ci@example.com", 1, hash);
+          db.close();
+          NODE
+
+          customer_login_status=$(curl --silent --output /tmp/customer-login.json --dump-header /tmp/customer-login-headers.txt --write-out '%{http_code}' \
+            -X POST http://127.0.0.1:3100/api/auth/login \
+            -H 'X-Forwarded-Proto: https' \
+            -H 'Content-Type: application/json' \
+            --data '{"phone":"0502223344","password":"CI-Customer-Password-2026"}')
+          test "$customer_login_status" = "200"
+          grep --quiet '"role":"customer"' /tmp/customer-login.json
+          remember_cookie=$(grep -i '^set-cookie: rifai_customer_auth=' /tmp/customer-login-headers.txt | sed -E 's/^[^:]+: ([^;]+).*/\1/' | tr -d '\r')
+          test -n "$remember_cookie"
+
+          curl --fail --silent \
+            -H 'X-Forwarded-Proto: https' \
+            -H "Cookie: $remember_cookie" \
+            http://127.0.0.1:3100/api/me > /tmp/customer-remembered.json
+          grep --quiet '"authenticated":true' /tmp/customer-remembered.json
+          grep --quiet '"role":"customer"' /tmp/customer-remembered.json
+
+          logout_status=$(curl --silent --output /tmp/customer-logout.json --dump-header /tmp/customer-logout-headers.txt --write-out '%{http_code}' \
+            -X POST http://127.0.0.1:3100/api/auth/logout \
+            -H 'X-Forwarded-Proto: https' \
+            -H "Cookie: $remember_cookie")
+          test "$logout_status" = "200"
+          grep -qi '^set-cookie: rifai_customer_auth=;' /tmp/customer-logout-headers.txt
+
           curl --fail --silent http://127.0.0.1:3100/purchase-shipping.html | grep --quiet 'شراء وشحن'
           curl --fail --silent http://127.0.0.1:3100/shipping-only.html | grep --quiet 'شحن فقط'
           curl --fail --silent http://127.0.0.1:3100/all-requests.html | grep --quiet 'shipping_only'
@@ -90,6 +125,10 @@ jobs:
             --data '{"phone":"0501112233","password":"CI-Admin-Password-2026"}')
           test "$login_status" = "200"
           grep --quiet '"role":"admin"' /tmp/admin-login.json
+          if grep -qi '^set-cookie: rifai_customer_auth=' /tmp/admin-login-headers.txt; then
+            echo "Admin must not receive persistent customer authentication cookie"
+            exit 1
+          fi
           session_cookie=$(grep -i '^set-cookie: connect.sid=' /tmp/admin-login-headers.txt | sed -E 's/^[^:]+: ([^;]+).*/\1/' | tr -d '\r')
           test -n "$session_cookie"
 
