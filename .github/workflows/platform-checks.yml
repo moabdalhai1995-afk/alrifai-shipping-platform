@@ -58,6 +58,15 @@ jobs:
             grep --quiet "href=\"/admin/$admin_page\"" "/tmp/admin-$admin_page.html"
           done
 
+          for client_page in index.html account.html tracking.html products.html services.html partners.html cart.html calculator.html purchase-shipping.html shipping-only.html vehicle-shipping.html sudan-delivery.html privacy.html terms.html; do
+            safe_name=$(printf '%s' "$client_page" | tr '/.' '--')
+            curl --fail --silent "http://127.0.0.1:3100/$client_page" > "/tmp/client-$safe_name"
+            test -s "/tmp/client-$safe_name"
+          done
+
+          curl --fail --silent http://127.0.0.1:3100/api/me | grep --quiet '"authenticated":false'
+          curl --fail --silent http://127.0.0.1:3100/api/auth/config | grep --quiet '"googleClientId"'
+
           curl --fail --silent http://127.0.0.1:3100/purchase-shipping.html | grep --quiet 'شراء وشحن'
           curl --fail --silent http://127.0.0.1:3100/shipping-only.html | grep --quiet 'شحن فقط'
           curl --fail --silent http://127.0.0.1:3100/all-requests.html | grep --quiet 'shipping_only'
