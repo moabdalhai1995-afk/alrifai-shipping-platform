@@ -7,4 +7,4 @@ COPY . .
 RUN mkdir -p /data
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node","--require","./reset-preload.js","server.js"]
+CMD ["npm","start"]
