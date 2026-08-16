@@ -4,21 +4,24 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>جميع الطلبات | الرفاعي للشحن الدولي</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f5f7fb;color:#18202a}.top{background:#111827;color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2}.top h1{font-size:20px;margin:0}.top a{color:#fff;text-decoration:none;background:#374151;padding:9px 13px;border-radius:10px}.wrap{max-width:1200px;margin:auto;padding:18px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.stat{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 12px #0000000d}.stat b{font-size:25px;display:block;margin-top:5px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}.filters button{border:0;background:#e5e7eb;padding:10px 14px;border-radius:999px;cursor:pointer}.filters button.active{background:#111827;color:#fff}.list{display:grid;gap:12px}.card{background:#fff;border-radius:14px;padding:15px;box-shadow:0 2px 12px #0000000d;border-right:5px solid #9ca3af}.card.vehicle{border-right-color:#2563eb}.card.shipping{border-right-color:#059669}.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.badge{display:inline-block;background:#eef2ff;padding:6px 9px;border-radius:8px;font-size:13px}.muted{color:#6b7280;font-size:13px}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.meta div{background:#f9fafb;padding:9px;border-radius:9px}.actions{margin-top:12px}.actions a{display:inline-block;text-decoration:none;background:#111827;color:white;padding:9px 12px;border-radius:9px}.empty,.error{background:#fff;padding:25px;border-radius:14px;text-align:center}.error{color:#b91c1c}@media(max-width:800px){.summary{grid-template-columns:repeat(2,1fr)}.meta{grid-template-columns:repeat(2,1fr)}}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f5f7fb;color:#18202a}.top{background:#111827;color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2}.top h1{font-size:20px;margin:0}.top a{color:#fff;text-decoration:none;background:#374151;padding:9px 13px;border-radius:10px}.wrap{max-width:1200px;margin:auto;padding:18px}.actions-top{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.actions-top a{text-decoration:none;padding:12px 16px;border-radius:11px;font-weight:800}.buy{background:#b8872d;color:white}.ship{background:#111827;color:white}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}.stat{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 12px #0000000d}.stat b{font-size:25px;display:block;margin-top:5px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}.filters button{border:0;background:#e5e7eb;padding:10px 14px;border-radius:999px;cursor:pointer}.filters button.active{background:#111827;color:#fff}.list{display:grid;gap:12px}.card{background:#fff;border-radius:14px;padding:15px;box-shadow:0 2px 12px #0000000d;border-right:5px solid #9ca3af}.card.vehicle{border-right-color:#2563eb}.card.purchase_shipping{border-right-color:#b8872d}.card.shipping_only{border-right-color:#059669}.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.badge{display:inline-block;background:#eef2ff;padding:6px 9px;border-radius:8px;font-size:13px}.muted{color:#6b7280;font-size:13px}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.meta div{background:#f9fafb;padding:9px;border-radius:9px}.actions{margin-top:12px}.actions a{display:inline-block;text-decoration:none;background:#111827;color:white;padding:9px 12px;border-radius:9px}.empty,.error{background:#fff;padding:25px;border-radius:14px;text-align:center}.error{color:#b91c1c}@media(max-width:900px){.summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.meta{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <header class="top"><h1>📋 جميع الطلبات</h1><a id="back" href="/account.html">رجوع</a></header>
 <main class="wrap">
+<div class="actions-top"><a class="buy" href="/purchase-shipping.html">🛒 طلب شراء وشحن جديد</a><a class="ship" href="/shipping-only.html">📦 طلب شحن فقط جديد</a></div>
 <section class="summary">
 <div class="stat">إجمالي الطلبات<b id="total">0</b></div>
-<div class="stat">طلبات الشحن<b id="shipping">0</b></div>
+<div class="stat">شراء وشحن<b id="purchaseShipping">0</b></div>
+<div class="stat">شحن فقط<b id="shippingOnly">0</b></div>
 <div class="stat">طلبات السيارات<b id="vehicles">0</b></div>
 <div class="stat">طلبات نشطة<b id="active">0</b></div>
 </section>
 <div class="filters">
 <button class="active" data-filter="all">الكل</button>
-<button data-filter="shipping">الشحن</button>
+<button data-filter="purchase_shipping">شراء وشحن</button>
+<button data-filter="shipping_only">شحن فقط</button>
 <button data-filter="vehicle">السيارات</button>
 <button data-filter="active">النشطة</button>
 </div>
@@ -47,8 +50,8 @@ function render(){
 }
 document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;render()});
 fetch('/api/unified-requests',{credentials:'same-origin'}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||'تعذر تحميل الطلبات');return d}).then(d=>{
- all=d.items||[];document.getElementById('total').textContent=d.summary.total;document.getElementById('shipping').textContent=d.summary.shipping;document.getElementById('vehicles').textContent=d.summary.vehicles;document.getElementById('active').textContent=d.summary.active;
- if(d.role==='admin')document.getElementById('back').href='/admin.html';render();
+ all=d.items||[];document.getElementById('total').textContent=d.summary.total;document.getElementById('purchaseShipping').textContent=d.summary.purchase_shipping||0;document.getElementById('shippingOnly').textContent=d.summary.shipping_only||0;document.getElementById('vehicles').textContent=d.summary.vehicles;document.getElementById('active').textContent=d.summary.active;
+ if(d.role==='admin')document.getElementById('back').href='/admin/orders';render();
 }).catch(e=>document.getElementById('list').innerHTML='<div class="error">'+esc(e.message)+'</div>');
 </script>
 </body></html>

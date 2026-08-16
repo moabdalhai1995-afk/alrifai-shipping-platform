@@ -58,6 +58,18 @@ jobs:
             grep --quiet "href=\"/admin/$admin_page\"" "/tmp/admin-$admin_page.html"
           done
 
+          curl --fail --silent http://127.0.0.1:3100/purchase-shipping.html | grep --quiet 'شراء وشحن'
+          curl --fail --silent http://127.0.0.1:3100/shipping-only.html | grep --quiet 'شحن فقط'
+          curl --fail --silent http://127.0.0.1:3100/all-requests.html | grep --quiet 'shipping_only'
+
+          shipping_status=$(curl --silent --output /tmp/shipping-only.json --write-out '%{http_code}' \
+            -X POST http://127.0.0.1:3100/api/shipping-only \
+            -H 'Content-Type: application/json' \
+            --data '{"name":"CI Customer","phone":"0500000000","pickup_city":"Riyadh","goods":"Test cargo","packages":2,"weight":25,"destination_city":"Khartoum"}')
+          test "$shipping_status" = "201"
+          grep --quiet '"serviceType":"shipping_only"' /tmp/shipping-only.json
+          grep --quiet '"orderNo":"RIF-SHIP-' /tmp/shipping-only.json
+
           node scripts/check-static-security.js
           recovery_status=$(curl --silent --output /tmp/recovery.json --write-out '%{http_code}' \
             -X POST http://127.0.0.1:3100/api/admin/recovery/request \
