@@ -51,6 +51,13 @@ jobs:
             cat /tmp/alrifai-server.log
             exit 1
           fi
+
+          for admin_page in overview orders customers products support assistant; do
+            curl --fail --silent "http://127.0.0.1:3100/admin/$admin_page" > "/tmp/admin-$admin_page.html"
+            grep --quiet 'admin-page-nav' "/tmp/admin-$admin_page.html"
+            grep --quiet "href=\"/admin/$admin_page\"" "/tmp/admin-$admin_page.html"
+          done
+
           node scripts/check-static-security.js
           recovery_status=$(curl --silent --output /tmp/recovery.json --write-out '%{http_code}' \
             -X POST http://127.0.0.1:3100/api/admin/recovery/request \
