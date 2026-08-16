@@ -2,6 +2,7 @@ require("./auth-rate-limit-preload");
 const express = require("express");
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.post("/api/auth/login", (req, res) => {
   if (req.body.password === "correct") return res.json({ ok: true });
