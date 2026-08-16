@@ -1,13 +1,13 @@
 {
   "name": "alrifai-shipping-platform",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "private": true,
-  "description": "AlRifai International Shipping Platform - accounts, orders, Sudan fulfillment, vehicle shipping and durable database sync",
+  "description": "AlRifai International Shipping Platform - unified requests, Sudan fulfillment, vehicle shipping and durable database sync",
   "main": "server.js",
   "scripts": {
-    "start": "node --require ./reset-preload.js --require ./secure-static-preload.js --require ./resend-mail-preload.js --require ./neon-durable-sync.js --require ./neon-sync-health-preload.js --require ./scripts/sudan-fulfillment-preload.js --require ./scripts/vehicle-shipping-preload.js server.js",
-    "dev": "node --require ./reset-preload.js --require ./secure-static-preload.js --require ./resend-mail-preload.js --require ./neon-durable-sync.js --require ./neon-sync-health-preload.js --require ./scripts/sudan-fulfillment-preload.js --require ./scripts/vehicle-shipping-preload.js server.js",
-    "check": "node --check server.js && node --check reset-preload.js && node --check secure-static-preload.js && node --check resend-mail-preload.js && node --check neon-durable-sync.js && node --check neon-sync-health-preload.js && node --check scripts/sudan-fulfillment-preload.js && node --check scripts/vehicle-shipping-preload.js && node --check scripts/check-static-security.js && node --check scripts/check-resend-mail.js && node scripts/check-resend-mail.js && node scripts/check-html-js.js"
+    "start": "node --require ./reset-preload.js --require ./secure-static-preload.js --require ./resend-mail-preload.js --require ./neon-durable-sync.js --require ./neon-sync-health-preload.js --require ./scripts/sudan-fulfillment-preload.js --require ./scripts/vehicle-shipping-preload.js --require ./scripts/unified-requests-preload.js server.js",
+    "dev": "node --require ./reset-preload.js --require ./secure-static-preload.js --require ./resend-mail-preload.js --require ./neon-durable-sync.js --require ./neon-sync-health-preload.js --require ./scripts/sudan-fulfillment-preload.js --require ./scripts/vehicle-shipping-preload.js --require ./scripts/unified-requests-preload.js server.js",
+    "check": "node --check server.js && node --check reset-preload.js && node --check secure-static-preload.js && node --check resend-mail-preload.js && node --check neon-durable-sync.js && node --check neon-sync-health-preload.js && node --check scripts/sudan-fulfillment-preload.js && node --check scripts/vehicle-shipping-preload.js && node --check scripts/unified-requests-preload.js && node --check scripts/check-static-security.js && node --check scripts/check-resend-mail.js && node scripts/check-resend-mail.js && node scripts/check-html-js.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
