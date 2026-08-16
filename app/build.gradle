@@ -10,8 +10,10 @@ android {
         applicationId 'com.alrifai.shipping'
         minSdk 24
         targetSdk 35
-        versionCode 5
-        versionName '1.2.0'
+        def buildVersionCode = System.getenv('ALRIFAI_VERSION_CODE')
+        def buildVersionName = System.getenv('ALRIFAI_VERSION_NAME')
+        versionCode buildVersionCode ? buildVersionCode.toInteger() : 6
+        versionName buildVersionName ?: '3.7.9'
     }
 
     signingConfigs {
