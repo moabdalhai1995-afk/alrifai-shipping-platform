@@ -5,9 +5,9 @@
   "description": "AlRifai International Shipping Platform - accounts, orders and SQLite database",
   "main": "server.js",
   "scripts": {
-    "start": "node --require ./reset-preload.js --require ./secure-static-preload.js server.js",
-    "dev": "node --require ./reset-preload.js --require ./secure-static-preload.js server.js",
-    "check": "node --check server.js && node --check reset-preload.js && node --check secure-static-preload.js && node --check scripts/check-static-security.js && node scripts/check-html-js.js"
+    "start": "node --require ./reset-preload.js --require ./secure-static-preload.js --require ./resend-mail-preload.js server.js",
+    "dev": "node --require ./reset-preload.js --require ./secure-static-preload.js --require ./resend-mail-preload.js server.js",
+    "check": "node --check server.js && node --check reset-preload.js && node --check secure-static-preload.js && node --check resend-mail-preload.js && node --check scripts/check-static-security.js && node --check scripts/check-resend-mail.js && node scripts/check-resend-mail.js && node scripts/check-html-js.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
