@@ -86,7 +86,7 @@ function integrationStatusMarkup() {
       name: "WhatsApp Cloud API",
       enabled: !!(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_VERIFY_TOKEN),
       ready: "بيانات Meta الأساسية موجودة — الإرسال والاستقبال قابلان للعمل.",
-      missing: "أضف WHATSAPP_ACCESS_TOKEN و WHATSAPP_PHONE_NUMBER_ID و WHATSAPP_VERIFY_TOKEN."
+      missing: "Cloud API غير مكتمل، لكن لوحة المدير تستطيع فتح واتساب مباشرة برسالة جاهزة كبديل يدوي."
     },
     {
       icon: "🛡️",
@@ -153,6 +153,7 @@ function transformAdminHtml(source, page) {
     .integration-card-head{display:flex;align-items:center;gap:11px}.integration-card-head>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.integration-icon{font-size:27px}
     .integration-state{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900}.integration-state.on{background:#e7f7f0;color:#13795b}.integration-state.off{background:#fff0ee;color:#b42318}
     .integration-card p{margin:10px 0 0;color:var(--muted);line-height:1.7}.integration-help{margin-top:14px;background:var(--cream);border-radius:12px;padding:13px;line-height:1.7}
+    .whatsapp-manual-compose{margin:0 0 14px;background:#f7fbf8;border-color:#cfe6d8}.whatsapp-manual-compose .wa-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.whatsapp-manual-compose small{color:var(--muted);line-height:1.6}.wa-fallback-note{display:inline-flex;margin-top:6px;padding:5px 9px;border-radius:999px;background:#fff4d6;color:#795600;font-size:11px;font-weight:800}
     @media(max-width:760px){
       .topbar .wrap{padding-bottom:10px}
       .admin-page-nav-wrap{padding:0 13px 10px}
@@ -169,6 +170,84 @@ function transformAdminHtml(source, page) {
     const PAGE = ${JSON.stringify(page)};
     const TITLES = ${JSON.stringify(PAGE_TITLES)};
     const IDS = ${JSON.stringify([...ADMIN_PAGES])};
+    let whatsappCloudEnabled = false;
+
+    function normalizeWaPhone(value){
+      let phone=String(value||'').replace(/\\D/g,'');
+      if(phone.indexOf('00')===0)phone=phone.slice(2);
+      if(phone.indexOf('0')===0)phone='966'+phone.slice(1);
+      return phone;
+    }
+
+    function openWhatsApp(phone,message){
+      const normalized=normalizeWaPhone(phone);
+      if(!normalized){if(typeof toast==='function')toast('أدخل رقم جوال صحيح');return false;}
+      const url='https://wa.me/'+normalized+'?text='+encodeURIComponent(String(message||''));
+      const opened=window.open(url,'_blank','noopener,noreferrer');
+      if(!opened)location.href=url;
+      return true;
+    }
+
+    function ensureWhatsAppCompose(){
+      const section=document.getElementById('whatsapp');
+      const list=document.getElementById('whatsappList');
+      if(!section||!list||document.getElementById('whatsappManualCompose'))return;
+      const panel=document.createElement('div');
+      panel.id='whatsappManualCompose';
+      panel.className='subpanel whatsapp-manual-compose';
+      panel.innerHTML='<h4>✉️ مراسلة عميل عبر واتساب</h4><div class="form-grid"><input id="whatsappManualPhone" inputmode="tel" placeholder="رقم العميل 05xxxxxxxx"><textarea id="whatsappManualMessage" rows="3" placeholder="اكتب الرسالة"></textarea><div class="wa-actions"><button id="whatsappManualSend" type="button" class="btn btn-gold">إرسال / فتح واتساب</button><small id="whatsappManualMode">يتم اختيار طريقة الإرسال تلقائياً.</small></div></div>';
+      list.parentNode.insertBefore(panel,list);
+      document.getElementById('whatsappManualSend').addEventListener('click',sendManualWhatsApp);
+    }
+
+    async function sendManualWhatsApp(){
+      const phone=document.getElementById('whatsappManualPhone').value.trim();
+      const message=document.getElementById('whatsappManualMessage').value.trim();
+      if(!phone||!message){if(typeof toast==='function')toast('رقم العميل والرسالة مطلوبان');return;}
+      if(!whatsappCloudEnabled){
+        if(openWhatsApp(phone,message)&&typeof toast==='function')toast('تم فتح واتساب بالرسالة الجاهزة');
+        return;
+      }
+      try{
+        await api('/api/admin/whatsapp/reply',{method:'POST',body:JSON.stringify({phone:phone,message:message})});
+        if(typeof toast==='function')toast('تم إرسال الرسالة عبر WhatsApp Cloud API');
+        document.getElementById('whatsappManualMessage').value='';
+        if(typeof loadAll==='function')loadAll();
+      }catch(error){
+        if(openWhatsApp(phone,message)&&typeof toast==='function')toast('تعذر Cloud API؛ تم فتح واتساب كبديل');
+      }
+    }
+
+    function installWhatsAppFallback(){
+      ensureWhatsAppCompose();
+      const originalRender=window.renderWhatsApp;
+      if(typeof originalRender==='function'){
+        window.renderWhatsApp=function(data){
+          whatsappCloudEnabled=!!(data&&data.enabled);
+          originalRender(data);
+          const state=document.getElementById('whatsappState');
+          const mode=document.getElementById('whatsappManualMode');
+          if(state&&!whatsappCloudEnabled){state.textContent='Cloud API غير مفعّل · الرد اليدوي عبر واتساب متاح';state.style.color='var(--danger)';}
+          if(mode)mode.innerHTML=whatsappCloudEnabled?'الإرسال الآلي عبر WhatsApp Cloud API مفعّل.':'<span class="wa-fallback-note">وضع بديل: فتح تطبيق واتساب برسالة جاهزة</span>';
+        };
+      }
+      window.replyWhatsApp=async function(button){
+        const message=prompt('اكتب رد واتساب للعميل');
+        if(!message)return;
+        const phone=button&&button.dataset?button.dataset.phone:'';
+        if(!whatsappCloudEnabled){
+          if(openWhatsApp(phone,message)&&typeof toast==='function')toast('تم فتح واتساب بالرد الجاهز');
+          return;
+        }
+        try{
+          await api('/api/admin/whatsapp/reply',{method:'POST',body:JSON.stringify({phone:phone,message:message})});
+          if(typeof toast==='function')toast('تم إرسال الرد');
+          if(typeof loadAll==='function')loadAll();
+        }catch(error){
+          if(openWhatsApp(phone,message)&&typeof toast==='function')toast('تعذر الإرسال الآلي؛ تم فتح واتساب كبديل');
+        }
+      };
+    }
 
     function applyAdminPage(){
       IDS.forEach(function(id){
@@ -191,8 +270,9 @@ function transformAdminHtml(source, page) {
       }
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyAdminPage);
-    else applyAdminPage();
+    function init(){applyAdminPage();installWhatsAppFallback();}
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
   })();
   </script>`;
   html = html.replace("</body>", `${script}</body>`);
