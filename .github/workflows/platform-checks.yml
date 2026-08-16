@@ -35,6 +35,9 @@ jobs:
           PORT: "3100"
           SESSION_SECRET: ci-only-secret
           NODE_ENV: production
+          ADMIN_NAME: "CI Admin"
+          ADMIN_PHONE: "0501112233"
+          ADMIN_PASSWORD: "CI-Admin-Password-2026"
         run: |
           npm start > /tmp/alrifai-server.log 2>&1 &
           server_pid=$!
@@ -78,6 +81,41 @@ jobs:
           test "$shipping_status" = "201"
           grep --quiet '"serviceType":"shipping_only"' /tmp/shipping-only.json
           grep --quiet '"orderNo":"RIF-SHIP-' /tmp/shipping-only.json
+
+          curl --fail --silent http://127.0.0.1:3100/accounting | grep --quiet 'حساب الأستاذ'
+          login_status=$(curl --silent --output /tmp/admin-login.json --dump-header /tmp/admin-login-headers.txt --write-out '%{http_code}' \
+            -X POST http://127.0.0.1:3100/api/auth/login \
+            -H 'X-Forwarded-Proto: https' \
+            -H 'Content-Type: application/json' \
+            --data '{"phone":"0501112233","password":"CI-Admin-Password-2026"}')
+          test "$login_status" = "200"
+          grep --quiet '"role":"admin"' /tmp/admin-login.json
+          session_cookie=$(grep -i '^set-cookie: connect.sid=' /tmp/admin-login-headers.txt | sed -E 's/^[^:]+: ([^;]+).*/\1/' | tr -d '\r')
+          test -n "$session_cookie"
+
+          curl --fail --silent -H "Cookie: $session_cookie" http://127.0.0.1:3100/api/accounting/accounts > /tmp/accounting-accounts.json
+          cash_id=$(node -e 'const d=JSON.parse(require("fs").readFileSync("/tmp/accounting-accounts.json","utf8")); const a=d.accounts.find(x=>x.code==="1000"); if(!a) process.exit(1); process.stdout.write(String(a.id));')
+          revenue_id=$(node -e 'const d=JSON.parse(require("fs").readFileSync("/tmp/accounting-accounts.json","utf8")); const a=d.accounts.find(x=>x.code==="4100"); if(!a) process.exit(1); process.stdout.write(String(a.id));')
+
+          journal_status=$(curl --silent --output /tmp/journal-create.json --write-out '%{http_code}' \
+            -H "Cookie: $session_cookie" \
+            -X POST http://127.0.0.1:3100/api/accounting/journal-entries \
+            -H 'Content-Type: application/json' \
+            --data "{\"entry_date\":\"2026-08-16\",\"description\":\"CI balanced entry\",\"reference\":\"CI-LEDGER\",\"lines\":[{\"account_id\":$cash_id,\"debit\":125,\"credit\":0},{\"account_id\":$revenue_id,\"debit\":0,\"credit\":125}]}" )
+          test "$journal_status" = "201"
+          grep --quiet '"entryNo":"JE-' /tmp/journal-create.json
+
+          unbalanced_status=$(curl --silent --output /tmp/journal-unbalanced.json --write-out '%{http_code}' \
+            -H "Cookie: $session_cookie" \
+            -X POST http://127.0.0.1:3100/api/accounting/journal-entries \
+            -H 'Content-Type: application/json' \
+            --data "{\"entry_date\":\"2026-08-16\",\"description\":\"CI unbalanced entry\",\"lines\":[{\"account_id\":$cash_id,\"debit\":100,\"credit\":0},{\"account_id\":$revenue_id,\"debit\":0,\"credit\":90}]}" )
+          test "$unbalanced_status" = "400"
+
+          curl --fail --silent -H "Cookie: $session_cookie" 'http://127.0.0.1:3100/api/accounting/report?from=2026-08-16&to=2026-08-16' > /tmp/accounting-report.json
+          node -e 'const d=JSON.parse(require("fs").readFileSync("/tmp/accounting-report.json","utf8")); if(!d.ok || d.totals.debit!==125 || d.totals.credit!==125 || d.summary.netProfit!==125) process.exit(1);'
+          curl --fail --silent -H "Cookie: $session_cookie" 'http://127.0.0.1:3100/api/accounting/journal-entries?from=2026-08-16&to=2026-08-16' | grep --quiet 'CI balanced entry'
+          curl --fail --silent -H "Cookie: $session_cookie" 'http://127.0.0.1:3100/api/accounting/report.csv?from=2026-08-16&to=2026-08-16' | grep --quiet 'CI-LEDGER'
 
           node scripts/check-static-security.js
           recovery_status=$(curl --silent --output /tmp/recovery.json --write-out '%{http_code}' \
