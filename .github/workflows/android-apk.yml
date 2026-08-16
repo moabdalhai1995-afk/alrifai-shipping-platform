@@ -10,7 +10,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -120,3 +120,26 @@ jobs:
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish GitHub Release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          RELEASE_TAG="android-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}"
+          APK_NAME="AlRifai-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.apk"
+          AAB_NAME="AlRifai-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$APK_NAME"
+          cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$AAB_NAME"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/$APK_NAME" "$RUNNER_TEMP/$AAB_NAME" --clobber
+          else
+            gh release create "$RELEASE_TAG" \
+              "$RUNNER_TEMP/$APK_NAME" \
+              "$RUNNER_TEMP/$AAB_NAME" \
+              --target "$GITHUB_SHA" \
+              --title "الرفاعي للشحن الدولي Android v${ALRIFAI_VERSION_NAME}" \
+              --notes "إصدار Android موقّع تلقائيًا. versionCode=${ALRIFAI_VERSION_CODE}. يتضمن APK للتثبيت وAAB للرفع إلى Google Play." \
+              --latest
+          fi
