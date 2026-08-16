@@ -18,6 +18,12 @@ services:
         value: /var/data/alrifai.db
       - key: BASE_URL
         value: https://alrifai-shipping-platform.onrender.com
+      - key: ADMIN_PHONE
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: ADMIN_NAME
+        value: مدير المنصة
       - key: DATABASE_URL
         sync: false
       - key: SMTP_USER
