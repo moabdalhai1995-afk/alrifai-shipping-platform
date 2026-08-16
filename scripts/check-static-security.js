@@ -6,6 +6,7 @@ const blockedPaths = [
   "/reset-preload.js",
   "/secure-static-preload.js",
   "/resend-mail-preload.js",
+  "/neon-durable-sync.js",
   "/package.json",
   "/package-lock.json",
   "/render.yaml",
