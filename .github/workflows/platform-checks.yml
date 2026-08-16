@@ -6,6 +6,7 @@ on:
       - "**.js"
       - "**.html"
       - "package.json"
+      - "Dockerfile"
       - ".github/workflows/platform-checks.yml"
   push:
     branches: [main]
@@ -26,6 +27,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check JavaScript
         run: npm run check
+      - name: Verify Docker production command
+        run: grep --fixed-strings 'CMD ["npm","start"]' Dockerfile
       - name: Start production command and verify platform
         env:
           DB_FILE: /tmp/alrifai-ci.db
