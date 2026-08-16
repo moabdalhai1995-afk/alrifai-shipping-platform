@@ -1,0 +1,35 @@
+name: AlRifaiShipping
+options:
+  bundleIdPrefix: com.alrifai
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+targets:
+  AlRifaiShipping:
+    type: application
+    platform: iOS
+    sources:
+      - path: AlRifaiShipping
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alrifai.shipping
+        PRODUCT_NAME: AlRifaiShipping
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        INFOPLIST_FILE: AlRifaiShipping/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+    scheme:
+      testTargets: []
+schemes:
+  AlRifaiShipping:
+    build:
+      targets:
+        AlRifaiShipping: all
+    run:
+      config: Debug
+    archive:
+      config: Release
