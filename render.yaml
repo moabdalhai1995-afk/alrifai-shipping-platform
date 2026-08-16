@@ -16,3 +16,5 @@ services:
         generateValue: true
       - key: DB_FILE
         value: /var/data/alrifai.db
+      - key: DATABASE_URL
+        sync: false
