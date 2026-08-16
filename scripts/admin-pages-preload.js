@@ -14,7 +14,8 @@ const ADMIN_PAGES = new Set([
   "products",
   "quotes",
   "payments",
-  "support"
+  "support",
+  "integrations"
 ]);
 
 const PAGE_TITLES = {
@@ -27,7 +28,8 @@ const PAGE_TITLES = {
   products: "المنتجات",
   quotes: "العروض",
   payments: "المدفوعات",
-  support: "الدعم"
+  support: "الدعم",
+  integrations: "جاهزية التكاملات"
 };
 
 function navMarkup() {
@@ -45,6 +47,7 @@ function navMarkup() {
     <a href="/vehicle-operations.html">شحن السيارات</a>
     <a href="/accounting">حساب الأستاذ</a>
     <a data-page="support" href="/admin/support">الدعم</a>
+    <a data-page="integrations" href="/admin/integrations">التكاملات</a>
     <a data-page="assistant" href="/admin/assistant">المساعد الذكي</a>
   </nav></div>`;
 }
@@ -55,10 +58,79 @@ function adminPageFromPath(pathname) {
   return "overview";
 }
 
+function integrationStatusMarkup() {
+  const checks = [
+    {
+      icon: "🗄️",
+      name: "قاعدة البيانات السحابية",
+      enabled: !!process.env.DATABASE_URL,
+      ready: "DATABASE_URL مضبوط — المزامنة السحابية جاهزة.",
+      missing: "أضف DATABASE_URL في Render لتفعيل التخزين السحابي الدائم."
+    },
+    {
+      icon: "✉️",
+      name: "البريد الإلكتروني",
+      enabled: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+      ready: "SMTP مضبوط — رسائل التفعيل والاستعادة جاهزة.",
+      missing: "أضف SMTP_USER و SMTP_PASS لتفعيل رسائل البريد."
+    },
+    {
+      icon: "🔐",
+      name: "تسجيل الدخول عبر Google",
+      enabled: !!process.env.GOOGLE_CLIENT_ID,
+      ready: "GOOGLE_CLIENT_ID موجود.",
+      missing: "أضف GOOGLE_CLIENT_ID لتفعيل دخول Google."
+    },
+    {
+      icon: "💬",
+      name: "WhatsApp Cloud API",
+      enabled: !!(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_VERIFY_TOKEN),
+      ready: "بيانات Meta الأساسية موجودة — الإرسال والاستقبال قابلان للعمل.",
+      missing: "أضف WHATSAPP_ACCESS_TOKEN و WHATSAPP_PHONE_NUMBER_ID و WHATSAPP_VERIFY_TOKEN."
+    },
+    {
+      icon: "🛡️",
+      name: "توقيع Webhook واتساب",
+      enabled: !!process.env.WHATSAPP_APP_SECRET,
+      ready: "WHATSAPP_APP_SECRET موجود — التحقق من توقيع Webhook مفعّل.",
+      missing: "أضف WHATSAPP_APP_SECRET لتقوية التحقق من Webhook."
+    },
+    {
+      icon: "🤖",
+      name: "المساعد الخارجي",
+      enabled: !!process.env.OPENAI_API_KEY,
+      ready: "OPENAI_API_KEY موجود. المساعد الخارجي قابل للتشغيل حسب الإعدادات.",
+      missing: "اختياري: بدون المفتاح تستمر المنصة باستخدام وضع المساعد المحلي."
+    },
+    {
+      icon: "💳",
+      name: "بوابة الدفع الإلكتروني",
+      enabled: false,
+      ready: "",
+      missing: "التحويل البنكي اليدوي متاح. Tamara/Tabby/البطاقات تحتاج حسابات تاجر ومفاتيح Webhook من مزود الدفع."
+    }
+  ];
+
+  const cards = checks.map(item => `<article class="integration-card">
+    <div class="integration-card-head"><span class="integration-icon">${item.icon}</span><div><b>${item.name}</b><span class="integration-state ${item.enabled ? "on" : "off"}">${item.enabled ? "مفعّل" : "غير مكتمل"}</span></div></div>
+    <p>${item.enabled ? item.ready : item.missing}</p>
+  </article>`).join("");
+
+  return `<section id="integrations" class="panel">
+    <div class="panel-head"><div><h3>🔌 جاهزية التكاملات</h3><p class="integration-intro">هذه الشاشة تعرض وجود إعدادات الإنتاج فقط ولا تعرض أي قيمة سرية.</p></div></div>
+    <div class="integration-grid">${cards}</div>
+    <div class="integration-help"><b>الأولوية:</b> فعّل قاعدة البيانات السحابية والبريد وWhatsApp أولاً، ثم اربط بوابة الدفع بعد استلام مفاتيح حسابات التاجر.</div>
+  </section>`;
+}
+
 function transformAdminHtml(source, page) {
   let html = source;
 
   html = html.replace(/<nav class="nav">[\s\S]*?<\/nav>/i, "");
+
+  if (!html.includes('id="integrations"')) {
+    html = html.replace("</main>", `${integrationStatusMarkup()}</main>`);
+  }
 
   const navigation = navMarkup();
   if (html.includes("</div></header>")) {
@@ -75,12 +147,19 @@ function transformAdminHtml(source, page) {
     .admin-page-nav a.active{background:var(--gold);color:#fff;border-color:var(--gold)}
     .admin-page-hidden{display:none!important}
     .admin-section-page{margin-top:18px}
+    .integration-intro{margin:5px 0 0;color:var(--muted)}
+    .integration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .integration-card{border:1px solid var(--line);border-radius:15px;padding:15px;background:#fff}
+    .integration-card-head{display:flex;align-items:center;gap:11px}.integration-card-head>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.integration-icon{font-size:27px}
+    .integration-state{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900}.integration-state.on{background:#e7f7f0;color:#13795b}.integration-state.off{background:#fff0ee;color:#b42318}
+    .integration-card p{margin:10px 0 0;color:var(--muted);line-height:1.7}.integration-help{margin-top:14px;background:var(--cream);border-radius:12px;padding:13px;line-height:1.7}
     @media(max-width:760px){
       .topbar .wrap{padding-bottom:10px}
       .admin-page-nav-wrap{padding:0 13px 10px}
       .admin-page-nav a{padding:9px 13px;font-size:13px}
       main.wrap{padding-top:10px}
       .hero{margin-top:8px}
+      .integration-grid{grid-template-columns:1fr}
     }
   </style>`;
   html = html.replace("</head>", `${styles}</head>`);
@@ -143,3 +222,5 @@ express.static = function adminPagesStatic(root, options) {
     return middleware(req, res, next);
   };
 };
+
+module.exports = { transformAdminHtml, integrationStatusMarkup };
