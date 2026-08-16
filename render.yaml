@@ -16,5 +16,33 @@ services:
         generateValue: true
       - key: DB_FILE
         value: /var/data/alrifai.db
+      - key: BASE_URL
+        value: https://alrifai-shipping-platform.onrender.com
       - key: DATABASE_URL
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+      - key: WHATSAPP_STATUS_TEMPLATE
+        sync: false
+      - key: WHATSAPP_TEMPLATE_LANGUAGE
+        value: ar
+      - key: WHATSAPP_API_VERSION
+        value: v23.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
         sync: false
