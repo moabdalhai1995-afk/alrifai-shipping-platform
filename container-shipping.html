@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>شحن حاوية | الرفاعي للشحن الدولي</title>
+<link rel="stylesheet" href="/public-sections.css">
+<style>
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.wide{grid-column:1/-1}.intro{background:#f8f3e8;border:1px solid #eadcc0;border-radius:14px;padding:15px;margin-bottom:16px}.container-types{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.container-option{position:relative}.container-option input{position:absolute;opacity:0;pointer-events:none}.container-card{display:block;border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;cursor:pointer;min-height:88px}.container-card b{display:block;font-size:17px;margin-bottom:5px}.container-card small{color:var(--muted);line-height:1.5}.container-option input:checked+.container-card{border-color:var(--gold);background:#fff8e9;box-shadow:0 0 0 2px #b8892f22}.success{display:none;text-align:center}.quick{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}@media(max-width:720px){.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}.container-types{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap nav"><a class="brand" href="/"><span>الرفاعي للشحن الدولي</span><small>شحن حاويات إلى السودان</small></a><nav class="links"><a href="/services.html">الخدمات</a><a href="/shipping-only.html">الشحن</a><a href="/tracking.html">التتبع</a><a href="/all-requests.html">طلباتي</a><a href="/account.html">حسابي</a></nav></div></header>
+<section class="hero"><div class="wrap"><h1>🚢 طلب شحن حاوية</h1><p>سجّل بيانات حاويتك من السعودية إلى السودان، وسنتواصل معك لتأكيد المسار والتكلفة وموعد التحميل.</p></div></section>
+<main class="main"><div class="wrap">
+<div class="quick"><a class="btn secondary" href="/shipping-only.html">📦 برميل / كرتون</a><a class="btn secondary" href="/tracking.html">📍 تتبع شحنة</a></div>
+<section id="success" class="panel success"></section>
+<section id="formPanel" class="panel">
+<div class="intro"><b>الحاويات المتاحة:</b> اختر المقاس المطلوب، ثم أرسل بيانات البضاعة. السعر النهائي يعتمد على نوع البضاعة، مدينة الاستلام، الميناء، والوجهة داخل السودان.</div>
+<form id="form" class="form-grid">
+<div><label>اسم العميل / الشركة *</label><input id="name" class="field" required></div>
+<div><label>رقم الجوال / واتساب *</label><input id="phone" class="field" inputmode="tel" required></div>
+<div><label>صفة العميل</label><select id="customerType" class="field"><option value="individual">فرد</option><option value="trader">تاجر</option><option value="company">شركة / مؤسسة</option></select></div>
+<div><label>مدينة الاستلام في السعودية *</label><input id="pickupCity" class="field" placeholder="مثال: الرياض" required></div>
+<div class="wide"><label>عنوان / موقع الاستلام</label><input id="pickupAddress" class="field" placeholder="الحي، المستودع، أقرب معلم"></div>
+<div class="wide"><label>مقاس الحاوية *</label><div class="container-types">
+<label class="container-option"><input type="radio" name="containerSize" value="20ft" required><span class="container-card"><b>🚢 20 قدم</b><small>مناسبة للشحنات المتوسطة والحاوية الكاملة.</small></span></label>
+<label class="container-option"><input type="radio" name="containerSize" value="40ft" required><span class="container-card"><b>🚢 40 قدم</b><small>مساحة أكبر للأثاث والبضائع التجارية.</small></span></label>
+<label class="container-option"><input type="radio" name="containerSize" value="40hc" required><span class="container-card"><b>🚢 40HC</b><small>حاوية مرتفعة للشحنات كبيرة الحجم.</small></span></label>
+</div></div>
+<div class="wide"><label>وصف البضاعة *</label><textarea id="goods" class="field" rows="4" placeholder="مثال: أثاث منزلي، أجهزة كهربائية، مواد تجارية..." required></textarea></div>
+<div><label>الوزن التقريبي بالكيلو</label><input id="weight" class="field" type="number" min="0" step="1"></div>
+<div><label>تاريخ الجاهزية المتوقع</label><input id="readyDate" class="field" type="date"></div>
+<div><label>مدينة الوصول في السودان *</label><select id="city" class="field" required><option>الخرطوم</option><option>الجزيرة</option><option>عطبرة</option><option>شندي</option></select></div>
+<div><label>عنوان التسليم في السودان</label><input id="destinationAddress" class="field"></div>
+<div class="wide"><label>ملاحظات إضافية</label><textarea id="notes" class="field" rows="3" placeholder="تفاصيل التحميل، طبيعة البضاعة، أي متطلبات خاصة"></textarea></div>
+<div class="wide"><button class="btn primary" style="width:100%">إرسال طلب شحن الحاوية</button></div>
+</form>
+</section>
+</div></main>
+<div id="toast" class="toast"></div>
+<script>
+const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path,options={}){const r=await fetch(path,{headers:{'Content-Type':'application/json',...(options.headers||{})},credentials:'same-origin',...options}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'حدث خطأ');return d}
+function toast(t){$('toast').textContent=t;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2500)}
+async function prefill(){try{const me=await api('/api/me');if(!me.authenticated||me.user.role==='admin')return;const d=await api('/api/profile'),u=d.user;$('name').value=u.name||'';$('phone').value=u.phone||'';$('city').value=u.delivery_city||'الخرطوم';$('destinationAddress').value=u.delivery_address||''}catch{}}
+$('form').addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{const size=document.querySelector('input[name="containerSize"]:checked')?.value;if(!size)throw new Error('اختر مقاس الحاوية');const customerType={individual:'فرد',trader:'تاجر',company:'شركة / مؤسسة'}[$('customerType').value]||$('customerType').value;const ready=$('readyDate').value;const extra=$('notes').value.trim();const details=[`نوع الخدمة: شحن حاوية كاملة`,`مقاس الحاوية: ${size}`,`صفة العميل: ${customerType}`,ready?`تاريخ الجاهزية: ${ready}`:'',extra?`ملاحظات العميل: ${extra}`:''].filter(Boolean).join('\n');const d=await api('/api/shipping-only',{method:'POST',body:JSON.stringify({name:$('name').value.trim(),phone:$('phone').value.trim(),pickup_city:$('pickupCity').value.trim(),pickup_address:$('pickupAddress').value.trim(),package_type:'container',goods:`حاوية ${size} - ${$('goods').value.trim()}`,packages:1,weight:Number($('weight').value)||0,destination_city:$('city').value,destination_address:$('destinationAddress').value.trim(),notes:details})});$('formPanel').style.display='none';$('success').style.display='block';$('success').innerHTML=`<h2>تم استلام طلب الحاوية ✅</h2><p>المقاس: <b>${esc(size)}</b></p><p>رقم الطلب: <b>${esc(d.orderNo)}</b></p><p>سنتواصل معك لتأكيد السعر وموعد التحميل ومسار الشحن.</p><a class="btn primary" href="/tracking.html?order=${encodeURIComponent(d.orderNo)}">تتبع الطلب</a> <a class="btn secondary" href="/all-requests.html">جميع طلباتي</a>`}catch(err){toast(err.message);button.disabled=false}});
+prefill();
+</script>
+</body>
+</html>
