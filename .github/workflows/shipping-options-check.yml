@@ -1,0 +1,24 @@
+name: Shipping options check
+
+on:
+  pull_request:
+    paths:
+      - "shipping-only.html"
+      - ".github/workflows/shipping-options-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify barrel and carton shipping options
+        run: |
+          grep --quiet 'value="barrel"' shipping-only.html
+          grep --quiet 'value="carton"' shipping-only.html
+          grep --quiet 'شحن برميل' shipping-only.html
+          grep --quiet 'شحن كرتون' shipping-only.html
+          grep --quiet 'نوع الشحنة:' shipping-only.html
+          grep --quiet 'packageType' shipping-only.html
