@@ -8,8 +8,10 @@ const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'androi
 for (const token of [
   "System.getenv('ALRIFAI_VERSION_CODE')",
   "System.getenv('ALRIFAI_VERSION_NAME')",
+  "groovy.json.JsonSlurper()",
+  "file('../package.json')",
   'versionCode buildVersionCode',
-  'versionName buildVersionName'
+  'versionName buildVersionName ?: packageVersion'
 ]) {
   if (!gradle.includes(token)) throw new Error(`missing Gradle Android version token: ${token}`);
 }
@@ -20,9 +22,10 @@ for (const token of [
   'ALRIFAI_VERSION_CODE',
   'ALRIFAI_VERSION_NAME',
   "require('./package.json').version",
-  'Google-Play-AAB'
+  'Google-Play-AAB',
+  'Publish GitHub Release'
 ]) {
   if (!workflow.includes(token)) throw new Error(`missing Android workflow version token: ${token}`);
 }
 
-console.log('Android automatic versioning check passed');
+console.log('Android automatic and local versioning check passed');
