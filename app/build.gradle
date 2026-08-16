@@ -12,8 +12,9 @@ android {
         targetSdk 35
         def buildVersionCode = System.getenv('ALRIFAI_VERSION_CODE')
         def buildVersionName = System.getenv('ALRIFAI_VERSION_NAME')
+        def packageVersion = new groovy.json.JsonSlurper().parse(file('../package.json')).version.toString()
         versionCode buildVersionCode ? buildVersionCode.toInteger() : 6
-        versionName buildVersionName ?: '3.7.9'
+        versionName buildVersionName ?: packageVersion
     }
 
     signingConfigs {
