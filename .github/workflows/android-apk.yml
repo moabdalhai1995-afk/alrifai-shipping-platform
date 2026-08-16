@@ -37,6 +37,17 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      - name: Resolve Android build version
+        shell: bash
+        run: |
+          PLATFORM_VERSION="$(node -p "require('./package.json').version")"
+          VERSION_CODE="${{ github.run_number }}"
+          test -n "$PLATFORM_VERSION"
+          test "$VERSION_CODE" -gt 5
+          printf 'ALRIFAI_VERSION_CODE=%s\n' "$VERSION_CODE" >> "$GITHUB_ENV"
+          printf 'ALRIFAI_VERSION_NAME=%s\n' "$PLATFORM_VERSION" >> "$GITHUB_ENV"
+          echo "Android versionCode=$VERSION_CODE versionName=$PLATFORM_VERSION"
+
       - name: Restore permanent signing key
         if: github.event_name != 'pull_request'
         env:
@@ -96,7 +107,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: AlRifai-Shipping-v1.2.0-Signed-APK
+          name: AlRifai-Shipping-Android-${{ github.run_number }}-Signed-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
@@ -105,7 +116,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: AlRifai-Shipping-v1.2.0-Google-Play-AAB
+          name: AlRifai-Shipping-Android-${{ github.run_number }}-Google-Play-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
