@@ -26,20 +26,32 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check JavaScript
         run: npm run check
-      - name: Start server and verify health
+      - name: Start production command and verify platform
         env:
           DB_FILE: /tmp/alrifai-ci.db
           PORT: "3100"
           SESSION_SECRET: ci-only-secret
+          NODE_ENV: production
         run: |
-          node server.js > /tmp/alrifai-server.log 2>&1 &
+          npm start > /tmp/alrifai-server.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          healthy=0
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
             if curl --fail --silent http://127.0.0.1:3100/api/health | grep --quiet '"ok":true'; then
-              exit 0
+              healthy=1
+              break
             fi
             sleep 1
           done
-          cat /tmp/alrifai-server.log
-          exit 1
+          if [ "$healthy" -ne 1 ]; then
+            cat /tmp/alrifai-server.log
+            exit 1
+          fi
+          node scripts/check-static-security.js
+          recovery_status=$(curl --silent --output /tmp/recovery.json --write-out '%{http_code}' \
+            -X POST http://127.0.0.1:3100/api/admin/recovery/request \
+            -H 'Content-Type: application/json' \
+            --data '{"email":"ci@example.com"}')
+          test "$recovery_status" = "200"
+          grep --quiet '"ok":true' /tmp/recovery.json
