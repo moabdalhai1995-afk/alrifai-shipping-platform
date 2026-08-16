@@ -1,0 +1,66 @@
+name: Build iOS
+
+on:
+  pull_request:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  push:
+    branches: [main]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate app icon
+        working-directory: ios
+        run: python3 scripts/generate_app_icon.py
+
+      - name: Validate Info.plist
+        run: plutil -lint ios/AlRifaiShipping/Info.plist
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build iOS Simulator app
+        working-directory: ios
+        run: |
+          xcodebuild \
+            -project AlRifaiShipping.xcodeproj \
+            -scheme AlRifaiShipping \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package simulator app
+        working-directory: ios
+        run: |
+          test -d build/Build/Products/Release-iphonesimulator/AlRifaiShipping.app
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/Build/Products/Release-iphonesimulator/AlRifaiShipping.app \
+            AlRifaiShipping-iOS-Simulator.zip
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlRifaiShipping-iOS-Simulator
+          path: ios/AlRifaiShipping-iOS-Simulator.zip
+          if-no-files-found: error
