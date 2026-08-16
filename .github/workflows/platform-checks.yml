@@ -85,6 +85,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:3100/accounting | grep --quiet 'حساب الأستاذ'
           login_status=$(curl --silent --output /tmp/admin-login.json --dump-header /tmp/admin-login-headers.txt --write-out '%{http_code}' \
             -X POST http://127.0.0.1:3100/api/auth/login \
+            -H 'X-Forwarded-Proto: https' \
             -H 'Content-Type: application/json' \
             --data '{"phone":"0501112233","password":"CI-Admin-Password-2026"}')
           test "$login_status" = "200"
