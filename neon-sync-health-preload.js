@@ -32,8 +32,8 @@ if (enabled) {
   ).slice(0, 200);
 
   const originalQuery = Client.prototype.query;
-  let mirrorDetected = false;
-  let suppressHealthQueries = false;
+  const healthClients = new WeakSet();
+  const mirroringClients = new WeakSet();
 
   function queryText(query) {
     if (typeof query === "string") return query;
@@ -47,11 +47,10 @@ if (enabled) {
   }
 
   async function recordStatus(status, mirrored = false) {
-    if (suppressHealthQueries) return;
-    suppressHealthQueries = true;
     let client;
     try {
       client = await healthPool.connect();
+      healthClients.add(client);
       const count = await remoteBusinessCount(client);
       await originalQuery.call(client, `
         INSERT INTO durable_sync_status(
@@ -80,7 +79,6 @@ if (enabled) {
       console.error("Neon sync health update failed", error.message);
     } finally {
       client?.release();
-      suppressHealthQueries = false;
     }
   }
 
@@ -88,22 +86,29 @@ if (enabled) {
     const text = queryText(query);
     const result = originalQuery.call(this, query, ...args);
 
-    if (!suppressHealthQueries) {
+    if (!healthClients.has(this)) {
       if (/^\s*DELETE\s+FROM\s+"?(users|orders|payments|products_catalog|partners|support_tickets|whatsapp_messages|admin_tasks|ai_actions|journal_entries)"?/i.test(text)) {
-        mirrorDetected = true;
+        mirroringClients.add(this);
       }
 
-      if (mirrorDetected && /^\s*COMMIT\b/i.test(text)) {
+      if (mirroringClients.has(this) && /^\s*COMMIT\b/i.test(text)) {
         Promise.resolve(result).then(
           () => {
-            mirrorDetected = false;
+            mirroringClients.delete(this);
             recordStatus("mirrored", true);
           },
           () => {
-            mirrorDetected = false;
+            mirroringClients.delete(this);
             recordStatus("error", false);
           }
         );
+      }
+
+      if (mirroringClients.has(this) && /^\s*ROLLBACK\b/i.test(text)) {
+        Promise.resolve(result).finally(() => {
+          mirroringClients.delete(this);
+          recordStatus("error", false);
+        });
       }
     }
 
