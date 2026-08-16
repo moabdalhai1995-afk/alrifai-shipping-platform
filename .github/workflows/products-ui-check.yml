@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify top category strip
+      - name: Verify horizontal category strip above search
         run: |
           grep --quiet 'category-strip-shell' products.html
           grep --quiet 'category-chip active' products.html
@@ -22,11 +22,16 @@ jobs:
           grep --quiet 'categoryImage(category)' products.html
           grep --quiet 'buildCategories()' products.html
           grep --quiet 'activeCategory' products.html
+          grep --quiet 'flex-wrap:nowrap' products.html
+          grep --quiet 'overflow-x:auto' products.html
           python - <<'PY'
           from pathlib import Path
           html = Path('products.html').read_text(encoding='utf-8')
-          if html.index('category-strip-shell') > html.index('<header class="top">'):
-              raise SystemExit('Category strip must appear before the main header')
+          strip = html.index('class="category-strip-shell"')
+          search = html.index('class="toolbar products-toolbar"')
+          main = html.index('<main class="main">')
+          if not (main < strip < search):
+              raise SystemExit('Category strip must be inside main content and immediately above search')
           PY
           if grep --quiet '<select id="category"' products.html; then
             echo 'Legacy category dropdown must not return'
