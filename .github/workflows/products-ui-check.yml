@@ -1,0 +1,26 @@
+name: Products UI check
+
+on:
+  pull_request:
+    paths:
+      - "products.html"
+      - ".github/workflows/products-ui-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify top category strip
+        run: |
+          grep --quiet 'category-strip-shell' products.html
+          grep --quiet 'category-chip active' products.html
+          grep --quiet 'buildCategories()' products.html
+          grep --quiet 'activeCategory' products.html
+          if grep --quiet '<select id="category"' products.html; then
+            echo 'Legacy category dropdown must not return'
+            exit 1
+          fi
