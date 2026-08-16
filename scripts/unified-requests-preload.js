@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 let appRef = null;
 let dbRef = null;
@@ -58,7 +59,7 @@ function injectUnifiedLink(filePath, html) {
 
   if (name === "account.html") {
     const marker = '<div class="panel wide"><button class="btn danger"';
-    const card = '<div class="panel wide"><h2>📋 جميع طلباتي</h2><p>تابع طلبات الشحن وخدمات السودان وشحن السيارات من شاشة موحدة.</p><a class="btn primary" href="/all-requests.html">فتح جميع الطلبات</a></div>';
+    const card = '<div class="panel wide"><h2>📋 جميع طلباتي</h2><p>تابع طلبات شراء وشحن، الشحن فقط، خدمات السودان وشحن السيارات من شاشة موحدة.</p><a class="btn primary" href="/all-requests.html">فتح جميع الطلبات</a></div>';
     if (html.includes(marker)) return html.replace(marker, card + marker);
   }
 
@@ -136,15 +137,24 @@ function tableExists(name) {
     return false;
   }
 }
+function ensureOrderServiceType() {
+  if (!tableExists("orders")) return;
+  const columns = new Set(dbRef.prepare("PRAGMA table_info(orders)").all().map(x => x.name));
+  if (!columns.has("service_type")) {
+    dbRef.exec("ALTER TABLE orders ADD COLUMN service_type TEXT NOT NULL DEFAULT 'purchase_shipping'");
+  }
+}
 function dateValue(row) {
   return row.updated_at || row.created_at || row.date || row.shipped_at || "";
 }
 function normalizeOrder(row) {
   const rawStatus = row.order_status ?? row.status ?? 0;
   const sudanCode = row.sudan_status || "awaiting_receipt";
+  const serviceType = row.service_type === "shipping_only" ? "shipping_only" : "purchase_shipping";
   return {
-    type: "shipping",
-    type_label: "طلب شحن",
+    type: serviceType,
+    group: "shipping",
+    type_label: serviceType === "shipping_only" ? "شحن فقط" : "شراء وشحن",
     ref: row.order_no || String(row.id),
     customer: row.name || row.customer_name || "",
     phone: row.phone || "",
@@ -161,6 +171,7 @@ function normalizeOrder(row) {
 function normalizeVehicle(row) {
   return {
     type: "vehicle",
+    group: "vehicle",
     type_label: row.service_type === "triptych" ? "سيارة - تربتك" : "سيارة - تصدير",
     ref: row.request_no,
     customer: row.owner_name || "",
@@ -216,16 +227,61 @@ function readUnified(req) {
   return items;
 }
 
+function newShippingOnlyOrderNo() {
+  return "RIF-SHIP-" + Date.now().toString(36).toUpperCase() + "-" + crypto.randomBytes(2).toString("hex").toUpperCase();
+}
+
 function installRoutes() {
   if (routesInstalled || !appRef || !dbRef) return;
   routesInstalled = true;
+  ensureOrderServiceType();
+
+  appRef.post("/api/shipping-only", (req, res) => {
+    const name = String(req.body.name || "").trim().slice(0, 150);
+    const phone = String(req.body.phone || "").trim().slice(0, 60);
+    const product = String(req.body.goods || req.body.product || "").trim().slice(0, 500);
+    const city = String(req.body.destination_city || req.body.city || "").trim().slice(0, 120);
+    const pickupCity = String(req.body.pickup_city || "").trim().slice(0, 120);
+    const pickupAddress = String(req.body.pickup_address || "").trim().slice(0, 500);
+    const destinationAddress = String(req.body.destination_address || "").trim().slice(0, 500);
+    const weight = Math.max(0, Number(req.body.weight) || 0);
+    const qty = Math.max(1, Math.min(10000, Number(req.body.packages) || 1));
+    const notes = String(req.body.notes || "").trim().slice(0, 1500);
+    if (!name || !phone || !product || !city || !pickupCity) {
+      return res.status(400).json({ error: "الاسم والجوال ووصف الشحنة ومدينة الاستلام ومدينة الوصول مطلوبة" });
+    }
+    const orderNo = newShippingOnlyOrderNo();
+    const userId = req.session?.user?.id > 0 ? req.session.user.id : null;
+    const details = [
+      "نوع الخدمة: شحن فقط",
+      "مدينة الاستلام في السعودية: " + pickupCity,
+      pickupAddress ? "عنوان الاستلام: " + pickupAddress : "",
+      destinationAddress ? "عنوان التسليم في السودان: " + destinationAddress : "",
+      weight ? "الوزن التقريبي: " + weight + " كجم" : "",
+      notes ? "ملاحظات: " + notes : ""
+    ].filter(Boolean).join("\n");
+    try {
+      const info = dbRef.prepare(`INSERT INTO orders(order_no,user_id,name,phone,product,city,qty,details,status,service_type)
+        VALUES(?,?,?,?,?,?,?,?,0,'shipping_only')`).run(orderNo, userId, name, phone, product, city, qty, details);
+      if (userId && tableExists("notifications")) {
+        dbRef.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
+          .run(userId, info.lastInsertRowid, "تم استلام طلب الشحن", "تم تسجيل طلب الشحن فقط " + orderNo + " وسنتواصل معك لتنسيق الاستلام.");
+      }
+      return res.status(201).json({ ok: true, orderNo, id: Number(info.lastInsertRowid), serviceType: "shipping_only", status: 0 });
+    } catch (error) {
+      console.error("Shipping-only order create failed", error);
+      return res.status(500).json({ error: "تعذر إنشاء طلب الشحن فقط" });
+    }
+  });
 
   appRef.get("/api/unified-requests", (req, res) => {
     if (!isAdmin(req) && !isCustomer(req)) return res.status(401).json({ error: "يجب تسجيل الدخول" });
     const items = readUnified(req);
     const summary = {
       total: items.length,
-      shipping: items.filter(x => x.type === "shipping").length,
+      purchase_shipping: items.filter(x => x.type === "purchase_shipping").length,
+      shipping_only: items.filter(x => x.type === "shipping_only").length,
+      shipping: items.filter(x => x.group === "shipping").length,
       vehicles: items.filter(x => x.type === "vehicle").length,
       active: items.filter(x => !["3", "4", "delivered"].includes(x.status)).length
     };
