@@ -19,7 +19,11 @@ for (const token of [
   if (!html.includes(token)) throw new Error(`missing refreshed home token: ${token}`);
 }
 
-if (html.indexOf('home-category-strip') > html.indexOf('search-shell')) {
+const stripMarker = '<div class="home-category-strip">';
+const searchMarker = '<div class="search-shell">';
+const stripIndex = html.indexOf(stripMarker);
+const searchIndex = html.indexOf(searchMarker);
+if (stripIndex < 0 || searchIndex < 0 || stripIndex > searchIndex) {
   throw new Error('category/product strip must appear above the search bar');
 }
 
