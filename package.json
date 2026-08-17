@@ -1,6 +1,6 @@
 {
   "name": "alrifai-shipping-platform",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "private": true,
   "description": "AlRifai International Shipping Platform - multipage admin, unified requests, Sudan fulfillment, vehicle shipping, durable database sync and runtime performance tuning",
   "main": "server.js",
