@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify horizontal category strip above search
+      - name: Verify product catalog and horizontal category strip
         run: |
           grep --quiet 'category-strip-shell' products.html
           grep --quiet 'category-chip active' products.html
@@ -24,6 +24,17 @@ jobs:
           grep --quiet 'activeCategory' products.html
           grep --quiet 'flex-wrap:nowrap' products.html
           grep --quiet 'overflow-x:auto' products.html
+          grep --quiet 'const fallbackProducts=' products.html
+          grep --quiet 'ثلاجات' products.html
+          grep --quiet 'مكيفات' products.html
+          grep --quiet 'أثاث منزلي' products.html
+          grep --quiet 'شاشات وأجهزة' products.html
+          grep --quiet 'غسالات' products.html
+          grep --quiet 'أجهزة مطبخ' products.html
+          grep --quiet 'مكاتب وتجهيزات' products.html
+          grep --quiet 'إكسسوارات إلكترونية' products.html
+          grep --quiet 'showProducts(d.products)' products.html
+          grep --quiet 'showProducts(fallbackProducts)' products.html
           python - <<'PY'
           from pathlib import Path
           html = Path('products.html').read_text(encoding='utf-8')
@@ -32,6 +43,8 @@ jobs:
           main = html.index('<main class="main">')
           if not (main < strip < search):
               raise SystemExit('Category strip must be inside main content and immediately above search')
+          if html.count('id:"fallback-') < 8:
+              raise SystemExit('Fallback catalog must keep all eight starter products')
           PY
           if grep --quiet '<select id="category"' products.html; then
             echo 'Legacy category dropdown must not return'
