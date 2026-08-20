@@ -19,12 +19,16 @@ const serviceCards = [
   }
 ];
 
+const socialMarketingCard = '<a class="card service-choice-card social-marketing-card" href="/social-media-marketing.html" aria-label="برامج السوشل ميديا"><div class="icon">📣</div><div class="social-marketing-copy"><h3>برامج السوشل ميديا</h3><p>خطط محتوى وتصاميم وإعلانات لإدارة حضورك الرقمي وزيادة الاستفسارات والعملاء.</p></div><span class="service-card-hint">عرض البرامج</span></a>';
+
 const styles = `<style id="home-service-options-style">
 .service-choice-card{width:100%;font:inherit;color:inherit;text-align:right;cursor:pointer;appearance:none;position:relative;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 .service-choice-card:hover,.service-choice-card:focus-visible{transform:translateY(-2px);border-color:#d6b56f;box-shadow:0 10px 26px rgba(22,32,42,.08)}
 .service-choice-card:focus-visible{outline:3px solid rgba(184,135,45,.25);outline-offset:2px}
 .service-card-hint{display:inline-flex;align-items:center;gap:5px;margin-top:8px;color:var(--gold2);font-size:12px;font-weight:800}
 .service-card-hint:after{content:'←';font-size:14px}
+.social-marketing-card{grid-column:1/-1;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#fff9ee,#fff);border-color:#e2c581;box-shadow:0 8px 24px rgba(184,135,45,.08)}
+.social-marketing-card .icon{margin:0;flex:0 0 auto}.social-marketing-copy{flex:1;min-width:0}.social-marketing-copy h3{margin:0 0 5px}.social-marketing-copy p{margin:0}.social-marketing-card .service-card-hint{margin:0;white-space:nowrap;padding:9px 12px;border-radius:999px;background:#f5ead1}
 .home-service-sheet-backdrop{position:fixed;inset:0;background:rgba(12,20,29,.48);z-index:120;display:none;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(2px)}
 .home-service-sheet-backdrop.show{display:flex}
 .home-service-sheet{width:min(560px,100%);max-height:min(78dvh,720px);overflow:auto;background:#fff;border-radius:26px 26px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -18px 55px rgba(0,0,0,.18);animation:serviceSheetIn .2s ease-out}
@@ -33,6 +37,7 @@ const styles = `<style id="home-service-options-style">
 .home-service-options{display:grid;gap:10px}.home-service-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid var(--line);border-radius:15px;background:#fff;color:var(--ink);padding:14px 15px;font:inherit;font-weight:800;text-align:right;cursor:pointer;text-decoration:none;transition:.15s ease}.home-service-option:hover,.home-service-option:focus-visible{border-color:var(--gold);background:#fff9ed;outline:none}.home-service-option-icon{font-size:25px;min-width:32px;text-align:center}.home-service-option-main{flex:1}.home-service-option-main small{display:block;color:var(--muted);font-weight:400;margin-top:3px;line-height:1.5}.home-service-option-arrow{color:var(--gold);font-size:20px}
 body.service-sheet-open{overflow:hidden}
 @keyframes serviceSheetIn{from{transform:translateY(35px);opacity:.65}to{transform:translateY(0);opacity:1}}
+@media(max-width:600px){.social-marketing-card{align-items:flex-start;gap:12px;flex-wrap:wrap}.social-marketing-copy{flex:1 1 calc(100% - 60px)}.social-marketing-card .service-card-hint{margin-right:58px}}
 @media(min-width:700px){.home-service-sheet-backdrop{align-items:center;padding:20px}.home-service-sheet{border-radius:24px;padding:12px 20px 22px}}
 </style>`;
 
@@ -98,6 +103,9 @@ function transformHomeHtml(source) {
     }
   }
   if (!changed) return source;
+  if (!html.includes('/social-media-marketing.html')) {
+    html = html.replace(serviceCards[2].to, serviceCards[2].to + socialMarketingCard);
+  }
   html = html.replace('</head>', styles + '\n</head>');
   html = html.replace('<div class="toast" id="toast"></div>', sheet + '\n<div class="toast" id="toast"></div>');
   html = html.replace('</body>', script + '\n</body>');
