@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="برامج تسويق وإدارة محتوى السوشل ميديا للشركات والمتاجر مع خطة محتوى وتصاميم وإعلانات وتحسين النتائج.">
+  <title>برامج السوشل ميديا | الرفاعي</title>
+  <link rel="stylesheet" href="/public-sections.css">
+  <style>
+    :root{--ink:#123047;--gold:#b8892f;--gold2:#e7c577;--soft:#f7f3e8;--line:#e8e1d0;--ok:#1f7a54}
+    *{box-sizing:border-box}
+    body{margin:0;background:#fff;color:#14202b;font-family:Tahoma,Arial,sans-serif}
+    .sm-hero{padding:58px 0 44px;background:linear-gradient(135deg,#0f2b3f 0%,#123047 58%,#1a415d 100%);color:#fff;overflow:hidden}
+    .sm-hero .wrap{position:relative}
+    .badge{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid rgba(231,197,119,.55);background:rgba(255,255,255,.07);border-radius:999px;color:#f6dfaa;font-size:13px;font-weight:800}
+    .sm-hero h1{margin:16px 0 12px;font-size:clamp(30px,7vw,54px);line-height:1.18;max-width:760px}
+    .sm-hero p{margin:0;max-width:760px;font-size:17px;line-height:1.9;color:#eaf0f4}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+    .cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 18px;border-radius:14px;text-decoration:none;font-weight:900}
+    .cta.primary{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#152432}
+    .cta.ghost{border:1px solid rgba(255,255,255,.3);color:#fff;background:rgba(255,255,255,.07)}
+    .platforms{display:flex;gap:10px;overflow:auto;padding:18px 0 3px;scrollbar-width:none}
+    .platforms::-webkit-scrollbar{display:none}
+    .platform{flex:0 0 auto;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:800;color:var(--ink);box-shadow:0 4px 16px rgba(18,48,71,.05)}
+    .section{padding:42px 0}
+    .section.soft{background:#fbfaf7}
+    .eyebrow{color:var(--gold);font-weight:900;font-size:13px;margin-bottom:7px}
+    .section h2{margin:0 0 10px;color:var(--ink);font-size:clamp(24px,5vw,34px)}
+    .lead{margin:0 0 24px;color:#5d6872;line-height:1.8}
+    .feature-grid,.package-grid,.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .sm-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:20px;box-shadow:0 8px 26px rgba(18,48,71,.055)}
+    .sm-card .icon{width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:var(--soft);font-size:24px;margin-bottom:13px}
+    .sm-card h3{margin:0 0 8px;color:var(--ink);font-size:19px}
+    .sm-card p{margin:0;color:#66717b;line-height:1.75;font-size:14px}
+    .package{position:relative;border:1px solid var(--line);border-radius:20px;background:#fff;padding:22px;display:flex;flex-direction:column;min-height:100%}
+    .package.popular{border:2px solid var(--gold2);box-shadow:0 10px 30px rgba(184,137,47,.13)}
+    .popular-tag{position:absolute;top:14px;left:14px;padding:6px 9px;border-radius:999px;background:var(--ink);color:#fff;font-size:11px;font-weight:900}
+    .package h3{margin:0 0 6px;color:var(--ink);font-size:22px}
+    .package .sub{color:#73808a;font-size:13px;margin-bottom:15px}
+    .package ul{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:10px}
+    .package li{position:relative;padding-right:25px;line-height:1.65;color:#35424d;font-size:14px}
+    .package li:before{content:'✓';position:absolute;right:0;top:0;color:var(--ok);font-weight:900}
+    .package .cta{margin-top:auto;background:var(--ink);color:#fff}
+    .step{border-radius:18px;padding:20px;background:#fff;border:1px solid var(--line)}
+    .num{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:var(--ink);color:#fff;font-weight:900;margin-bottom:12px}
+    .step h3{margin:0 0 7px;color:var(--ink)}
+    .step p{margin:0;color:#6b7680;line-height:1.7;font-size:14px}
+    .final-cta{padding:30px;border-radius:24px;background:linear-gradient(135deg,#f6edd8,#fff8ea);border:1px solid #ead7aa;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .final-cta h2{margin:0 0 7px}
+    .final-cta p{margin:0;color:#5f6972;line-height:1.7}
+    .final-cta .cta{background:#1f7a54;color:#fff;white-space:nowrap}
+    @media(max-width:850px){.feature-grid,.package-grid,.steps{grid-template-columns:1fr 1fr}.final-cta{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.sm-hero{padding-top:38px}.feature-grid,.package-grid,.steps{grid-template-columns:1fr}.hero-actions .cta{width:100%}.section{padding:34px 0}.sm-card,.package,.step{padding:17px}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="/"><span>الرفاعي للشحن الدولي</span><small>حلول شراء وشحن متكاملة</small></a>
+      <nav class="links"><a href="/">الرئيسية</a><a href="/services.html">الخدمات</a><a href="/products.html">المنتجات</a><a href="/account.html">حسابي</a></nav>
+    </div>
+  </header>
+
+  <section class="sm-hero">
+    <div class="wrap">
+      <span class="badge">📣 نمو رقمي بخطة واضحة</span>
+      <h1>حوّل حساباتك في السوشل ميديا إلى قناة تجذب العملاء</h1>
+      <p>برامج تسويقية مرنة للشركات والمتاجر تشمل التخطيط للمحتوى، كتابة المنشورات، التصاميم، إدارة الحملات ومتابعة الأداء — بما يناسب هدفك وميزانيتك.</p>
+      <div class="hero-actions">
+        <a class="cta primary" href="https://wa.me/966540407193?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%20%D8%B3%D8%B9%D8%B1%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%B3%D9%88%D8%B4%D9%84%20%D9%85%D9%8A%D8%AF%D9%8A%D8%A7" target="_blank" rel="noopener">اطلب عرض سعر عبر واتساب</a>
+        <a class="cta ghost" href="#packages">استعرض البرامج</a>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="section" aria-label="المنصات">
+      <div class="wrap">
+        <div class="platforms">
+          <span class="platform">Instagram</span><span class="platform">TikTok</span><span class="platform">Snapchat</span><span class="platform">X</span><span class="platform">Facebook</span><span class="platform">WhatsApp Business</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft">
+      <div class="wrap">
+        <div class="eyebrow">خدمات متكاملة</div>
+        <h2>كل ما يحتاجه حضورك الرقمي في مكان واحد</h2>
+        <p class="lead">نرتب العمل من الفكرة وحتى القياس، بدل نشر محتوى متفرق بدون هدف واضح.</p>
+        <div class="feature-grid">
+          <article class="sm-card"><div class="icon">🧭</div><h3>خطة محتوى شهرية</h3><p>تحديد المواضيع والأهداف وجدول النشر بحسب الجمهور والمنصة.</p></article>
+          <article class="sm-card"><div class="icon">✍️</div><h3>كتابة المحتوى</h3><p>صياغة منشورات وعبارات تسويقية ونداءات واضحة تحفز التواصل والشراء.</p></article>
+          <article class="sm-card"><div class="icon">🎨</div><h3>تصاميم احترافية</h3><p>قوالب وهوية بصرية متناسقة للمحتوى والإعلانات والعروض.</p></article>
+          <article class="sm-card"><div class="icon">🎬</div><h3>أفكار فيديو وريـلز</h3><p>أفكار وسيناريوهات قصيرة مناسبة لريلز وتيك توك وسناب.</p></article>
+          <article class="sm-card"><div class="icon">🎯</div><h3>إعلانات ممولة</h3><p>إعداد الحملات والاستهداف وقراءة النتائج وتحسين الإنفاق الإعلاني.</p></article>
+          <article class="sm-card"><div class="icon">📊</div><h3>تقارير وتحسين</h3><p>متابعة الوصول والتفاعل والاستفسارات وتحويل الأرقام إلى قرارات عملية.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="packages">
+      <div class="wrap">
+        <div class="eyebrow">برامج مرنة</div>
+        <h2>اختر البرنامج المناسب لمرحلتك</h2>
+        <p class="lead">يتم تحديد السعر النهائي بعد معرفة عدد المنصات وحجم المحتوى والهدف الإعلاني.</p>
+        <div class="package-grid">
+          <article class="package">
+            <h3>انطلاقة</h3><div class="sub">للحسابات الجديدة أو قليلة النشاط</div>
+            <ul><li>خطة محتوى أساسية</li><li>منشورات وتصاميم شهرية</li><li>تهيئة الملف التعريفي</li><li>أفكار عروض ومناسبات</li><li>تقرير شهري مبسط</li></ul>
+            <a class="cta" href="https://wa.me/966540407193?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82%D8%A9%20%D9%84%D9%84%D8%B3%D9%88%D8%B4%D9%84%20%D9%85%D9%8A%D8%AF%D9%8A%D8%A7" target="_blank" rel="noopener">اطلب البرنامج</a>
+          </article>
+          <article class="package popular">
+            <span class="popular-tag">الأكثر مرونة</span>
+            <h3>نمو</h3><div class="sub">للشركات التي تريد زيادة الاستفسارات</div>
+            <ul><li>استراتيجية محتوى شهرية</li><li>منشورات وتصاميم متنوعة</li><li>أفكار ريلز وفيديو قصير</li><li>إدارة حملة إعلانية</li><li>متابعة وتحسين أسبوعي</li><li>تقرير أداء واضح</li></ul>
+            <a class="cta" href="https://wa.me/966540407193?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20%D9%86%D9%85%D9%88%20%D9%84%D9%84%D8%B3%D9%88%D8%B4%D9%84%20%D9%85%D9%8A%D8%AF%D9%8A%D8%A7" target="_blank" rel="noopener">اطلب البرنامج</a>
+          </article>
+          <article class="package">
+            <h3>احترافي</h3><div class="sub">للعلامات التي تحتاج حضورًا مستمرًا</div>
+            <ul><li>إدارة عدة منصات</li><li>خطة محتوى وحملات متقدمة</li><li>محتوى عروض ومواسم</li><li>متابعة الإعلانات والتحسين</li><li>تقارير أداء دورية</li><li>أولوية في الدعم والتعديلات</li></ul>
+            <a class="cta" href="https://wa.me/966540407193?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20%D8%A7%D8%AD%D8%AA%D8%B1%D8%A7%D9%81%D9%8A%20%D9%84%D9%84%D8%B3%D9%88%D8%B4%D9%84%20%D9%85%D9%8A%D8%AF%D9%8A%D8%A7" target="_blank" rel="noopener">اطلب البرنامج</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft">
+      <div class="wrap">
+        <div class="eyebrow">طريقة العمل</div><h2>من التواصل إلى إطلاق الخطة</h2>
+        <div class="steps">
+          <article class="step"><div class="num">1</div><h3>نفهم نشاطك</h3><p>المنتج أو الخدمة، الجمهور، المنصات، المنافسين والهدف الأساسي.</p></article>
+          <article class="step"><div class="num">2</div><h3>نحدد البرنامج</h3><p>نقترح حجم المحتوى والمنصات والحملات الأنسب للميزانية.</p></article>
+          <article class="step"><div class="num">3</div><h3>نبدأ ونقيس</h3><p>تنفيذ منظم مع متابعة النتائج وتطوير المحتوى باستمرار.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="final-cta">
+          <div><h2>جاهز تبدأ بشكل أقوى؟</h2><p>أرسل نشاطك والمنصات التي تستخدمها وسنجهز لك البرنامج المناسب.</p></div>
+          <a class="cta" href="https://wa.me/966540407193?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D8%B3%D8%AA%D8%B4%D8%A7%D8%B1%D8%A9%20%D9%84%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%B3%D9%88%D8%B4%D9%84%20%D9%85%D9%8A%D8%AF%D9%8A%D8%A7" target="_blank" rel="noopener">ابدأ عبر واتساب</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap footer-row"><span>الرفاعي — حلول رقمية وخدمات متكاملة</span><a href="/services.html">العودة للخدمات</a></div></footer>
+</body>
+</html>
