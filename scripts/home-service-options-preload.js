@@ -66,6 +66,7 @@ const script = `<script id="home-service-options-script">
       {icon:'🛢️',label:'شحن برميل',desc:'سجّل عدد البراميل ومحتويات الشحنة',href:'/shipping-only.html?type=barrel'},
       {icon:'📦',label:'شحن كرتون',desc:'سجّل عدد الكراتين ومحتوياتها',href:'/shipping-only.html?type=carton'},
       {icon:'🧳',label:'شحنة أخرى',desc:'أثاث، أجهزة أو أغراض متنوعة',href:'/shipping-only.html?type=general'},
+      {icon:'✈️',label:'شحن جوي',desc:'للطرود والشحنات العاجلة حسب الوزن الفعلي والحجمي',href:'/air-shipping.html'},
       {icon:'🚢',label:'شحن حاوية',desc:'20 قدم أو 40 قدم أو 40HC',href:'/container-shipping.html'},
       {icon:'🚗',label:'شحن سيارة',desc:'تصدير نهائي أو تربتك إلى السودان',href:'/vehicle-shipping.html'},
       {icon:'📍',label:'تتبع الشحنة',desc:'تابع حالة طلبك حتى الوصول',href:'/tracking.html'}
