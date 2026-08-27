@@ -63,14 +63,13 @@ const script = `<script id="home-service-options-script">
       {icon:'✍️',label:'طلب شراء خاص',desc:'اكتب المنتج المطلوب حتى لو لم يكن في الكتالوج',action:'open-order'}
     ]},
     shipping:{title:'الشحن إلى السودان',items:[
-      {icon:'🛢️',label:'شحن برميل · 350 ر.س',desc:'من الباب إلى الباب، شامل التغليف',href:'/shipping-only.html?type=barrel'},
-      {icon:'🧳',label:'شنطة كبيرة · 250 ر.س',desc:'سجّل عدد الشنط ومحتوياتها',href:'/shipping-only.html?type=large_bag'},
-      {icon:'📦',label:'كرتون 30 كجم · 200 ر.س',desc:'السعر للكرتون حتى وزن 30 كجم',href:'/shipping-only.html?type=carton'},
-      {icon:'🧳',label:'شحنة أخرى',desc:'أثاث، أجهزة أو أغراض متنوعة',href:'/shipping-only.html?type=general'},
-      {icon:'✈️',label:'شحن جوي',desc:'للطرود والشحنات العاجلة حسب الوزن الفعلي والحجمي',href:'/air-shipping.html'},
-      {icon:'🚢',label:'شحن حاوية',desc:'20 قدم أو 40 قدم أو 40HC',href:'/container-shipping.html'},
-      {icon:'🚗',label:'شحن سيارة',desc:'تصدير نهائي أو تربتك إلى السودان',href:'/vehicle-shipping.html'},
-      {icon:'🛡️',label:'تغليف جميع الشحنات',desc:'تجهيز وحماية الشحنة قبل النقل',href:'/shipping-only.html'},
+      {icon:'🛢️',label:'شحن برميل · 350 ر.س',desc:'من الباب إلى الباب · تغليف مجاني',href:'/shipping-only.html?type=barrel'},
+      {icon:'🧳',label:'شنطة كبيرة · 250 ر.س',desc:'للشنطة الكبيرة · تغليف مجاني',href:'/shipping-only.html?type=large_bag'},
+      {icon:'📦',label:'كرتون 30 كجم · 200 ر.س',desc:'حتى وزن 30 كجم · تغليف مجاني',href:'/shipping-only.html?type=carton'},
+      {icon:'🧳',label:'شحنة أخرى',desc:'أثاث أو أجهزة · تغليف مجاني',href:'/shipping-only.html?type=general'},
+      {icon:'✈️',label:'شحن جوي',desc:'حسب الوزن الفعلي والحجمي · تغليف مجاني',href:'/air-shipping.html'},
+      {icon:'🚢',label:'شحن حاوية',desc:'20 أو 40 قدم أو 40HC · تغليف مجاني',href:'/container-shipping.html'},
+      {icon:'🚗',label:'شحن سيارة',desc:'تصدير نهائي أو تربتك · تغليف مجاني',href:'/vehicle-shipping.html'},
       {icon:'🏷️',label:'باركود لكل قطعة',desc:'كل قطعة مرتبطة برقم التتبع الرئيسي',href:'/tracking.html'},
       {icon:'📍',label:'تتبع الشحنة',desc:'تابع حالة طلبك حتى الوصول',href:'/tracking.html'}
     ]}
