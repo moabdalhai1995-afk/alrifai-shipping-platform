@@ -50,6 +50,15 @@ function BarcodeDatabase(...args) {
       CREATE INDEX IF NOT EXISTS idx_shipment_packages_order ON shipment_packages(order_id);
       CREATE INDEX IF NOT EXISTS idx_shipment_packages_barcode ON shipment_packages(barcode);
       CREATE TABLE IF NOT EXISTS barcode_sequence (number INTEGER PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS package_delivery_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        package_id INTEGER NOT NULL,
+        order_id INTEGER NOT NULL,
+        barcode TEXT NOT NULL,
+        delivered_by TEXT,
+        delivered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(package_id) REFERENCES shipment_packages(id)
+      );
     `);
     const addNumber = db.prepare("INSERT OR IGNORE INTO barcode_sequence(number) VALUES(?)");
     db.transaction(() => { for (let number = 1; number <= 500; number++) addNumber.run(number); })();
@@ -121,6 +130,10 @@ async function ensureRemote(client) {
     piece_no INTEGER NOT NULL, description TEXT, weight_kg DOUBLE PRECISION NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'active', created_at TEXT, updated_at TEXT,
     UNIQUE(order_id,piece_no)
+  );
+  CREATE TABLE IF NOT EXISTS package_delivery_events (
+    id BIGINT PRIMARY KEY, package_id BIGINT NOT NULL, order_id BIGINT NOT NULL,
+    barcode TEXT NOT NULL, delivered_by TEXT, delivered_at TEXT
   )`);
 }
 async function syncRemotePackages() {
@@ -135,6 +148,10 @@ async function syncRemotePackages() {
         order_id=EXCLUDED.order_id,piece_no=EXCLUDED.piece_no,description=EXCLUDED.description,
         weight_kg=EXCLUDED.weight_kg,status=EXCLUDED.status,updated_at=EXCLUDED.updated_at`,
         [p.id,p.order_id,p.barcode,p.piece_no,p.description,p.weight_kg,p.status,p.created_at,p.updated_at]);
+    }
+    for (const e of dbRef.prepare("SELECT * FROM package_delivery_events ORDER BY id").all()) {
+      await client.query(`INSERT INTO package_delivery_events(id,package_id,order_id,barcode,delivered_by,delivered_at)
+        VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(id) DO NOTHING`,[e.id,e.package_id,e.order_id,e.barcode,e.delivered_by,e.delivered_at]);
     }
     await client.query("COMMIT");
   } catch (error) { try { await client?.query("ROLLBACK"); } catch {} console.error("Package barcode sync error", error.message); }
@@ -194,6 +211,40 @@ function installRoutes() {
     if (!info.changes) return res.status(404).json({ error: "الباركود غير موجود" });
     void syncRemotePackages();
     res.json({ ok: true });
+  });
+
+  appRef.get("/api/admin/shipping-packages/scan/:barcode", (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "غير مصرح" });
+    const row = dbRef.prepare(`SELECT p.id package_id,p.order_id,p.barcode,p.piece_no,p.description,p.status,
+      o.order_no,o.name customer_name,o.phone,o.city,
+      (SELECT COUNT(*) FROM shipment_packages x WHERE x.order_id=p.order_id AND x.status!='inactive') total_pieces,
+      (SELECT COUNT(*) FROM shipment_packages x WHERE x.order_id=p.order_id AND x.status='delivered') delivered_pieces
+      FROM shipment_packages p JOIN orders o ON o.id=p.order_id WHERE UPPER(p.barcode)=UPPER(?)`).get(req.params.barcode);
+    if (!row) return res.status(404).json({ error: "الباركود غير مسجل في المستودع" });
+    if (row.status === "inactive") return res.status(409).json({ error: "هذه القطعة موقوفة ولا يمكن تسليمها" });
+    res.json({ ok:true, package:row, already_delivered:row.status === "delivered" });
+  });
+
+  appRef.post("/api/admin/shipping-packages/deliver", async (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "غير مصرح" });
+    const barcode = clean(req.body?.barcode, 100).toUpperCase();
+    const row = dbRef.prepare(`SELECT p.*,o.order_no,o.name customer_name,o.phone FROM shipment_packages p JOIN orders o ON o.id=p.order_id WHERE UPPER(p.barcode)=?`).get(barcode);
+    if (!row) return res.status(404).json({ error: "الباركود غير مسجل في المستودع" });
+    if (row.status === "inactive") return res.status(409).json({ error: "هذه القطعة موقوفة" });
+    if (row.status === "delivered") return res.status(409).json({ error: "تم تسليم هذه القطعة سابقًا" });
+    const deliveredBy = clean(req.session?.user?.name || "أمين المستودع", 120);
+    dbRef.transaction(() => {
+      dbRef.prepare("UPDATE shipment_packages SET status='delivered',updated_at=CURRENT_TIMESTAMP WHERE id=?").run(row.id);
+      dbRef.prepare("INSERT INTO package_delivery_events(package_id,order_id,barcode,delivered_by) VALUES(?,?,?,?)").run(row.id,row.order_id,row.barcode,deliveredBy);
+      const remaining = dbRef.prepare("SELECT COUNT(*) c FROM shipment_packages WHERE order_id=? AND status='active'").get(row.order_id).c;
+      if (remaining === 0) {
+        dbRef.prepare("UPDATE shipping_operations SET phase='delivered',delivered_at=COALESCE(delivered_at,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE order_id=?").run(row.order_id);
+        dbRef.prepare("UPDATE orders SET status=3 WHERE id=?").run(row.order_id);
+      }
+    })();
+    await syncRemotePackages();
+    const counts = dbRef.prepare("SELECT COUNT(*) total,SUM(CASE WHEN status='delivered' THEN 1 ELSE 0 END) delivered FROM shipment_packages WHERE order_id=? AND status!='inactive'").get(row.order_id);
+    res.json({ ok:true, tracking_no:row.order_no,customer_name:row.customer_name,total:counts.total,delivered:Number(counts.delivered||0),completed:Number(counts.delivered||0)===counts.total });
   });
 
   appRef.get("/api/shipping-packages/lookup/:code", (req, res) => {
