@@ -13,11 +13,11 @@ if (!resolveSendFilePath('/tmp/accounting.html', {})) throw new Error('absolute 
 if (!resolveSendFilePath('accounting.html', { root: '/tmp' }).endsWith('/tmp/accounting.html')) throw new Error('root-based HTML file paths must resolve');
 
 const calculator = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'calculator.html'), 'utf8'));
-for (const token of ['350*q', '350 ريال للبرميل الواحد', 'من الباب إلى الباب، شامل التغليف']) {
+for (const token of ['350*q', '350 ريال للبرميل الواحد', 'من الباب إلى الباب، شامل التغليف', '250*q', 'شنطة كبيرة · 250 ريال', '200*q', 'حتى وزن 30 كجم']) {
   if (!calculator.includes(token)) throw new Error(`missing barrel calculator pricing token: ${token}`);
 }
 const shippingOnly = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'shipping-only.html'), 'utf8'));
-for (const token of ['شحن برميل · 350 ريال', 'السعر: ${barrelPrice} ريال', 'الإجمالي: ${(350*count)']) {
+for (const token of ['شحن برميل · 350 ريال', 'شنطة كبيرة · 250 ريال', 'شحن كرتون · 200 ريال', "large_bag:'شنطة كبيرة'", "packageType==='large_bag'?250", 'السعر: ${shipmentPrice} ريال', 'الإجمالي: ${shipmentPrice']) {
   if (!shippingOnly.includes(token)) throw new Error(`missing barrel booking pricing token: ${token}`);
 }
 
