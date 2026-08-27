@@ -127,6 +127,7 @@ const productColumns = new Set(
 );
 if (!productColumns.has("image_url")) db.exec("ALTER TABLE products_catalog ADD COLUMN image_url TEXT");
 if (!productColumns.has("stock_quantity")) db.exec("ALTER TABLE products_catalog ADD COLUMN stock_quantity INTEGER NOT NULL DEFAULT 100");
+if (!productColumns.has("old_price")) db.exec("ALTER TABLE products_catalog ADD COLUMN old_price REAL");
 
 const partnerColumns = new Set(
   db.prepare("PRAGMA table_info(partners)").all().map((column) => column.name)
@@ -1302,7 +1303,7 @@ app.patch("/api/admin/payments/:paymentNo/status", (req, res) => {
 
 app.get("/api/my-favorites", (req, res) => {
   if (!req.session.user || req.session.user.id === 0) return res.status(401).json({ error: "يجب تسجيل الدخول بحساب عميل" });
-  const products = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity
+  const products = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.old_price,p.currency,p.stock_quantity
     FROM favorites f JOIN products_catalog p ON p.id=f.product_id
     WHERE f.user_id=? AND p.active=1 ORDER BY f.created_at DESC`).all(req.session.user.id);
   res.json({ ok: true, products });
@@ -1366,7 +1367,7 @@ app.patch("/api/admin/support-tickets/:ticketNo", (req, res) => {
 });
 
 app.get("/api/catalog", (req, res) => {
-  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity,p.supplier_id,s.name supplier_name
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.old_price,p.currency,p.stock_quantity,p.supplier_id,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
     WHERE p.active=1 ORDER BY p.id DESC`).all();
   res.json({ ok: true, products: rows });
@@ -1374,7 +1375,7 @@ app.get("/api/catalog", (req, res) => {
 
 app.get("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.currency,p.stock_quantity,
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.old_price,p.currency,p.stock_quantity,
     p.supplier_id,p.active,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
     ORDER BY p.active DESC,p.stock_quantity ASC,p.id DESC`).all();
@@ -1415,26 +1416,29 @@ app.post("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const {
     supplier_id = null, name, category = "", description = "", image_url = "",
-    price = 0, currency = "SAR", stock_quantity = 0
+    price = 0, old_price = null, currency = "SAR", stock_quantity = 0
   } = req.body;
   if (!name) return res.status(400).json({ error: "اسم المنتج مطلوب" });
-  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,image_url,price,currency,stock_quantity)
-    VALUES(?,?,?,?,?,?,?,?)`).run(
-      supplier_id || null, name, category, description, image_url, Number(price) || 0, currency, Math.max(0, Number(stock_quantity) || 0)
+  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,image_url,price,old_price,currency,stock_quantity)
+    VALUES(?,?,?,?,?,?,?,?,?)`).run(
+      supplier_id || null, name, category, description, image_url, Number(price) || 0,
+      old_price === null || old_price === "" ? null : Math.max(0, Number(old_price) || 0),
+      currency, Math.max(0, Number(stock_quantity) || 0)
     );
   res.status(201).json({ ok: true, id: info.lastInsertRowid });
 });
 
 app.patch("/api/admin/products/:id", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const { supplier_id, name, category, description, image_url, price, currency, active, stock_quantity } = req.body;
+  const { supplier_id, name, category, description, image_url, price, old_price, currency, active, stock_quantity } = req.body;
   const info = db.prepare(`UPDATE products_catalog
     SET supplier_id=CASE WHEN ? THEN ? ELSE supplier_id END,name=COALESCE(?,name),category=COALESCE(?,category),
         description=COALESCE(?,description),image_url=COALESCE(?,image_url),price=COALESCE(?,price),
-        currency=COALESCE(?,currency),active=COALESCE(?,active),stock_quantity=COALESCE(?,stock_quantity)
+        old_price=CASE WHEN ? THEN ? ELSE old_price END,currency=COALESCE(?,currency),active=COALESCE(?,active),stock_quantity=COALESCE(?,stock_quantity)
     WHERE id=?`).run(
       supplier_id !== undefined ? 1 : 0, supplier_id || null, name, category, description, image_url,
       price === undefined ? null : Number(price),
+      old_price !== undefined ? 1 : 0, old_price === null || old_price === "" ? null : Math.max(0, Number(old_price) || 0),
       currency,
       active === undefined ? null : Number(active),
       stock_quantity === undefined ? null : Math.max(0, Number(stock_quantity) || 0),
