@@ -70,7 +70,6 @@ const script = `<script id="home-service-options-script">
       {icon:'✈️',label:'شحن جوي',desc:'حسب الوزن الفعلي والحجمي · تغليف مجاني',href:'/air-shipping.html'},
       {icon:'🚢',label:'شحن حاوية',desc:'20 أو 40 قدم أو 40HC · تغليف مجاني',href:'/container-shipping.html'},
       {icon:'🚗',label:'شحن سيارة',desc:'تصدير نهائي أو تربتك · تغليف مجاني',href:'/vehicle-shipping.html'},
-      {icon:'🏷️',label:'باركود لكل قطعة',desc:'كل قطعة مرتبطة برقم التتبع الرئيسي',href:'/tracking.html'},
       {icon:'📍',label:'تتبع الشحنة',desc:'تابع حالة طلبك حتى الوصول',href:'/tracking.html'}
     ]}
   };

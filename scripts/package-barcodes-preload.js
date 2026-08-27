@@ -49,8 +49,34 @@ function BarcodeDatabase(...args) {
       );
       CREATE INDEX IF NOT EXISTS idx_shipment_packages_order ON shipment_packages(order_id);
       CREATE INDEX IF NOT EXISTS idx_shipment_packages_barcode ON shipment_packages(barcode);
+      CREATE TABLE IF NOT EXISTS barcode_sequence (number INTEGER PRIMARY KEY);
+    `);
+    const addNumber = db.prepare("INSERT OR IGNORE INTO barcode_sequence(number) VALUES(?)");
+    db.transaction(() => { for (let number = 1; number <= 500; number++) addNumber.run(number); })();
+    db.exec(`
+      CREATE TRIGGER IF NOT EXISTS trg_mandatory_warehouse_barcodes_insert
+      AFTER INSERT ON shipping_operations
+      WHEN NEW.phase IN ('warehouse','ready','left_riyadh','at_port','loaded','in_transit','arrived_sudan','customs','ready_delivery','out_delivery','delivered')
+      BEGIN
+        INSERT OR IGNORE INTO shipment_packages(order_id,barcode,piece_no,description)
+        SELECT NEW.order_id,
+          'RF'||REPLACE(REPLACE(UPPER(o.order_no),'-',''),' ','')||'P'||printf('%03d',n.number),
+          n.number,'القطعة '||n.number||' من '||NEW.package_count
+        FROM orders o JOIN barcode_sequence n ON n.number<=NEW.package_count WHERE o.id=NEW.order_id;
+      END;
+      CREATE TRIGGER IF NOT EXISTS trg_mandatory_warehouse_barcodes_update
+      AFTER UPDATE OF phase,package_count ON shipping_operations
+      WHEN NEW.phase IN ('warehouse','ready','left_riyadh','at_port','loaded','in_transit','arrived_sudan','customs','ready_delivery','out_delivery','delivered')
+      BEGIN
+        INSERT OR IGNORE INTO shipment_packages(order_id,barcode,piece_no,description)
+        SELECT NEW.order_id,
+          'RF'||REPLACE(REPLACE(UPPER(o.order_no),'-',''),' ','')||'P'||printf('%03d',n.number),
+          n.number,'القطعة '||n.number||' من '||NEW.package_count
+        FROM orders o JOIN barcode_sequence n ON n.number<=NEW.package_count WHERE o.id=NEW.order_id;
+      END;
     `);
     setTimeout(restoreRemotePackages, 2200).unref?.();
+    setInterval(syncRemotePackages, 30000).unref?.();
   }
   return db;
 }
@@ -136,6 +162,7 @@ function installRoutes() {
     const order = dbRef.prepare("SELECT id,order_no,name,phone,qty FROM orders WHERE UPPER(order_no)=UPPER(?)").get(req.params.orderNo);
     if (!order) return res.status(404).json({ error: "رقم التتبع غير موجود" });
     const packages = packagesFor(order.id);
+    void syncRemotePackages();
     res.json({ ok: true, tracking_no: order.order_no, owner: { name: order.name, phone: order.phone }, packages: packages.length ? packages : ensureCount(order, order.qty || 1) });
   });
 
