@@ -17,8 +17,12 @@ for (const token of ['350*q', '350 ريال للبرميل الواحد', 'من 
   if (!calculator.includes(token)) throw new Error(`missing barrel calculator pricing token: ${token}`);
 }
 const shippingOnly = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'shipping-only.html'), 'utf8'));
-for (const token of ['شحن برميل · 350 ريال', 'شنطة كبيرة · 250 ريال', 'شحن كرتون · 200 ريال', "large_bag:'شنطة كبيرة'", "packageType==='large_bag'?250", 'السعر: ${shipmentPrice} ريال', 'الإجمالي: ${shipmentPrice']) {
+for (const token of ['شحن برميل · 350 ريال', 'شنطة كبيرة · 250 ريال', 'شحن كرتون · 200 ريال', "large_bag:'شنطة كبيرة'", "packageType==='large_bag'?250", 'السعر: ${shipmentPrice} ريال', 'الإجمالي: ${shipmentPrice', 'خدمة التغليف: مشمولة لجميع الشحنات', 'باركود مستقل لكل قطعة مرتبط برقم التتبع الرئيسي']) {
   if (!shippingOnly.includes(token)) throw new Error(`missing barrel booking pricing token: ${token}`);
+}
+const tracking = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'tracking.html'), 'utf8'));
+for (const token of ['ما هو باركود التتبع؟', 'رقم تعريف فريد', 'رقم تتبع رئيسي واحد']) {
+  if (!tracking.includes(token)) throw new Error(`missing barcode definition token: ${token}`);
 }
 
 console.log('HTML sendFile UI checks passed');
