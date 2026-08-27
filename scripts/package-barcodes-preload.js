@@ -135,7 +135,8 @@ function installRoutes() {
     if (!isAdmin(req)) return res.status(403).json({ error: "غير مصرح" });
     const order = dbRef.prepare("SELECT id,order_no,name,phone,qty FROM orders WHERE UPPER(order_no)=UPPER(?)").get(req.params.orderNo);
     if (!order) return res.status(404).json({ error: "رقم التتبع غير موجود" });
-    res.json({ ok: true, tracking_no: order.order_no, owner: { name: order.name, phone: order.phone }, packages: packagesFor(order.id) });
+    const packages = packagesFor(order.id);
+    res.json({ ok: true, tracking_no: order.order_no, owner: { name: order.name, phone: order.phone }, packages: packages.length ? packages : ensureCount(order, order.qty || 1) });
   });
 
   appRef.post("/api/admin/shipping-packages/:orderNo/generate", (req, res) => {
@@ -178,7 +179,8 @@ function installRoutes() {
       if (scanned) order = { id: scanned.id, order_no: scanned.order_no, product: scanned.product, city: scanned.city, qty: scanned.qty, status: scanned.order_status, created_at: scanned.created_at };
     }
     if (!order) return res.status(404).json({ error: "رقم التتبع أو الباركود غير موجود" });
-    const packages = packagesFor(order.id).filter(x => x.status === "active").map(x => ({ barcode: x.barcode, piece_no: x.piece_no, description: x.description, weight_kg: x.weight_kg }));
+    const existing = packagesFor(order.id);
+    const packages = (existing.length ? existing : ensureCount(order, order.qty || 1)).filter(x => x.status === "active").map(x => ({ barcode: x.barcode, piece_no: x.piece_no, description: x.description, weight_kg: x.weight_kg }));
     res.json({ ok: true, tracking_no: order.order_no, scanned_piece: scanned ? { barcode: scanned.barcode, piece_no: scanned.piece_no } : null, package_count: packages.length, packages });
   });
 }
