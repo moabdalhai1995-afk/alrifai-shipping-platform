@@ -68,8 +68,27 @@ function resolveSendFilePath(filePath, options = {}) {
   return null;
 }
 
+function applyBarrelDoorToDoorPrice(source) {
+  if (!source || typeof source !== "string") return source;
+  let html = source;
+  if (html.includes("حاسبة الشحن التقديرية")) {
+    html = html.replace(
+      /if\(t==="barrel"\|\|t==="carton"\)\{result\.style\.display="block";result\.innerHTML=`<div>التقدير المبدئي<\/div><div class="estimate">عرض سعر مخصص<\/div><small>سعر \$\{t==="barrel"\?"البرميل":"الكرتون"\} يعتمد على الحجم والوزن والمحتويات والوجهة، وسيتم تأكيده قبل اعتماد الطلب\.<\/small>`;return\}/,
+      'if(t==="barrel"){const total=350*q;result.style.display="block";result.innerHTML=`<div>سعر شحن ${q} ${q===1?"برميل":"براميل"}</div><div class="estimate">${total.toLocaleString("ar-SA")} ريال سعودي</div><small>من الباب إلى الباب، شامل التغليف · 350 ريال للبرميل الواحد.</small><div style="margin-top:12px"><a class="btn primary" href="/shipping-only.html?type=barrel">احجز شحن البرميل</a></div>`;return}if(t==="carton"){result.style.display="block";result.innerHTML=`<div>التقدير المبدئي</div><div class="estimate">عرض سعر مخصص</div><small>سعر الكرتون يعتمد على الحجم والوزن والمحتويات والوجهة، وسيتم تأكيده قبل اعتماد الطلب.</small>`;return}'
+    );
+  }
+  if (html.includes("خدمة الشحن فقط")) {
+    html = html
+      .replace("<b>شحن برميل</b><small>للأغراض المعبأة داخل برميل</small>", "<b>شحن برميل · 350 ريال</b><small>من الباب إلى الباب، شامل التغليف</small>")
+      .replace("<div class=\"service-note\"><b>الخدمة تشمل:</b>", "<div class=\"service-note\"><b>عرض البرميل: 350 ريال للبرميل الواحد من الباب إلى الباب شامل التغليف.</b><br><span>الخدمة تشمل:</span>")
+      .replace("const savedNotes=`نوع الشحنة: ${packageLabel}\\nالعدد: ${count}${customerNotes?`\\n${customerNotes}`:''}`;", "const barrelPrice=packageType==='barrel'?350*count:0;const savedNotes=`نوع الشحنة: ${packageLabel}\\nالعدد: ${count}${barrelPrice?`\\nالسعر: ${barrelPrice} ريال · من الباب إلى الباب شامل التغليف`:''}${customerNotes?`\\n${customerNotes}`:''}`;")
+      .replace("<p>${esc(packageLabel)} × ${count}</p><p>رقم الطلب:", "<p>${esc(packageLabel)} × ${count}</p>${packageType==='barrel'?`<p><b>الإجمالي: ${(350*count).toLocaleString('ar-SA')} ريال</b><br>من الباب إلى الباب شامل التغليف</p>`:''}<p>رقم الطلب:");
+  }
+  return html;
+}
+
 function decorateHtml(source) {
-  let html = transformPlatformHtml(source);
+  let html = applyBarrelDoorToDoorPrice(transformPlatformHtml(source));
   if (!html || typeof html !== "string") return html;
   if (!html.includes('id="clean-route-ui-v393-style"')) {
     html = html.replace(/<\/head>/i, `${cleanRouteStyles}\n</head>`);
