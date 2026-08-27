@@ -20,6 +20,9 @@ const shippingOnly = decorateHtml(require('fs').readFileSync(require('path').joi
 for (const token of ['شحن برميل · 350 ريال', 'شنطة كبيرة · 250 ريال', 'شحن كرتون · 200 ريال', "large_bag:'شنطة كبيرة'", "packageType==='large_bag'?250", 'السعر: ${shipmentPrice} ريال', 'الإجمالي: ${shipmentPrice', 'خدمة التغليف: مشمولة لجميع الشحنات', 'باركود مستقل لكل قطعة مرتبط برقم التتبع الرئيسي']) {
   if (!shippingOnly.includes(token)) throw new Error(`missing barrel booking pricing token: ${token}`);
 }
+for (const token of ['id="sudanDestinations"', 'ابحث عن المدينة أو الحي أو القرية', 'ود مدني', 'شمبات', 'أم بدة', 'خشم القربة', 'القضارف', 'عطبرة', 'شندي']) {
+  if (!shippingOnly.includes(token)) throw new Error(`missing Sudan destination token: ${token}`);
+}
 const tracking = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'tracking.html'), 'utf8'));
 for (const token of ['ما هو باركود التتبع؟', 'رقم تعريف فريد', 'رقم تتبع رئيسي واحد']) {
   if (!tracking.includes(token)) throw new Error(`missing barcode definition token: ${token}`);

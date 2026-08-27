@@ -2,6 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { transformPlatformHtml } = require("./platform-ui-refresh-preload");
+const { applySudanDestinations } = require("./sudan-destinations");
 
 const originalSendFile = express.response.sendFile;
 
@@ -99,7 +100,7 @@ function applyBarrelDoorToDoorPrice(source) {
 }
 
 function decorateHtml(source) {
-  let html = applyBarrelDoorToDoorPrice(transformPlatformHtml(source));
+  let html = applySudanDestinations(applyBarrelDoorToDoorPrice(transformPlatformHtml(source)));
   if (!html || typeof html !== "string") return html;
   if (!html.includes('id="clean-route-ui-v393-style"')) {
     html = html.replace(/<\/head>/i, `${cleanRouteStyles}\n</head>`);
