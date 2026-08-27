@@ -63,7 +63,7 @@ const script = `<script id="home-service-options-script">
       {icon:'✍️',label:'طلب شراء خاص',desc:'اكتب المنتج المطلوب حتى لو لم يكن في الكتالوج',action:'open-order'}
     ]},
     shipping:{title:'الشحن إلى السودان',items:[
-      {icon:'🛢️',label:'شحن برميل',desc:'سجّل عدد البراميل ومحتويات الشحنة',href:'/shipping-only.html?type=barrel'},
+      {icon:'🛢️',label:'شحن برميل · 350 ر.س',desc:'من الباب إلى الباب، شامل التغليف',href:'/shipping-only.html?type=barrel'},
       {icon:'📦',label:'شحن كرتون',desc:'سجّل عدد الكراتين ومحتوياتها',href:'/shipping-only.html?type=carton'},
       {icon:'🧳',label:'شحنة أخرى',desc:'أثاث، أجهزة أو أغراض متنوعة',href:'/shipping-only.html?type=general'},
       {icon:'✈️',label:'شحن جوي',desc:'للطرود والشحنات العاجلة حسب الوزن الفعلي والحجمي',href:'/air-shipping.html'},

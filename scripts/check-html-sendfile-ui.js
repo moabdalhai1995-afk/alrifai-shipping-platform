@@ -12,4 +12,13 @@ if ((twice.match(/id="clean-route-ui-v393-style"/g) || []).length !== 1) throw n
 if (!resolveSendFilePath('/tmp/accounting.html', {})) throw new Error('absolute HTML file paths must resolve');
 if (!resolveSendFilePath('accounting.html', { root: '/tmp' }).endsWith('/tmp/accounting.html')) throw new Error('root-based HTML file paths must resolve');
 
+const calculator = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'calculator.html'), 'utf8'));
+for (const token of ['350*q', '350 ريال للبرميل الواحد', 'من الباب إلى الباب، شامل التغليف']) {
+  if (!calculator.includes(token)) throw new Error(`missing barrel calculator pricing token: ${token}`);
+}
+const shippingOnly = decorateHtml(require('fs').readFileSync(require('path').join(__dirname, '..', 'shipping-only.html'), 'utf8'));
+for (const token of ['شحن برميل · 350 ريال', 'السعر: ${barrelPrice} ريال', 'الإجمالي: ${(350*count)']) {
+  if (!shippingOnly.includes(token)) throw new Error(`missing barrel booking pricing token: ${token}`);
+}
+
 console.log('HTML sendFile UI checks passed');
