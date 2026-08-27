@@ -64,7 +64,8 @@ const script = `<script id="home-service-options-script">
     ]},
     shipping:{title:'الشحن إلى السودان',items:[
       {icon:'🛢️',label:'شحن برميل · 350 ر.س',desc:'من الباب إلى الباب، شامل التغليف',href:'/shipping-only.html?type=barrel'},
-      {icon:'📦',label:'شحن كرتون',desc:'سجّل عدد الكراتين ومحتوياتها',href:'/shipping-only.html?type=carton'},
+      {icon:'🧳',label:'شنطة كبيرة · 250 ر.س',desc:'سجّل عدد الشنط ومحتوياتها',href:'/shipping-only.html?type=large_bag'},
+      {icon:'📦',label:'كرتون 30 كجم · 200 ر.س',desc:'السعر للكرتون حتى وزن 30 كجم',href:'/shipping-only.html?type=carton'},
       {icon:'🧳',label:'شحنة أخرى',desc:'أثاث، أجهزة أو أغراض متنوعة',href:'/shipping-only.html?type=general'},
       {icon:'✈️',label:'شحن جوي',desc:'للطرود والشحنات العاجلة حسب الوزن الفعلي والحجمي',href:'/air-shipping.html'},
       {icon:'🚢',label:'شحن حاوية',desc:'20 قدم أو 40 قدم أو 40HC',href:'/container-shipping.html'},
