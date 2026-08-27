@@ -181,3 +181,4 @@ function wrappedExpress(...args) {
 
 Object.assign(wrappedExpress, realExpress);
 require.cache[require.resolve("express")].exports = wrappedExpress;
+require("./scripts/package-barcodes-preload.js");
