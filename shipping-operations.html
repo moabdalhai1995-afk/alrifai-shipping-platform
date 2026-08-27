@@ -18,7 +18,7 @@ dialog{border:0;border-radius:20px;padding:0;width:min(760px,calc(100% - 24px));
 <body>
 <header class="topbar"><div class="wrap">
   <div class="brand"><div class="logo">🚚</div><div><h1>تشغيل الشحن</h1><small>الرفاعي للشحن الدولي · السعودية ← السودان</small></div></div>
-  <div class="actions"><a class="btn light" href="/admin/overview" style="text-decoration:none">← <span>لوحة المدير</span></a><button class="btn gold" onclick="loadData()">↻ <span>تحديث</span></button></div>
+  <div class="actions"><button class="btn ok" onclick="openDeliveryScanner()">📷 تسليم بالباركود</button><a class="btn light" href="/admin/overview" style="text-decoration:none">← <span>لوحة المدير</span></a><button class="btn gold" onclick="loadData()">↻ <span>تحديث</span></button></div>
 </div></header>
 <main class="wrap" id="main">
   <section class="hero"><h2>مركز عمليات الشحن</h2><p>استلام الشحنة، المستودع، التجميع، الرحلات والحاويات، التتبع، الوصول للسودان، التسليم، والتكلفة والربح في شاشة واحدة.</p></section>
@@ -37,6 +37,13 @@ dialog{border:0;border-radius:20px;padding:0;width:min(760px,calc(100% - 24px));
   </section>
 </main>
 <div id="toast" class="toast"></div>
+
+<dialog id="deliveryDialog"><div class="modal">
+  <div class="row"><div><h3>تسليم العميل بقارئ الباركود</h3><small class="muted">امسح القطعة ثم طابق اسم العميل والجوال قبل التأكيد</small></div><button class="btn soft" onclick="closeDeliveryScanner()">✕</button></div>
+  <video id="deliveryVideo" playsinline muted style="display:none;width:100%;max-height:280px;background:#111;border-radius:14px;margin:12px 0"></video>
+  <div class="row" style="margin:12px 0"><input id="deliveryBarcode" style="flex:1;min-width:220px" autocomplete="off" placeholder="امسح الباركود أو اكتبه هنا"><button class="btn gold" onclick="lookupDeliveryBarcode()">تحقق</button><button class="btn soft" onclick="startDeliveryCamera()">فتح الكاميرا</button></div>
+  <div id="deliveryResult" class="empty">لم يتم مسح قطعة بعد.</div>
+</div></dialog>
 
 <dialog id="opDialog"><form id="opForm" class="modal">
   <div class="row"><div><h3>تحديث بيانات الشحنة</h3><div id="opOrder" class="track"></div></div><button type="button" class="btn soft" onclick="opDialog.close()">✕</button></div>
@@ -96,10 +103,16 @@ dialog{border:0;border-radius:20px;padding:0;width:min(760px,calc(100% - 24px));
 let data={operations:[],trips:[],phases:{},tripStatuses:{},shipmentTypes:{},summary:{}};
 let editingOrder='';let editingTrip='';let assigningTrip='';
 let packageRows=[];let packageOwner={name:'',phone:''};
+let deliveryCandidate=null,deliveryStream=null,deliveryScanning=false;
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(v){return Number(v||0).toLocaleString('ar-SA',{maximumFractionDigits:2})+' ر.س'}
 function toast(message){const t=$('toast');t.textContent=message;t.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.display='none',2600)}
+function openDeliveryScanner(){deliveryCandidate=null;$('deliveryBarcode').value='';$('deliveryResult').className='empty';$('deliveryResult').textContent='لم يتم مسح قطعة بعد.';deliveryDialog.showModal();setTimeout(()=>$('deliveryBarcode').focus(),100)}
+function closeDeliveryScanner(){deliveryScanning=false;if(deliveryStream){deliveryStream.getTracks().forEach(t=>t.stop());deliveryStream=null}$('deliveryVideo').style.display='none';deliveryDialog.close()}
+async function lookupDeliveryBarcode(value){const code=String(value||$('deliveryBarcode').value).trim().toUpperCase();if(!code)return toast('امسح الباركود أولاً');$('deliveryBarcode').value=code;try{const d=await api('/api/admin/shipping-packages/scan/'+encodeURIComponent(code));deliveryCandidate=d.package;$('deliveryResult').className='panel';$('deliveryResult').innerHTML=`<div class="row"><div><small>صاحب الشحنة</small><h2 style="margin:4px 0">${esc(d.package.customer_name)}</h2><a href="tel:${esc(d.package.phone)}">${esc(d.package.phone)}</a></div><span class="tag ${d.already_delivered?'danger':'ok'}">${d.already_delivered?'مسلّمة سابقًا':'مطابقة صحيحة'}</span></div><div class="meta"><div class="metric"><small>رقم التتبع</small><b class="track">${esc(d.package.order_no)}</b></div><div class="metric"><small>القطعة</small><b>${d.package.piece_no} من ${d.package.total_pieces}</b></div><div class="metric"><small>تم تسليم</small><b>${d.package.delivered_pieces} من ${d.package.total_pieces}</b></div></div>${d.already_delivered?'<div class="issue-card">تم تسليم هذه القطعة سابقًا؛ لا تسلمها مرة أخرى.</div>':'<button class="btn ok" style="width:100%" onclick="confirmBarcodeDelivery()">تأكيد تسليم هذه القطعة للعميل الصحيح</button>'}`}catch(e){deliveryCandidate=null;$('deliveryResult').className='issue-card';$('deliveryResult').textContent=e.message}}
+async function confirmBarcodeDelivery(){if(!deliveryCandidate)return;try{const d=await api('/api/admin/shipping-packages/deliver',{method:'POST',body:JSON.stringify({barcode:deliveryCandidate.barcode})});$('deliveryResult').className='panel';$('deliveryResult').innerHTML=`<h2>تم تسجيل تسليم القطعة ✅</h2><p>${esc(d.customer_name)} · ${d.delivered} من ${d.total}</p><p>${d.completed?'اكتمل تسليم جميع قطع الشحنة وأُغلقت كمسلمة.':'تبقت '+(d.total-d.delivered)+' قطعة قبل إغلاق الشحنة.'}</p>`;deliveryCandidate=null;$('deliveryBarcode').value='';await loadData();setTimeout(()=>$('deliveryBarcode').focus(),100)}catch(e){toast(e.message)}}
+async function startDeliveryCamera(){if(!('BarcodeDetector'in window)){toast('الكاميرا لا تدعم قراءة الباركود هنا؛ استخدم قارئ USB/Bluetooth أو اكتب الرقم');return}try{deliveryStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});const video=$('deliveryVideo');video.srcObject=deliveryStream;video.style.display='block';await video.play();const detector=new BarcodeDetector({formats:['code_39','code_128','qr_code']});deliveryScanning=true;const scan=async()=>{if(!deliveryScanning)return;try{const codes=await detector.detect(video);if(codes[0]?.rawValue){deliveryScanning=false;deliveryStream.getTracks().forEach(t=>t.stop());deliveryStream=null;video.style.display='none';await lookupDeliveryBarcode(codes[0].rawValue);return}}catch{}requestAnimationFrame(scan)};scan()}catch(e){toast('تعذر فتح الكاميرا؛ تحقق من الإذن أو استخدم قارئ الباركود')}}
 function code39Svg(value,height=52){const map={'0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw','5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn','A':'wnnnnwnnw','B':'nnwnnwnnw','C':'wnwnnwnnn','D':'nnnnwwnnw','E':'wnnnwwnnn','F':'nnwnwwnnn','G':'nnnnnwwnw','H':'wnnnnwwnn','I':'nnwnnwwnn','J':'nnnnwwwnn','K':'wnnnnnnww','L':'nnwnnnnww','M':'wnwnnnnwn','N':'nnnnwnnww','O':'wnnnwnnwn','P':'nnwnwnnwn','Q':'nnnnnnwww','R':'wnnnnnwwn','S':'nnwnnnwwn','T':'nnnnwnwwn','U':'wwnnnnnnw','V':'nwwnnnnnw','W':'wwwnnnnnn','X':'nwnnwnnnw','Y':'wwnnwnnnn','Z':'nwwnwnnnn','-':'nwnnnnwnw','.':'wwnnnnwnn',' ':'nwwnnnwnn','*':'nwnnwnwnn'};const text='*'+String(value).toUpperCase().replace(/[^0-9A-Z. -]/g,'')+'*';let x=8,bars='';for(const ch of text){for(let i=0;i<9;i++){const w=map[ch][i]==='w'?3:1;if(i%2===0)bars+=`<rect x="${x}" y="2" width="${w}" height="${height}"/>`;x+=w}x+=1}return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x+8} ${height+4}" role="img" aria-label="${esc(value)}" style="width:100%;height:${height}px">${bars}</svg>`}
 async function api(url,options={}){const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'تعذر إكمال العملية');return d}
 async function ensureAdmin(){const r=await fetch('/api/profile',{credentials:'same-origin'});if(!r.ok){location.href='/admin';return false}const d=await r.json();if(d.user?.role!=='admin'){location.href='/admin';return false}return true}
@@ -131,6 +144,7 @@ function printPackageLabel(barcode){const p=packageRows.find(x=>x.barcode===barc
 function printPackageLabels(){thermalPrint(packageRows.filter(p=>p.status==='active'),true)}
 function showTab(name,button){$('shipmentsTab').classList.toggle('hidden',name!=='shipments');$('tripsTab').classList.toggle('hidden',name!=='trips');document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));button.classList.add('active')}
 $('search').addEventListener('input',renderShipments);$('phaseFilter').addEventListener('change',renderShipments);$('typeFilter').addEventListener('change',renderShipments);
+$('deliveryBarcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();lookupDeliveryBarcode()}});
 loadData();
 </script>
 </body></html>
