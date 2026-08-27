@@ -81,6 +81,14 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 @media(max-width:850px){body{padding-bottom:64px}.promo-bar{font-size:11px}.nav{min-height:58px}.nav .actions .outline:not(#loginBtn){display:none}.search-row{padding-block:8px}.hero{padding:30px 0}.hero-card{display:none}.hero-grid{display:block}.category-rail{margin-inline:-20px;padding-inline:20px}.deal-strip{border-radius:0;margin-inline:-20px}.products{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.product-img{height:190px}.product-body{padding:9px}.store-benefits{grid-template-columns:repeat(2,1fr)}.toolbar{top:58px}.mobile-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;right:0;left:0;background:#fff;border-top:1px solid var(--line);z-index:40;padding:7px 4px max(7px,env(safe-area-inset-bottom))}.mobile-nav button,.mobile-nav a{border:0;background:none;text-align:center;font-family:inherit;font-size:11px}.mobile-nav i{font-style:normal;font-size:20px;display:block}.cart{display:none}}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+.shipment-journey{background:linear-gradient(145deg,#101820 0%,#1d2c38 100%);color:#fff}
+.journey-intro{text-align:center;max-width:780px;margin:0 auto 32px}.journey-kicker{display:inline-block;color:#e7b74e;font-weight:900;margin-bottom:8px}.journey-intro h2{font-size:clamp(28px,5vw,40px);margin:0 0 12px}.journey-intro p{color:#d8dde1;line-height:1.9;font-size:17px;margin:0}
+.journey-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.journey-step{position:relative;display:flex;align-items:center;gap:12px;min-height:92px;padding:17px;background:#ffffff0d;border:1px solid #ffffff22;border-radius:16px;line-height:1.65}.journey-step::after{content:"";position:absolute;left:-15px;top:50%;width:15px;height:2px;background:#b8872d}.journey-step:nth-child(4)::after,.journey-step:last-child::after{display:none}.journey-icon{display:grid;place-items:center;flex:0 0 45px;width:45px;height:45px;border-radius:13px;background:#ffffff14;font-size:24px}
+.journey-promise{margin-top:24px;padding:16px 20px;text-align:center;border-radius:14px;background:#b8872d1f;border:1px solid #b8872d66;color:#f5eee2;font-size:17px}.journey-promise strong{color:#f3c96c}
+@media(max-width:850px){.journey-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.journey-step:nth-child(4)::after{display:block}.journey-step:nth-child(even)::after,.journey-step:last-child::after{display:none}}
+@media(max-width:520px){.shipment-journey{padding:46px 0}.journey-intro{text-align:right;margin-bottom:24px}.journey-intro p{font-size:15px}.journey-steps{grid-template-columns:1fr}.journey-step{min-height:76px}.journey-step::after{display:none!important}.journey-promise{font-size:15px;line-height:1.8}}
+</style>
 </head>
 <body>
 <div class="promo-bar">شحن من السعودية إلى السودان · <span>اطلب عرض السعر الآن</span></div>
@@ -128,8 +136,19 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <div class="field"><label>عدد الطرود</label><input id="cQty" type="number" min="1" value="1"></div>
 </div><button class="btn primary" onclick="calculate()">احسب التقدير</button><div id="calcResult" class="result" style="display:none"></div></div></div></section>
 
-<section id="how"><div class="wrap"><div class="section-head"><div><h2>كيف تعمل المنصة؟</h2><p class="muted">رحلة واضحة من اختيار المنتج حتى الشحن.</p></div></div>
-<div class="steps"><div class="step"><span class="num">1</span><h3>اختر</h3><p class="muted">تصفح المنتجات المتاحة.</p></div><div class="step"><span class="num">2</span><h3>اطلب</h3><p class="muted">أرسل المنتج والكمية والوجهة.</p></div><div class="step"><span class="num">3</span><h3>اعتمد</h3><p class="muted">نؤكد التوفر والسعر وتكلفة الشحن.</p></div><div class="step"><span class="num">4</span><h3>نشحن</h3><p class="muted">نشتري ونستلم ونجهز ثم نشحن.</p></div></div></div></section>
+<section id="how" class="shipment-journey"><div class="wrap">
+<div class="journey-intro"><span class="journey-kicker">رحلة شحنتك معنا</span><h2>تابع شحنتك بكل وضوح واطمئنان</h2><p>نستلم شحنتك ونفحصها ونغلفها بعناية، ثم نمنحك رقمًا خاصًا لمتابعتها حتى وصولها بأمان.</p></div>
+<div class="journey-steps" aria-label="مراحل تتبع الشحنة">
+<div class="journey-step"><span class="journey-icon">📦</span><b>انطلقت من مستودعات الرفاعي</b></div>
+<div class="journey-step"><span class="journey-icon">🚚</span><b>في طريقها إلى الميناء أو المطار</b></div>
+<div class="journey-step"><span class="journey-icon">🚢</span><b>تم شحنها إلى السودان</b></div>
+<div class="journey-step"><span class="journey-icon">📍</span><b>وصلت إلى وجهتها</b></div>
+<div class="journey-step"><span class="journey-icon">📋</span><b>جاري إنهاء إجراءات التخليص</b></div>
+<div class="journey-step"><span class="journey-icon">🚛</span><b>خرجت للتوصيل</b></div>
+<div class="journey-step"><span class="journey-icon">✅</span><b>تم التسليم بنجاح</b></div>
+</div>
+<div class="journey-promise">الرفاعي للشحن الدولي — <strong>شفافية في كل خطوة</strong>، وأمان حتى الوصول.</div>
+</div></section>
 
 <section id="track"><div class="wrap"><div class="section-head"><div><h2>تتبع الطلب</h2><p class="muted">أدخل رقم الطلب لمعرفة آخر حالة محفوظة على الجهاز.</p></div></div>
 <div class="calc"><div style="display:flex;gap:10px"><input id="trackId" class="field" style="margin:0;flex:1;padding:12px;border:1px solid var(--line);border-radius:9px" placeholder="مثال: RIF-1001"><button class="btn primary" onclick="trackOrder()">تتبع</button></div><div id="trackResult" style="margin-top:15px"></div></div></div></section>
