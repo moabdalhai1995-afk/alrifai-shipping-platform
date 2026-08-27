@@ -118,7 +118,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 
 <section style="padding:16px 0 25px"><div class="wrap">
 <div class="category-rail">
-<div class="category-chip" onclick="chooseCategory('')"><span>✨</span><b>وصل حديثًا</b></div><div class="category-chip" onclick="chooseCategory('أجهزة منزلية')"><span>🏠</span><b>أجهزة منزلية</b></div><div class="category-chip" onclick="chooseCategory('تكييف')"><span>❄️</span><b>تكييف</b></div><div class="category-chip" onclick="chooseCategory('أثاث')"><span>🛋️</span><b>أثاث</b></div><div class="category-chip" onclick="chooseCategory('إلكترونيات')"><span>📱</span><b>إلكترونيات</b></div><div class="category-chip" onclick="location.href='/calculator.html'"><span>🚢</span><b>احسب الشحن</b></div>
+<div class="category-chip" onclick="chooseCategory('')"><span>✨</span><b>وصل حديثًا</b></div><div class="category-chip" onclick="chooseCategory('أجهزة منزلية')"><span>🏠</span><b>أجهزة منزلية</b></div><div class="category-chip" onclick="chooseCategory('تكييف')"><span>❄️</span><b>تكييف</b></div><div class="category-chip" onclick="chooseCategory('أثاث')"><span>🛋️</span><b>أثاث</b></div><div class="category-chip" onclick="chooseCategory('إلكترونيات')"><span>📱</span><b>إلكترونيات</b></div><div class="category-chip" onclick="chooseCategory('قطع غيار السيارات')"><span>⚙️</span><b>قطع غيار السيارات</b></div><div class="category-chip" onclick="location.href='/calculator.html'"><span>🚢</span><b>احسب الشحن</b></div>
 </div>
 <div class="deal-strip"><div><h2>عروض الرفاعي</h2><div>أسعار مميزة من الموردين لفترة محدودة</div></div><div class="deal-timer"><b id="dealH">12</b><b id="dealM">00</b><b id="dealS">00</b></div></div>
 <div class="store-benefits"><div class="store-benefit">🛡️<b>تسوق موثوق</b><small>منتجات شركائنا فقط</small></div><div class="store-benefit">💬<b>عرض سعر واضح</b><small>قبل اعتماد الطلب</small></div><div class="store-benefit">📦<b>تجهيز احترافي</b><small>للأفراد والتجار</small></div><div class="store-benefit">🚢<b>تتبع الشحنة</b><small>حتى الوصول للسودان</small></div></div>
@@ -132,7 +132,7 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 </div></div></section>
 
 <section id="products"><div class="wrap"><div class="section-head"><div><h2>كتالوج المنتجات</h2><p class="muted">كتالوج تجريبي قابل للاستبدال ببيانات الشركاء الفعلية.</p></div><button class="btn outline" onclick="openOrder()">طلب منتج غير موجود</button></div>
-<div class="toolbar"><input id="search" placeholder="ابحث عن منتج..." oninput="syncTopSearch(this.value);renderProducts()"><select id="category" onchange="renderProducts()"><option value="">كل الأقسام</option><option>أجهزة منزلية</option><option>تكييف</option><option>أثاث</option><option>إلكترونيات</option></select><select id="sortProducts" class="sort-select" onchange="renderProducts()"><option value="featured">الأكثر صلة</option><option value="name">الاسم</option><option value="priceLow">السعر: الأقل أولًا</option></select></div>
+<div class="toolbar"><input id="search" placeholder="ابحث عن منتج..." oninput="syncTopSearch(this.value);renderProducts()"><select id="category" onchange="renderProducts()"><option value="">كل الأقسام</option><option>أجهزة منزلية</option><option>تكييف</option><option>أثاث</option><option>إلكترونيات</option><option>قطع غيار السيارات</option></select><select id="sortProducts" class="sort-select" onchange="renderProducts()"><option value="featured">الأكثر صلة</option><option value="name">الاسم</option><option value="priceLow">السعر: الأقل أولًا</option></select></div>
 <div id="productsGrid" class="products"></div></div></section>
 
 <section id="calculator"><div class="wrap"><div class="section-head"><div><h2>حاسبة تقديرية للشحن</h2><p class="muted">تقدير أولي فقط، والسعر النهائي يعتمد على الوزن/الحجم ونوع الشحنة والوجهة.</p></div></div>
@@ -329,7 +329,8 @@ const products=[
 {id:5,name:"غسالات",cat:"أجهزة منزلية",icon:"🧺",desc:"غسالات منزلية",price:"حسب المورد"},
 {id:6,name:"أجهزة مطبخ",cat:"أجهزة منزلية",icon:"🍳",desc:"أجهزة ومستلزمات المطبخ",price:"حسب المورد"},
 {id:7,name:"مكاتب وتجهيزات",cat:"أثاث",icon:"🪑",desc:"مكاتب وتجهيزات تجارية",price:"حسب المورد"},
-{id:8,name:"إكسسوارات إلكترونية",cat:"إلكترونيات",icon:"🔌",desc:"ملحقات وأجهزة",price:"حسب المورد"}
+{id:8,name:"إكسسوارات إلكترونية",cat:"إلكترونيات",icon:"🔌",desc:"ملحقات وأجهزة",price:"حسب المورد"},
+{id:9,name:"قطع غيار السيارات",cat:"قطع غيار السيارات",icon:"⚙️",desc:"قطع غيار وصيانة لمختلف أنواع السيارات",price:"حسب المورد"}
 ];
 let cart=JSON.parse(localStorage.getItem("rifai_cart")||"[]");
 let currentProducts=products;
