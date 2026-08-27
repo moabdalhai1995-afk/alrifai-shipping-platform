@@ -1,6 +1,6 @@
 {
   "name": "alrifai-shipping-platform",
-  "version": "3.10.5",
+  "version": "3.11.0",
   "private": true,
   "description": "AlRifai International Shipping Platform - unified responsive UI, admin/accounting, shipping operations, notification center, WhatsApp alerts, warehouse and container trips, automatic trip-to-shipment tracking sync, Sudan fulfillment, vehicle shipping, durable database sync and runtime performance tuning",
   "main": "server.js",
