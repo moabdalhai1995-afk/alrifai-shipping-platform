@@ -70,6 +70,8 @@ const script = `<script id="home-service-options-script">
       {icon:'✈️',label:'شحن جوي',desc:'للطرود والشحنات العاجلة حسب الوزن الفعلي والحجمي',href:'/air-shipping.html'},
       {icon:'🚢',label:'شحن حاوية',desc:'20 قدم أو 40 قدم أو 40HC',href:'/container-shipping.html'},
       {icon:'🚗',label:'شحن سيارة',desc:'تصدير نهائي أو تربتك إلى السودان',href:'/vehicle-shipping.html'},
+      {icon:'🛡️',label:'تغليف جميع الشحنات',desc:'تجهيز وحماية الشحنة قبل النقل',href:'/shipping-only.html'},
+      {icon:'🏷️',label:'باركود لكل قطعة',desc:'كل قطعة مرتبطة برقم التتبع الرئيسي',href:'/tracking.html'},
       {icon:'📍',label:'تتبع الشحنة',desc:'تابع حالة طلبك حتى الوصول',href:'/tracking.html'}
     ]}
   };
