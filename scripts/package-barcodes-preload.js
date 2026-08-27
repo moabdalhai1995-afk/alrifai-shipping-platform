@@ -59,6 +59,13 @@ function BarcodeDatabase(...args) {
         delivered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(package_id) REFERENCES shipment_packages(id)
       );
+      CREATE TABLE IF NOT EXISTS package_scan_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, package_id INTEGER NOT NULL, order_id INTEGER NOT NULL,
+        barcode TEXT NOT NULL, checkpoint TEXT NOT NULL, warehouse_location TEXT, scanned_by TEXT,
+        scanned_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(package_id) REFERENCES shipment_packages(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_package_scans_recent ON package_scan_events(package_id,checkpoint,scanned_at);
     `);
     const addNumber = db.prepare("INSERT OR IGNORE INTO barcode_sequence(number) VALUES(?)");
     db.transaction(() => { for (let number = 1; number <= 500; number++) addNumber.run(number); })();
@@ -95,6 +102,34 @@ require.cache[sqlitePath].exports = BarcodeDatabase;
 
 function isAdmin(req) { return req.session?.user?.role === "admin"; }
 function clean(v, max = 160) { return String(v ?? "").trim().slice(0, max); }
+function normalizePhone(value) {
+  let phone = String(value || "").replace(/\D/g, "");
+  if (phone.startsWith("00")) phone = phone.slice(2);
+  if (phone.startsWith("0")) phone = "966" + phone.slice(1);
+  return phone;
+}
+const SCAN_CHECKPOINTS = {
+  warehouse_in: { label: "تم استلام القطعة في المستودع", phase: "warehouse" },
+  loading: { label: "تم تحميل القطعة للنقل", phase: "loaded" },
+  transfer: { label: "غادرت القطعة المستودع للنقل", phase: "in_transit" }
+};
+async function notifyWarehouseScan(order, pieceNo, checkpoint, location) {
+  const event = SCAN_CHECKPOINTS[checkpoint], place = location ? ` في ${location}` : "";
+  const body = `تحديث الشحنة ${order.order_no}: ${event.label}${place} (القطعة ${pieceNo}).`;
+  if (order.user_id) dbRef.prepare("INSERT INTO notifications(user_id,order_id,title,body) VALUES(?,?,?,?)")
+    .run(order.user_id, order.order_id, "تحديث حركة الشحنة", body);
+  const token = process.env.WHATSAPP_ACCESS_TOKEN || "", phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || "";
+  const phone = normalizePhone(order.phone);
+  if (!token || !phoneId || !phone) return { in_app: Boolean(order.user_id), whatsapp: false };
+  try {
+    const version = process.env.WHATSAPP_API_VERSION || "v23.0";
+    const response = await fetch(`https://graph.facebook.com/${version}/${phoneId}/messages`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", to: phone, type: "text", text: { preview_url: false, body: `مرحباً ${order.name}، ${body} تابع شحنتك من منصة الرفاعي.` } })
+    });
+    return { in_app: Boolean(order.user_id), whatsapp: response.ok };
+  } catch (error) { console.error("Warehouse scan WhatsApp error", error.message); return { in_app: Boolean(order.user_id), whatsapp: false }; }
+}
 function pieceBarcode(orderNo, pieceNo) {
   const base = String(orderNo).toUpperCase().replace(/[^A-Z0-9]/g, "");
   return `RF${base}P${String(pieceNo).padStart(3, "0")}`;
@@ -134,6 +169,10 @@ async function ensureRemote(client) {
   CREATE TABLE IF NOT EXISTS package_delivery_events (
     id BIGINT PRIMARY KEY, package_id BIGINT NOT NULL, order_id BIGINT NOT NULL,
     barcode TEXT NOT NULL, delivered_by TEXT, delivered_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS package_scan_events (
+    id BIGINT PRIMARY KEY, package_id BIGINT NOT NULL, order_id BIGINT NOT NULL,
+    barcode TEXT NOT NULL, checkpoint TEXT NOT NULL, warehouse_location TEXT, scanned_by TEXT, scanned_at TEXT
   )`);
 }
 async function syncRemotePackages() {
@@ -152,6 +191,10 @@ async function syncRemotePackages() {
     for (const e of dbRef.prepare("SELECT * FROM package_delivery_events ORDER BY id").all()) {
       await client.query(`INSERT INTO package_delivery_events(id,package_id,order_id,barcode,delivered_by,delivered_at)
         VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(id) DO NOTHING`,[e.id,e.package_id,e.order_id,e.barcode,e.delivered_by,e.delivered_at]);
+    }
+    for (const e of dbRef.prepare("SELECT * FROM package_scan_events ORDER BY id").all()) {
+      await client.query(`INSERT INTO package_scan_events(id,package_id,order_id,barcode,checkpoint,warehouse_location,scanned_by,scanned_at)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(id) DO NOTHING`,[e.id,e.package_id,e.order_id,e.barcode,e.checkpoint,e.warehouse_location,e.scanned_by,e.scanned_at]);
     }
     await client.query("COMMIT");
   } catch (error) { try { await client?.query("ROLLBACK"); } catch {} console.error("Package barcode sync error", error.message); }
@@ -245,6 +288,36 @@ function installRoutes() {
     await syncRemotePackages();
     const counts = dbRef.prepare("SELECT COUNT(*) total,SUM(CASE WHEN status='delivered' THEN 1 ELSE 0 END) delivered FROM shipment_packages WHERE order_id=? AND status!='inactive'").get(row.order_id);
     res.json({ ok:true, tracking_no:row.order_no,customer_name:row.customer_name,total:counts.total,delivered:Number(counts.delivered||0),completed:Number(counts.delivered||0)===counts.total });
+  });
+
+  appRef.post("/api/admin/shipping-packages/warehouse/scan", async (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "غير مصرح" });
+    const barcode = clean(req.body?.barcode, 100).toUpperCase(), checkpoint = clean(req.body?.checkpoint, 30);
+    const event = SCAN_CHECKPOINTS[checkpoint];
+    if (!event) return res.status(400).json({ error: "اختر مرحلة قراءة صحيحة" });
+    const location = clean(req.body?.warehouse_location, 120);
+    const row = dbRef.prepare(`SELECT p.*,o.user_id,o.order_no,o.name,o.phone FROM shipment_packages p
+      JOIN orders o ON o.id=p.order_id WHERE UPPER(p.barcode)=?`).get(barcode);
+    if (!row) return res.status(404).json({ error: "الباركود غير مسجل في المستودع" });
+    if (row.status === "inactive") return res.status(409).json({ error: "هذه القطعة موقوفة" });
+    if (row.status === "delivered") return res.status(409).json({ error: "تم تسليم هذه القطعة سابقًا" });
+    const recent = dbRef.prepare(`SELECT id FROM package_scan_events WHERE package_id=? AND checkpoint=?
+      AND scanned_at >= datetime('now','-10 minutes') LIMIT 1`).get(row.id, checkpoint);
+    if (recent) return res.json({ ok:true,duplicate:true,notified:false,tracking_no:row.order_no,customer_name:row.name,label:event.label });
+    const scannedBy = clean(req.session?.user?.name || "أمين المستودع", 120);
+    dbRef.transaction(() => {
+      dbRef.prepare(`INSERT INTO package_scan_events(package_id,order_id,barcode,checkpoint,warehouse_location,scanned_by)
+        VALUES(?,?,?,?,?,?)`).run(row.id,row.order_id,row.barcode,checkpoint,location,scannedBy);
+      dbRef.prepare(`UPDATE shipping_operations SET phase=?,warehouse_location=COALESCE(NULLIF(?,''),warehouse_location),
+        warehouse_at=CASE WHEN ?='warehouse_in' THEN COALESCE(warehouse_at,CURRENT_TIMESTAMP) ELSE warehouse_at END,
+        shipped_at=CASE WHEN ? IN ('loading','transfer') THEN COALESCE(shipped_at,CURRENT_TIMESTAMP) ELSE shipped_at END,
+        updated_at=CURRENT_TIMESTAMP WHERE order_id=?`).run(event.phase,location,checkpoint,checkpoint,row.order_id);
+      dbRef.prepare("UPDATE orders SET status=CASE WHEN ?='warehouse_in' THEN 2 ELSE 3 END WHERE id=?").run(checkpoint,row.order_id);
+    })();
+    const channels = await notifyWarehouseScan(row,row.piece_no,checkpoint,location);
+    await syncRemotePackages();
+    res.json({ ok:true,duplicate:false,notified:channels.in_app||channels.whatsapp,channels,tracking_no:row.order_no,
+      customer_name:row.name,piece_no:row.piece_no,label:event.label,warehouse_location:location });
   });
 
   appRef.get("/api/shipping-packages/lookup/:code", (req, res) => {
