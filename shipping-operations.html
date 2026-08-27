@@ -44,7 +44,7 @@ dialog{border:0;border-radius:20px;padding:0;width:min(760px,calc(100% - 24px));
     <div class="field"><label>نوع الشحنة</label><select id="opType" required></select></div>
     <div class="field"><label>المرحلة الحالية</label><select id="opPhase" required></select></div>
     <div class="field"><label>الرحلة / الحاوية</label><select id="opTrip"><option value="">بدون رحلة</option></select></div>
-    <div class="field"><label>عدد القطع</label><input id="opPackages" type="number" min="1" step="1" value="1"></div>
+    <div class="field"><label>عدد القطع *</label><input id="opPackages" type="number" min="1" max="500" step="1" value="1" required><small class="muted">إلزامي لإصدار باركود لكل قطعة عند دخول المستودع</small></div>
     <div class="field"><label>الوزن كجم</label><input id="opWeight" type="number" min="0" step="0.01"></div>
     <div class="field"><label>الحجم م³</label><input id="opVolume" type="number" min="0" step="0.001"></div>
     <div class="field"><label>موقع المستودع</label><input id="opWarehouse" placeholder="مثال A-03-15"></div>
