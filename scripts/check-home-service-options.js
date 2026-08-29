@@ -12,7 +12,7 @@ for (const token of [
   'data-service-menu="shipping"',
   'homeServiceSheetBackdrop',
   'شحن برميل',
-  'شحن كرتون',
+  'كرتون 30 كجم',
   'شحن حاوية',
   '/container-shipping.html',
   '/vehicle-shipping.html',
