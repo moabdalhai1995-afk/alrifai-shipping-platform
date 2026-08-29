@@ -14,7 +14,7 @@ for (const token of [
   'عرض سعر مخصص',
   'data-service-menu="shipping"',
   'شحن برميل',
-  'شحن كرتون'
+  'كرتون 30 كجم'
 ]) {
   if (!html.includes(token)) throw new Error(`missing refreshed home token: ${token}`);
 }
