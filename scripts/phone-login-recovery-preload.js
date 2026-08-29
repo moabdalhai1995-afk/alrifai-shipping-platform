@@ -4,7 +4,7 @@ const originalPost = express.application.post;
 const originalSend = express.response.send;
 const originalStatic = express.static;
 
-const AUTH_MARKER = "phone-login-recovery-v2";
+const AUTH_MARKER = "phone-login-recovery-v3";
 
 function isHtmlBody(body, response) {
   if (typeof body !== "string") return false;
@@ -18,15 +18,26 @@ function authEnhancement() {
 #googleButton{display:none!important}
 #emailRecoveryButton{width:100%;margin-top:2px}
 .phone-entry-gate .close{display:none!important}
+body.phone-entry-locked{overflow:hidden!important;background:#fff!important}
+body.phone-entry-locked > *:not(#authModal):not(script):not(style){display:none!important}
+body.phone-entry-locked #authModal{display:flex!important;position:fixed!important;inset:0!important;z-index:10000!important;background:#fff!important}
 #phoneEntryIntro{margin:-8px 0 20px;padding:14px 16px;border:1px solid #eadcc0;border-radius:14px;background:#fff9ed;color:#5f4a24;line-height:1.8;font-size:14px;text-align:center}
 #phoneEntryIntro strong{display:block;color:#8d671f;margin-bottom:3px}
 </style>
 <script id="${AUTH_MARKER}">
 (function(){
+  var entryRequired=false;
+
   function notify(message){
     if(typeof showToast==='function') return showToast(message);
     if(typeof toast==='function') return toast(message);
     alert(message);
+  }
+
+  function authModal(){return document.getElementById('authModal');}
+  function authRoot(){
+    var modal=authModal();
+    return document.getElementById('authForm') || (modal&&modal.querySelector('.auth-content')) || modal;
   }
 
   function phoneInput(){
@@ -55,10 +66,10 @@ function authEnhancement() {
   function addPhoneEntryIntro(modal){
     if(!modal||document.getElementById('phoneEntryIntro'))return;
     var heading=modal.querySelector('h2');
-    if(heading)heading.textContent='الدخول أو التسجيل برقم الهاتف';
+    if(heading)heading.textContent='تسجيل الدخول للمنصة';
     var note=document.createElement('div');
     note.id='phoneEntryIntro';
-    note.innerHTML='<strong>مرحباً بك في الرفاعي للشحن الدولي</strong>سجّل برقم هاتفك لحفظ حسابك واستقبال تحديثات الطلبات والعروض داخل المنصة. إشعارات واتساب تبقى اختيارية ويمكن التحكم بها من صفحة الإشعارات.';
+    note.innerHTML='<strong>مرحباً بك في الرفاعي للشحن الدولي</strong>سجّل الدخول برقم هاتفك أولاً للاطلاع على المنصة ومتابعة الطلبات والشحنات بأمان.';
     if(heading)heading.insertAdjacentElement('afterend',note);
   }
 
@@ -67,18 +78,38 @@ function authEnhancement() {
     return path==='/'||path==='/index.html';
   }
 
+  function lockPlatform(modal){
+    entryRequired=true;
+    if(document.body)document.body.classList.add('phone-entry-locked');
+    if(modal){
+      modal.classList.add('show','phone-entry-gate');
+      modal.setAttribute('aria-modal','true');
+      modal.setAttribute('data-required-phone-entry','true');
+    }
+  }
+
+  function unlockPlatform(){
+    entryRequired=false;
+    if(document.body)document.body.classList.remove('phone-entry-locked');
+    var modal=authModal();
+    if(modal){
+      modal.classList.remove('phone-entry-gate');
+      modal.removeAttribute('data-required-phone-entry');
+    }
+  }
+
   function showRequiredPhoneEntry(){
-    var form=document.getElementById('authForm');
-    if(!form)return false;
-    var modal=form.closest('.modal');
+    var modal=authModal();
     if(!modal)return false;
     if(typeof window.setMode==='function')window.setMode('login');
+    else if(typeof window.renderAuthMode==='function'){
+      try{window.authMode='login';}catch(error){}
+      window.renderAuthMode();
+    }
     enforceHomeLogin();
     ensureAccountRecovery();
     addPhoneEntryIntro(modal);
-    modal.classList.add('show','phone-entry-gate');
-    modal.setAttribute('aria-modal','true');
-    modal.setAttribute('data-required-phone-entry','true');
+    lockPlatform(modal);
     setTimeout(function(){
       var input=document.getElementById('authPhone');
       if(input)input.focus();
@@ -91,7 +122,7 @@ function authEnhancement() {
     try{
       var response=await fetch('/api/me',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
       var data=await response.json().catch(function(){return {};});
-      if(response.ok&&data&&data.authenticated)return;
+      if(response.ok&&data&&data.authenticated){unlockPlatform();return;}
     }catch(error){}
     if(!showRequiredPhoneEntry())setTimeout(showRequiredPhoneEntry,120);
   }
@@ -108,20 +139,20 @@ function authEnhancement() {
   window.openForgotPassword=recoverAccountByEmail;
 
   function ensureAccountRecovery(){
-    var form=document.getElementById('authForm');
-    if(!form)return;
+    var root=authRoot();
+    if(!root)return;
     phoneInput();
     var email=document.getElementById('authEmail');
     var emailWrap=email&&email.parentElement;
     if(emailWrap&&!emailWrap.id)emailWrap.id='emailField';
-    var submit=form.querySelector('button.primary.wide');
+    var submit=root.querySelector('button.primary.wide,button.primary');
     if(submit&&!document.getElementById('emailRecoveryButton')){
       var holder=document.createElement('div');
       holder.className='wide';
       var button=document.createElement('button');
       button.type='button';
       button.id='emailRecoveryButton';
-      button.className='btn secondary';
+      button.className='btn outline';
       button.textContent='استعادة الحساب بالبريد الإلكتروني';
       button.addEventListener('click',recoverAccountByEmail);
       holder.appendChild(button);
@@ -158,6 +189,24 @@ function authEnhancement() {
     };
   }
 
+  var originalSubmitAuth=window.submitAuth;
+  if(typeof originalSubmitAuth==='function'){
+    window.submitAuth=async function(){
+      var result=await originalSubmitAuth.apply(this,arguments);
+      setTimeout(requirePhoneEntryOnHome,40);
+      return result;
+    };
+  }
+
+  var originalLogoutUser=window.logoutUser;
+  if(typeof originalLogoutUser==='function'){
+    window.logoutUser=async function(){
+      var result=await originalLogoutUser.apply(this,arguments);
+      if(isHomePage())showRequiredPhoneEntry();
+      return result;
+    };
+  }
+
   document.addEventListener('click',function(event){
     var gate=document.querySelector('.phone-entry-gate.show[data-required-phone-entry="true"]');
     if(gate&&event.target.closest&&event.target.closest('.close')){
@@ -169,16 +218,30 @@ function authEnhancement() {
   },true);
 
   document.addEventListener('keydown',function(event){
-    if(event.key==='Escape'&&document.querySelector('.phone-entry-gate.show[data-required-phone-entry="true"]')){
+    if(event.key==='Escape'&&entryRequired){
       event.preventDefault();
       event.stopImmediatePropagation();
     }
   },true);
 
+  var observer=new MutationObserver(function(){
+    if(!entryRequired||!isHomePage())return;
+    var modal=authModal();
+    if(modal&&!modal.classList.contains('show'))modal.classList.add('show','phone-entry-gate');
+    if(document.body&&!document.body.classList.contains('phone-entry-locked'))document.body.classList.add('phone-entry-locked');
+  });
+
   enforceHomeLogin();
   ensureAccountRecovery();
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',requirePhoneEntryOnHome,{once:true});
-  else requirePhoneEntryOnHome();
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      if(document.body)observer.observe(document.body,{attributes:true,childList:true,subtree:false});
+      requirePhoneEntryOnHome();
+    },{once:true});
+  }else{
+    if(document.body)observer.observe(document.body,{attributes:true,childList:true,subtree:false});
+    requirePhoneEntryOnHome();
+  }
 })();
 </script>`;
 }
