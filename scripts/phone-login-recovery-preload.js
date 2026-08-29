@@ -4,7 +4,7 @@ const originalPost = express.application.post;
 const originalSend = express.response.send;
 const originalStatic = express.static;
 
-const AUTH_MARKER = "phone-login-recovery-v1";
+const AUTH_MARKER = "phone-login-recovery-v2";
 
 function isHtmlBody(body, response) {
   if (typeof body !== "string") return false;
@@ -17,6 +17,9 @@ function authEnhancement() {
 <style id="${AUTH_MARKER}-style">
 #googleButton{display:none!important}
 #emailRecoveryButton{width:100%;margin-top:2px}
+.phone-entry-gate .close{display:none!important}
+#phoneEntryIntro{margin:-8px 0 20px;padding:14px 16px;border:1px solid #eadcc0;border-radius:14px;background:#fff9ed;color:#5f4a24;line-height:1.8;font-size:14px;text-align:center}
+#phoneEntryIntro strong{display:block;color:#8d671f;margin-bottom:3px}
 </style>
 <script id="${AUTH_MARKER}">
 (function(){
@@ -47,6 +50,50 @@ function authEnhancement() {
       var button=forgot.querySelector('button');
       if(button){button.textContent='استعادة الحساب بالبريد الإلكتروني';button.id='emailRecoveryButton';}
     }
+  }
+
+  function addPhoneEntryIntro(modal){
+    if(!modal||document.getElementById('phoneEntryIntro'))return;
+    var heading=modal.querySelector('h2');
+    if(heading)heading.textContent='الدخول أو التسجيل برقم الهاتف';
+    var note=document.createElement('div');
+    note.id='phoneEntryIntro';
+    note.innerHTML='<strong>مرحباً بك في الرفاعي للشحن الدولي</strong>سجّل برقم هاتفك لحفظ حسابك واستقبال تحديثات الطلبات والعروض داخل المنصة. إشعارات واتساب تبقى اختيارية ويمكن التحكم بها من صفحة الإشعارات.';
+    if(heading)heading.insertAdjacentElement('afterend',note);
+  }
+
+  function isHomePage(){
+    var path=String(location.pathname||'/').replace(/\/+$/,'')||'/';
+    return path==='/'||path==='/index.html';
+  }
+
+  function showRequiredPhoneEntry(){
+    var form=document.getElementById('authForm');
+    if(!form)return false;
+    var modal=form.closest('.modal');
+    if(!modal)return false;
+    if(typeof window.setMode==='function')window.setMode('login');
+    enforceHomeLogin();
+    ensureAccountRecovery();
+    addPhoneEntryIntro(modal);
+    modal.classList.add('show','phone-entry-gate');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('data-required-phone-entry','true');
+    setTimeout(function(){
+      var input=document.getElementById('authPhone');
+      if(input)input.focus();
+    },80);
+    return true;
+  }
+
+  async function requirePhoneEntryOnHome(){
+    if(!isHomePage())return;
+    try{
+      var response=await fetch('/api/me',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
+      var data=await response.json().catch(function(){return {};});
+      if(response.ok&&data&&data.authenticated)return;
+    }catch(error){}
+    if(!showRequiredPhoneEntry())setTimeout(showRequiredPhoneEntry,120);
   }
 
   async function recoverAccountByEmail(){
@@ -112,11 +159,26 @@ function authEnhancement() {
   }
 
   document.addEventListener('click',function(event){
+    var gate=document.querySelector('.phone-entry-gate.show[data-required-phone-entry="true"]');
+    if(gate&&event.target.closest&&event.target.closest('.close')){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
     if(event.target.closest&&event.target.closest('#authSwitch,#loginTab,#registerTab'))setTimeout(function(){enforceHomeLogin();ensureAccountRecovery();},0);
-  });
+  },true);
+
+  document.addEventListener('keydown',function(event){
+    if(event.key==='Escape'&&document.querySelector('.phone-entry-gate.show[data-required-phone-entry="true"]')){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  },true);
 
   enforceHomeLogin();
   ensureAccountRecovery();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',requirePhoneEntryOnHome,{once:true});
+  else requirePhoneEntryOnHome();
 })();
 </script>`;
 }
