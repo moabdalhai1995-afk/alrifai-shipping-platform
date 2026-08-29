@@ -117,7 +117,7 @@ function persistentCustomerMiddleware(req, res, next) {
       const isAccountDelete = req.path === "/api/profile" && req.method === "DELETE";
       if (isExplicitLogout || isAccountDelete) {
         appendSetCookie(res, clearRememberCookie());
-      } else if (body && body.ok && req.session?.user?.role === "customer" && Number(req.session.user.id) > 0) {
+      } else if (req.session?.user?.role === "customer" && Number(req.session.user.id) > 0) {
         const user = customerById(req.session.user.id);
         if (user && user.role === "customer") {
           req.session.cookie.maxAge = REMEMBER_MS;
