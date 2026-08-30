@@ -5,6 +5,24 @@ const { transformHomeHtml } = require("./home-service-options-preload");
 
 const originalStatic = express.static;
 
+const gpsTrackingSection = `
+<section class="standalone-security-section" id="gpsTrackingService" aria-label="خدمة تتبع GPS">
+  <div class="wrap">
+    <div class="standalone-security-card">
+      <div class="standalone-security-icon" aria-hidden="true">📍</div>
+      <div class="standalone-security-copy">
+        <span class="standalone-security-kicker">خدمة مستقلة</span>
+        <h2>تتبع GPS للمركبات والشحنات</h2>
+        <p>تركيب وإعداد أجهزة GPS لمتابعة المركبات والشحنات مباشرة من الجوال، مع سجل المسار والتنبيهات وإدارة أكثر من مركبة عند الحاجة.</p>
+        <div class="standalone-security-features" aria-label="مزايا خدمة GPS">
+          <span>📍 موقع مباشر</span><span>🧭 سجل المسار</span><span>🔔 تنبيهات فورية</span><span>📱 متابعة بالجوال</span>
+        </div>
+      </div>
+      <a class="standalone-security-action" href="/gps-tracking.html">فتح قسم GPS</a>
+    </div>
+  </div>
+</section>`;
+
 const layoutStyles = `<style id="home-layout-refresh-style">
 .home-category-strip{background:#fff;border-bottom:1px solid var(--line)}
 .home-category-strip .category-rail{gap:8px;padding:8px 0 7px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity}
@@ -41,6 +59,17 @@ function moveCategoryRailAboveSearch(html) {
   return withoutRail.replace(searchMarker, strip + searchMarker);
 }
 
+function insertGpsTrackingSection(html) {
+  if (!html || html.includes('id="gpsTrackingService"') || html.includes('href="/gps-tracking.html"')) return html;
+  const cameraMarker = 'id="securityCamerasService"';
+  const cameraIndex = html.indexOf(cameraMarker);
+  if (cameraIndex < 0) return html;
+  const cameraSectionEnd = html.indexOf('</section>', cameraIndex);
+  if (cameraSectionEnd < 0) return html;
+  const insertAt = cameraSectionEnd + '</section>'.length;
+  return html.slice(0, insertAt) + gpsTrackingSection + html.slice(insertAt);
+}
+
 function enhanceHomeCalculator(html) {
   const selectFrom = '<select id="cType"><option value="parcel">طرد</option><option value="commercial">شحنة تجارية</option><option value="container">حاوية</option></select>';
   const selectTo = '<select id="cType"><option value="carton">كرتون حتى 30 كجم · 200 ريال</option><option value="large_bag">شنطة كبيرة · 250 ريال</option><option value="barrel">برميل · 350 ريال</option><option value="parcel">طرد</option><option value="commercial">شحنة تجارية</option><option value="container">حاوية</option></select>';
@@ -54,6 +83,7 @@ function enhanceHomeCalculator(html) {
 function transformHomeLayout(source) {
   if (!source) return source;
   let html = transformHomeHtml(source);
+  html = insertGpsTrackingSection(html);
   html = moveCategoryRailAboveSearch(html);
   html = enhanceHomeCalculator(html);
   if (!html.includes('home-layout-refresh-style')) html = html.replace('</head>', layoutStyles + '\n</head>');
@@ -78,4 +108,4 @@ express.static = function homeLayoutRefreshStatic(root, options) {
   };
 };
 
-module.exports = { transformHomeLayout, moveCategoryRailAboveSearch, enhanceHomeCalculator };
+module.exports = { transformHomeLayout, moveCategoryRailAboveSearch, insertGpsTrackingSection, enhanceHomeCalculator };
