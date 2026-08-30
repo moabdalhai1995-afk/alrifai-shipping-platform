@@ -2,40 +2,51 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const originalStatic = express.static;
-const MARKER = "cars-showroom-product-strip-v2";
+const MARKER = "cars-showroom-product-strip-v3";
 
 function enhancement() {
   return String.raw`
 <style id="${MARKER}-style">
+  .home-category-strip .cars-showroom-product-chip,
+  .cars-showroom-product-chip{
+    cursor:pointer;
+  }
   .home-category-strip .cars-showroom-product-chip span,
   .cars-showroom-product-chip span{
-    background:linear-gradient(135deg,#0b2239,#123b5c)!important;
-    border:1px solid #c9942f!important;
+    background:#fff!important;
+    border:1.5px solid #c9942f!important;
     color:#fff!important;
-    box-shadow:0 5px 15px rgba(11,34,57,.16)!important;
+    box-shadow:0 5px 15px rgba(11,34,57,.10)!important;
   }
-  .cars-showroom-product-chip{cursor:pointer}
+  .home-category-strip .cars-showroom-product-chip b,
+  .cars-showroom-product-chip b{
+    color:#0b2239!important;
+    font-weight:900!important;
+  }
   .cars-showroom-entry-wrap{
     padding:12px 20px 18px;
     background:#fff;
   }
   .cars-showroom-entry-btn{
-    width:min(560px,100%);min-height:54px;margin:0 auto;
+    width:min(760px,100%);min-height:58px;margin:0 auto;
     display:flex;align-items:center;justify-content:center;gap:10px;
-    border-radius:15px;text-decoration:none;
-    background:linear-gradient(135deg,#c9942f,#b67d1c);
-    color:#fff;font-weight:900;font-size:17px;
-    box-shadow:0 8px 22px rgba(184,125,28,.22);
-    border:1px solid #d8ad54;
+    position:relative;border-radius:15px;text-decoration:none;
+    background:#fff;color:#0b2239;font-weight:900;font-size:18px;
+    box-shadow:0 7px 20px rgba(11,34,57,.08);
+    border:1.5px solid #c9942f;
   }
-  .cars-showroom-entry-btn .car-icon{font-size:24px;line-height:1}
+  .cars-showroom-entry-btn .car-icon{font-size:25px;line-height:1}
+  .cars-showroom-entry-btn .entry-arrow{
+    position:absolute;left:20px;font-size:29px;line-height:1;color:#0b2239;font-weight:400;
+  }
   .cars-showroom-entry-btn:hover,.cars-showroom-entry-btn:focus-visible{
-    transform:translateY(-1px);box-shadow:0 11px 26px rgba(184,125,28,.28);outline:none;
+    background:#fffaf0;transform:translateY(-1px);box-shadow:0 10px 24px rgba(11,34,57,.12);outline:none;
   }
   @media(max-width:620px){
     .cars-showroom-entry-wrap{padding:10px 14px 15px}
-    .cars-showroom-entry-btn{min-height:50px;border-radius:13px;font-size:16px}
+    .cars-showroom-entry-btn{min-height:52px;border-radius:13px;font-size:16px}
     .cars-showroom-entry-btn .car-icon{font-size:22px}
+    .cars-showroom-entry-btn .entry-arrow{left:15px;font-size:25px}
   }
 </style>
 <script id="${MARKER}">
@@ -48,7 +59,7 @@ function enhancement() {
   function removeOldShowroomUI(){
     var old=document.getElementById('carsShowroomHome');
     if(old)old.remove();
-    document.querySelectorAll('.cars-showroom-chip,[data-cars-showroom-chip="true"],.cars-showroom-nav-link,[data-cars-showroom-mini="true"],.cars-showroom-mini-btn').forEach(function(el){el.remove();});
+    document.querySelectorAll('.cars-showroom-chip,[data-cars-showroom-chip="true"],.cars-showroom-nav-link,[data-cars-showroom-mini="true"],.cars-showroom-mini-btn,[data-cars-showroom-entry="true"],[data-cars-product-chip="true"]').forEach(function(el){el.remove();});
   }
 
   function addCarToProductStrip(){
@@ -85,7 +96,7 @@ function enhancement() {
     var wrap=document.createElement('div');
     wrap.className='cars-showroom-entry-wrap';
     wrap.setAttribute('data-cars-showroom-entry','true');
-    wrap.innerHTML='<a class="cars-showroom-entry-btn" href="/cars.html" aria-label="دخول معرض السيارات"><span class="car-icon" aria-hidden="true">🚗</span><span>دخول معرض السيارات</span></a>';
+    wrap.innerHTML='<a class="cars-showroom-entry-btn" href="/cars.html" aria-label="دخول معرض السيارات"><span class="car-icon" aria-hidden="true">🚗</span><span>دخول معرض السيارات</span><span class="entry-arrow" aria-hidden="true">‹</span></a>';
     hero.insertAdjacentElement('afterend',wrap);
   }
 
