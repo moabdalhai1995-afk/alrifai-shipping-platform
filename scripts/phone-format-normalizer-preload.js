@@ -8,27 +8,33 @@ function toAsciiDigits(value) {
     .replace(/[۰-۹]/g, digit => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
 }
 
-function normalizeSaudiPhone(value) {
+function normalizeInternationalPhone(value) {
   const raw = toAsciiDigits(value).trim();
   if (!raw) return "";
 
   const digits = raw.replace(/\D/g, "");
-  let local = digits;
+  let international = "";
 
-  if (local.startsWith("00966")) local = local.slice(5);
-  else if (local.startsWith("966")) local = local.slice(3);
+  if (/^\s*\+/.test(raw)) international = "+" + digits;
+  else if (/^\s*00/.test(raw)) international = "+" + digits.replace(/^00/, "");
+  else if (/^9665\d{8}$/.test(digits)) international = "+" + digits;
 
-  if (/^5\d{8}$/.test(local)) return "0" + local;
-  if (/^05\d{8}$/.test(local)) return local;
+  // Backward compatibility: existing Saudi accounts are stored as 05XXXXXXXX.
+  if (/^\+9665\d{8}$/.test(international)) return "0" + international.slice(4);
+  if (/^05\d{8}$/.test(digits)) return digits;
 
-  return raw;
+  // Other countries are stored and compared in canonical international form.
+  if (international) return international;
+
+  // Preserve a local number when a caller does not provide a country code.
+  return digits || raw;
 }
 
 function wrapPhoneHandler(handler) {
   if (typeof handler !== "function") return handler;
   return function normalizedPhoneHandler(req, res, next) {
     if (req.body && Object.prototype.hasOwnProperty.call(req.body, "phone")) {
-      req.body = { ...req.body, phone: normalizeSaudiPhone(req.body.phone) };
+      req.body = { ...req.body, phone: normalizeInternationalPhone(req.body.phone) };
     }
     return handler.call(this, req, res, next);
   };
@@ -41,4 +47,4 @@ express.application.post = function normalizePhonePost(path, ...handlers) {
   return originalPost.call(this, path, ...handlers);
 };
 
-module.exports = { normalizeSaudiPhone };
+module.exports = { normalizeInternationalPhone };
