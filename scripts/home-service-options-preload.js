@@ -20,7 +20,24 @@ const serviceCards = [
 ];
 
 const socialMarketingCard = '<a class="card service-choice-card featured-service-card social-marketing-card" href="/social-media-marketing.html" aria-label="برامج السوشل ميديا"><div class="icon">📣</div><div class="featured-service-copy"><h3>برامج السوشل ميديا</h3><p>خطط محتوى وتصاميم وإعلانات لإدارة حضورك الرقمي وزيادة الاستفسارات والعملاء.</p></div><span class="service-card-hint">عرض البرامج</span></a>';
-const securityCamerasCard = '<a class="card service-choice-card featured-service-card security-cameras-card" href="/security-cameras.html" aria-label="تركيب نظام كاميرات مراقبة كامل للمنزل"><div class="icon">📹</div><div class="featured-service-copy"><h3>تركيب كاميرات مراقبة للمنزل</h3><p>معاينة وتحديد العدد، توريد وتركيب الكاميرات وجهاز التسجيل والتخزين وربط المشاهدة بالجوال.</p></div><span class="service-card-hint">اطلب التركيب</span></a>';
+
+const securityCamerasSection = `
+<section class="standalone-security-section" id="securityCamerasService" aria-label="خدمة كاميرات المراقبة">
+  <div class="wrap">
+    <div class="standalone-security-card">
+      <div class="standalone-security-icon" aria-hidden="true">📹</div>
+      <div class="standalone-security-copy">
+        <span class="standalone-security-kicker">خدمة مستقلة</span>
+        <h2>تركيب كاميرات المراقبة</h2>
+        <p>قسم مستقل عن معرض السيارات: معاينة الموقع، تحديد العدد المناسب، توريد وتركيب الكاميرات وجهاز التسجيل والتخزين وربط المشاهدة بالجوال.</p>
+        <div class="standalone-security-features" aria-label="مزايا خدمة الكاميرات">
+          <span>🧰 تركيب احترافي</span><span>🛡️ ضمان على التركيب</span><span>📱 ربط بالجوال</span><span>🔧 خدمة ما بعد البيع</span>
+        </div>
+      </div>
+      <a class="standalone-security-action" href="/security-cameras.html">فتح قسم الكاميرات</a>
+    </div>
+  </div>
+</section>`;
 
 const styles = `<style id="home-service-options-style">
 .service-choice-card{width:100%;font:inherit;color:inherit;text-align:right;cursor:pointer;appearance:none;position:relative;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
@@ -30,7 +47,7 @@ const styles = `<style id="home-service-options-style">
 .service-card-hint:after{content:'←';font-size:14px}
 .featured-service-card{grid-column:1/-1;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#fff9ee,#fff);border-color:#e2c581;box-shadow:0 8px 24px rgba(184,135,45,.08)}
 .featured-service-card .icon{margin:0;flex:0 0 auto}.featured-service-copy{flex:1;min-width:0}.featured-service-copy h3{margin:0 0 5px}.featured-service-copy p{margin:0}.featured-service-card .service-card-hint{margin:0;white-space:nowrap;padding:9px 12px;border-radius:999px;background:#f5ead1}
-.security-cameras-card{background:linear-gradient(135deg,#f3f7fb,#fff);border-color:#b9c9da}.security-cameras-card .service-card-hint{background:#eaf0f6}
+.standalone-security-section{padding-top:0!important}.standalone-security-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:20px;background:linear-gradient(135deg,#eef5fb,#fff);border:1px solid #b9c9da;border-radius:22px;padding:24px;box-shadow:0 10px 28px rgba(11,34,57,.08)}.standalone-security-icon{width:74px;height:74px;display:grid;place-items:center;border-radius:20px;background:#0f2d46;color:#fff;font-size:38px;box-shadow:0 8px 22px rgba(15,45,70,.2)}.standalone-security-kicker{display:inline-block;color:#176b87;font-weight:900;font-size:13px;margin-bottom:5px}.standalone-security-copy h2{margin:0 0 7px;color:var(--ink);font-size:clamp(23px,4vw,31px)}.standalone-security-copy p{margin:0;color:var(--muted);line-height:1.85}.standalone-security-features{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.standalone-security-features span{background:#fff;border:1px solid #d9e4ed;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;color:#26465d}.standalone-security-action{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 16px;border-radius:12px;background:#176b87;color:#fff!important;font-weight:900;white-space:nowrap;box-shadow:0 7px 18px rgba(23,107,135,.18)}
 .home-service-sheet-backdrop{position:fixed;inset:0;background:rgba(12,20,29,.48);z-index:120;display:none;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(2px)}
 .home-service-sheet-backdrop.show{display:flex}
 .home-service-sheet{width:min(560px,100%);max-height:min(78dvh,720px);overflow:auto;background:#fff;border-radius:26px 26px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -18px 55px rgba(0,0,0,.18);animation:serviceSheetIn .2s ease-out}
@@ -39,7 +56,8 @@ const styles = `<style id="home-service-options-style">
 .home-service-options{display:grid;gap:10px}.home-service-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid var(--line);border-radius:15px;background:#fff;color:var(--ink);padding:14px 15px;font:inherit;font-weight:800;text-align:right;cursor:pointer;text-decoration:none;transition:.15s ease}.home-service-option:hover,.home-service-option:focus-visible{border-color:var(--gold);background:#fff9ed;outline:none}.home-service-option-icon{font-size:25px;min-width:32px;text-align:center}.home-service-option-main{flex:1}.home-service-option-main small{display:block;color:var(--muted);font-weight:400;margin-top:3px;line-height:1.5}.home-service-option-arrow{color:var(--gold);font-size:20px}
 body.service-sheet-open{overflow:hidden}
 @keyframes serviceSheetIn{from{transform:translateY(35px);opacity:.65}to{transform:translateY(0);opacity:1}}
-@media(max-width:600px){.featured-service-card{align-items:flex-start;gap:12px;flex-wrap:wrap}.featured-service-copy{flex:1 1 calc(100% - 60px)}.featured-service-card .service-card-hint{margin-right:58px}}
+@media(max-width:760px){.standalone-security-card{grid-template-columns:auto 1fr}.standalone-security-action{grid-column:1/-1;width:100%}}
+@media(max-width:600px){.featured-service-card{align-items:flex-start;gap:12px;flex-wrap:wrap}.featured-service-copy{flex:1 1 calc(100% - 60px)}.featured-service-card .service-card-hint{margin-right:58px}.standalone-security-card{grid-template-columns:1fr;gap:14px;padding:18px}.standalone-security-icon{width:58px;height:58px;border-radius:16px;font-size:30px}.standalone-security-features{display:grid;grid-template-columns:1fr 1fr}.standalone-security-features span{text-align:center}}
 @media(min-width:700px){.home-service-sheet-backdrop{align-items:center;padding:20px}.home-service-sheet{border-radius:24px;padding:12px 20px 22px}}
 </style>`;
 
@@ -96,6 +114,15 @@ const script = `<script id="home-service-options-script">
 })();
 </script>`;
 
+function insertAfterServices(html, fragment) {
+  const serviceCardIndex = html.indexOf(serviceCards[2].to);
+  if (serviceCardIndex < 0) return html;
+  const sectionEnd = html.indexOf('</section>', serviceCardIndex);
+  if (sectionEnd < 0) return html;
+  const insertAt = sectionEnd + '</section>'.length;
+  return html.slice(0, insertAt) + fragment + html.slice(insertAt);
+}
+
 function transformHomeHtml(source) {
   if (!source || source.includes('home-service-options-script')) return source;
   let html = source;
@@ -107,10 +134,12 @@ function transformHomeHtml(source) {
     }
   }
   if (!changed) return source;
-  let featuredCards = '';
-  if (!html.includes('/social-media-marketing.html')) featuredCards += socialMarketingCard;
-  if (!html.includes('/security-cameras.html')) featuredCards += securityCamerasCard;
-  if (featuredCards) html = html.replace(serviceCards[2].to, serviceCards[2].to + featuredCards);
+  if (!html.includes('/social-media-marketing.html')) {
+    html = html.replace(serviceCards[2].to, serviceCards[2].to + socialMarketingCard);
+  }
+  if (!html.includes('id="securityCamerasService"') && !html.includes('/security-cameras.html')) {
+    html = insertAfterServices(html, securityCamerasSection);
+  }
   html = html.replace('</head>', styles + '\n</head>');
   html = html.replace('<div class="toast" id="toast"></div>', sheet + '\n<div class="toast" id="toast"></div>');
   html = html.replace('</body>', script + '\n</body>');
