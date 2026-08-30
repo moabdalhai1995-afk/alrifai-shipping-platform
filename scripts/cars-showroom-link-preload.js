@@ -2,7 +2,7 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const originalStatic = express.static;
-const MARKER = "cars-showroom-link-v2";
+const MARKER = "cars-showroom-link-v3";
 
 function enhancement() {
   return String.raw`
@@ -20,10 +20,19 @@ function enhancement() {
   .cars-showroom-home-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
   .cars-showroom-home-btn{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,#c9942f,#b67d1c);color:#fff;font-weight:900}
   .cars-showroom-home-btn.secondary{background:#fff;color:#0b2239}
+  .cars-showroom-home-brands{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14)}
+  .cars-showroom-home-brands-title{display:flex;align-items:center;justify-content:center;gap:12px;color:#e9ca7f;font-weight:900;font-size:15px;margin-bottom:12px}
+  .cars-showroom-home-brands-title:before,.cars-showroom-home-brands-title:after{content:"";display:block;width:52px;max-width:18vw;height:2px;border-radius:999px;background:linear-gradient(90deg,transparent,#d6b164)}
+  .cars-showroom-home-brands-title:after{background:linear-gradient(90deg,#d6b164,transparent)}
+  .cars-showroom-home-brands-strip{display:flex;gap:9px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none;scroll-snap-type:x proximity}.cars-showroom-home-brands-strip::-webkit-scrollbar{display:none}
+  .cars-showroom-home-brand{flex:0 0 86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:88px;padding:9px 7px;border-radius:16px;background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 18px rgba(4,18,31,.16);text-align:center;scroll-snap-align:start}
+  .cars-showroom-home-brand-logo{display:grid;place-items:center;width:46px;height:38px}.cars-showroom-home-brand-logo img{display:block;max-width:44px;max-height:34px;width:auto;height:auto;object-fit:contain}
+  .cars-showroom-home-brand strong{font-size:13px;line-height:1.2;color:#0b2239}
+  .cars-showroom-home-brand small{display:none}
   .cars-showroom-home-features{display:grid;grid-template-columns:1fr 1fr;gap:9px;position:relative;z-index:1}
   .cars-showroom-home-feature{background:#ffffff12;border:1px solid #ffffff20;border-radius:15px;padding:13px;text-align:center;backdrop-filter:blur(4px)}
   .cars-showroom-home-feature b{display:block;font-size:14px;margin-top:5px}.cars-showroom-home-feature span{font-size:28px}.cars-showroom-home-feature small{display:block;color:#d8e5eb;margin-top:3px;line-height:1.45}
-  @media(max-width:760px){.cars-showroom-home-section{padding:18px 0 5px!important}.cars-showroom-home-card{grid-template-columns:1fr;padding:20px;border-radius:19px}.cars-showroom-home-features{grid-template-columns:1fr 1fr}.cars-showroom-home-card:before{font-size:135px}.cars-showroom-home-actions .cars-showroom-home-btn{flex:1 1 150px}}
+  @media(max-width:760px){.cars-showroom-home-section{padding:18px 0 5px!important}.cars-showroom-home-card{grid-template-columns:1fr;padding:20px;border-radius:19px}.cars-showroom-home-features{grid-template-columns:1fr 1fr}.cars-showroom-home-card:before{font-size:135px}.cars-showroom-home-actions .cars-showroom-home-btn{flex:1 1 150px}.cars-showroom-home-brands-strip{gap:7px}.cars-showroom-home-brand{flex-basis:78px;min-height:80px;padding:8px 6px}.cars-showroom-home-brand-logo{width:42px;height:34px}.cars-showroom-home-brand-logo img{max-width:40px;max-height:30px}.cars-showroom-home-brand strong{font-size:12px}}
 </style>
 <script id="${MARKER}">
 (function(){
@@ -36,6 +45,20 @@ function enhancement() {
     return a;
   }
 
+  function brandsMarkup(){
+    var brands=[
+      {name:'تويوتا',slug:'toyota'},
+      {name:'هيونداي',slug:'hyundai'},
+      {name:'كيا',slug:'kia'},
+      {name:'نيسان',slug:'nissan'},
+      {name:'فورد',slug:'ford'},
+      {name:'شيفروليه',slug:'chevrolet'},
+      {name:'لكزس',slug:'lexus'},
+      {name:'مرسيدس',slug:'mercedes'}
+    ];
+    return '<div class="cars-showroom-home-brands"><div class="cars-showroom-home-brands-title">الماركات المتوفرة</div><div class="cars-showroom-home-brands-strip">'+brands.map(function(brand){var logo='https://cdn.simpleicons.org/'+brand.slug+'/0b2239';return '<a class="cars-showroom-home-brand" href="/cars.html?brand='+encodeURIComponent(brand.name)+'" aria-label="عرض سيارات '+brand.name+'"><span class="cars-showroom-home-brand-logo"><img src="'+logo+'" alt="شعار '+brand.name+'" loading="lazy" decoding="async"></span><strong>'+brand.name+'</strong></a>';}).join('')+'</div></div>';
+  }
+
   function addHomeShowroomSection(){
     var pathname=String(location.pathname||'/');
     if(pathname!=='/'&&pathname!=='/index.html')return;
@@ -46,7 +69,7 @@ function enhancement() {
     section.id='carsShowroomHome';
     section.className='cars-showroom-home-section';
     section.setAttribute('aria-label','معرض السيارات');
-    section.innerHTML='<div class="wrap"><div class="cars-showroom-home-card"><div><span class="cars-showroom-home-kicker">🚗 معرض السيارات</span><h2>سيارتك القادمة تبدأ من هنا</h2><p>تصفح السيارات الجديدة والمستعملة من الموردين والمعارض، قارن المواصفات والأسعار، ثم اطلب الشراء والشحن من السعودية إلى السودان عبر منصة واحدة.</p><div class="cars-showroom-home-actions"><a class="cars-showroom-home-btn" href="/cars.html">تصفح السيارات</a><a class="cars-showroom-home-btn secondary" href="/cars.html#sellCar">اعرض سيارتك</a></div></div><div class="cars-showroom-home-features"><div class="cars-showroom-home-feature"><span>🔎</span><b>بحث دقيق</b><small>الماركة والموديل والسنة</small></div><div class="cars-showroom-home-feature"><span>🛡️</span><b>معارض وموردون</b><small>بيانات واضحة لكل سيارة</small></div><div class="cars-showroom-home-feature"><span>📦</span><b>شراء وشحن</b><small>من السعودية إلى السودان</small></div><div class="cars-showroom-home-feature"><span>💬</span><b>تواصل مباشر</b><small>مع فريق الرفاعي</small></div></div></div></div>';
+    section.innerHTML='<div class="wrap"><div class="cars-showroom-home-card"><div><span class="cars-showroom-home-kicker">🚗 معرض السيارات</span><h2>سيارتك القادمة تبدأ من هنا</h2><p>تصفح السيارات الجديدة والمستعملة من الموردين والمعارض، قارن المواصفات والأسعار، ثم اطلب الشراء والشحن من السعودية إلى السودان عبر منصة واحدة.</p><div class="cars-showroom-home-actions"><a class="cars-showroom-home-btn" href="/cars.html">تصفح السيارات</a><a class="cars-showroom-home-btn secondary" href="/cars.html#sellCar">اعرض سيارتك</a><a class="cars-showroom-home-btn secondary" href="https://wa.me/966540407193" target="_blank" rel="noopener">واتساب</a></div>'+brandsMarkup()+'</div><div class="cars-showroom-home-features"><div class="cars-showroom-home-feature"><span>🔎</span><b>بحث دقيق</b><small>الماركة والموديل والسنة</small></div><div class="cars-showroom-home-feature"><span>🛡️</span><b>معارض وموردون</b><small>بيانات واضحة لكل سيارة</small></div><div class="cars-showroom-home-feature"><span>📦</span><b>شراء وشحن</b><small>من السعودية إلى السودان</small></div><div class="cars-showroom-home-feature"><span>💬</span><b>تواصل مباشر</b><small>مع فريق الرفاعي</small></div></div></div></div>';
     hero.insertAdjacentElement('afterend',section);
   }
 
