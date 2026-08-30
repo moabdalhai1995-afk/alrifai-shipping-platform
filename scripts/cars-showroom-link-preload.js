@@ -2,58 +2,97 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const originalStatic = express.static;
-const MARKER = "cars-showroom-mini-icon-v1";
+const MARKER = "cars-showroom-product-strip-v2";
 
 function enhancement() {
   return String.raw`
 <style id="${MARKER}-style">
-  .cars-showroom-mini-btn{
-    width:46px;height:46px;min-width:46px;padding:0;border-radius:14px;
-    display:inline-grid;place-items:center;text-decoration:none;
-    background:linear-gradient(135deg,#0b2239,#123b5c);
-    border:1px solid #c9942f;color:#fff;font-size:25px;line-height:1;
-    box-shadow:0 6px 18px rgba(11,34,57,.16);cursor:pointer;
+  .home-category-strip .cars-showroom-product-chip span,
+  .cars-showroom-product-chip span{
+    background:linear-gradient(135deg,#0b2239,#123b5c)!important;
+    border:1px solid #c9942f!important;
+    color:#fff!important;
+    box-shadow:0 5px 15px rgba(11,34,57,.16)!important;
   }
-  .cars-showroom-mini-btn:hover,.cars-showroom-mini-btn:focus-visible{
-    transform:translateY(-1px);box-shadow:0 9px 22px rgba(11,34,57,.22);outline:none;
+  .cars-showroom-product-chip{cursor:pointer}
+  .cars-showroom-entry-wrap{
+    padding:12px 20px 18px;
+    background:#fff;
+  }
+  .cars-showroom-entry-btn{
+    width:min(560px,100%);min-height:54px;margin:0 auto;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    border-radius:15px;text-decoration:none;
+    background:linear-gradient(135deg,#c9942f,#b67d1c);
+    color:#fff;font-weight:900;font-size:17px;
+    box-shadow:0 8px 22px rgba(184,125,28,.22);
+    border:1px solid #d8ad54;
+  }
+  .cars-showroom-entry-btn .car-icon{font-size:24px;line-height:1}
+  .cars-showroom-entry-btn:hover,.cars-showroom-entry-btn:focus-visible{
+    transform:translateY(-1px);box-shadow:0 11px 26px rgba(184,125,28,.28);outline:none;
   }
   @media(max-width:620px){
-    .cars-showroom-mini-btn{width:42px;height:42px;min-width:42px;border-radius:12px;font-size:23px}
+    .cars-showroom-entry-wrap{padding:10px 14px 15px}
+    .cars-showroom-entry-btn{min-height:50px;border-radius:13px;font-size:16px}
+    .cars-showroom-entry-btn .car-icon{font-size:22px}
   }
 </style>
 <script id="${MARKER}">
 (function(){
-  function addMiniCarButton(){
+  function isHome(){
     var pathname=String(location.pathname||'/');
-    if(pathname!=='/'&&pathname!=='/index.html')return;
-    if(document.querySelector('[data-cars-showroom-mini="true"]'))return;
-
-    var host=document.querySelector('.actions,.header-actions');
-    if(!host){
-      var nav=document.querySelector('header .nav,.top .nav,header nav,.top nav');
-      if(!nav)return;
-      host=nav;
-    }
-
-    var link=document.createElement('a');
-    link.href='/cars.html';
-    link.className='cars-showroom-mini-btn';
-    link.setAttribute('data-cars-showroom-mini','true');
-    link.setAttribute('aria-label','معرض السيارات');
-    link.setAttribute('title','معرض السيارات');
-    link.innerHTML='🚗';
-    host.insertBefore(link,host.firstChild||null);
+    return pathname==='/'||pathname==='/index.html';
   }
 
   function removeOldShowroomUI(){
     var old=document.getElementById('carsShowroomHome');
     if(old)old.remove();
-    document.querySelectorAll('.cars-showroom-chip,[data-cars-showroom-chip="true"],.cars-showroom-nav-link').forEach(function(el){el.remove();});
+    document.querySelectorAll('.cars-showroom-chip,[data-cars-showroom-chip="true"],.cars-showroom-nav-link,[data-cars-showroom-mini="true"],.cars-showroom-mini-btn').forEach(function(el){el.remove();});
+  }
+
+  function addCarToProductStrip(){
+    if(!isHome())return;
+    var rail=document.querySelector('.category-rail');
+    if(!rail||rail.querySelector('[data-cars-product-chip="true"]'))return;
+
+    var chip=document.createElement('div');
+    chip.className='category-chip cars-showroom-product-chip';
+    chip.setAttribute('data-cars-product-chip','true');
+    chip.setAttribute('role','link');
+    chip.setAttribute('tabindex','0');
+    chip.setAttribute('aria-label','دخول معرض السيارات');
+    chip.innerHTML='<span aria-hidden="true">🚗</span><b>السيارات</b>';
+    chip.onclick=function(){location.href='/cars.html';};
+    chip.onkeydown=function(event){
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();location.href='/cars.html';}
+    };
+
+    var parts=Array.prototype.find.call(rail.children,function(el){
+      return String(el.textContent||'').includes('قطع غيار السيارات');
+    });
+    if(parts&&parts.nextSibling)rail.insertBefore(chip,parts.nextSibling);
+    else if(parts)rail.appendChild(chip);
+    else rail.insertBefore(chip,rail.firstChild||null);
+  }
+
+  function addShowroomEntryButton(){
+    if(!isHome())return;
+    if(document.querySelector('[data-cars-showroom-entry="true"]'))return;
+    var hero=document.querySelector('main .hero,.hero');
+    if(!hero)return;
+
+    var wrap=document.createElement('div');
+    wrap.className='cars-showroom-entry-wrap';
+    wrap.setAttribute('data-cars-showroom-entry','true');
+    wrap.innerHTML='<a class="cars-showroom-entry-btn" href="/cars.html" aria-label="دخول معرض السيارات"><span class="car-icon" aria-hidden="true">🚗</span><span>دخول معرض السيارات</span></a>';
+    hero.insertAdjacentElement('afterend',wrap);
   }
 
   function install(){
     removeOldShowroomUI();
-    addMiniCarButton();
+    addCarToProductStrip();
+    addShowroomEntryButton();
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
@@ -71,7 +110,7 @@ function transformHtml(source) {
   return source.replace(/<\/body>/i, `${enhancement()}\n</body>`);
 }
 
-express.response.send = function carsShowroomMiniIconSend(body) {
+express.response.send = function carsShowroomProductStripSend(body) {
   const contentType = String(this.getHeader?.("Content-Type") || "").toLowerCase();
   if (typeof body === "string" && (contentType.includes("text/html") || /^\s*<!doctype html/i.test(body))) {
     body = transformHtml(body);
@@ -81,9 +120,9 @@ express.response.send = function carsShowroomMiniIconSend(body) {
   return originalSend.call(this, body);
 };
 
-express.static = function carsShowroomMiniIconStatic(root, options = {}) {
+express.static = function carsShowroomProductStripStatic(root, options = {}) {
   const middleware = originalStatic(root, options);
-  return function carsShowroomMiniIconStaticMiddleware(req, res, next) {
+  return function carsShowroomProductStripStaticMiddleware(req, res, next) {
     const pathname = String(req.path || req.url || "").split("?")[0];
     const target = req.method === "GET" && ["/", "/index.html"].includes(pathname);
     if (!target) return middleware(req, res, next);
