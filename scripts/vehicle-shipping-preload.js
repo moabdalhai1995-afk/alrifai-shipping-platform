@@ -183,6 +183,20 @@ function isVehicleAgent(req) {
 function isVehicleOperator(req) {
   return isAdmin(req) || isVehicleAgent(req);
 }
+function requireVehicleOperator(req, res) {
+  if (!isVehicleOperator(req)) {
+    res.status(403).json({ error: "صلاحية إدارة السيارات مطلوبة" });
+    return false;
+  }
+  if (isVehicleAgent(req)) {
+    const user = dbRef.prepare("SELECT must_change_password FROM users WHERE id=?").get(req.session.user.id);
+    if (!user || Number(user.must_change_password)) {
+      res.status(428).json({ error: "يجب إنشاء كلمة مرور ثابتة أولاً", code: "PASSWORD_CHANGE_REQUIRED" });
+      return false;
+    }
+  }
+  return true;
+}
 function isCustomer(req) {
   return !!(req.session?.user && req.session.user.id > 0 && req.session.user.role === "customer");
 }
@@ -382,13 +396,13 @@ function installRoutes() {
   });
 
   appRef.get("/api/admin/vehicle-shipments", (req, res) => {
-    if (!isVehicleOperator(req)) return res.status(403).json({ error: "صلاحية إدارة السيارات مطلوبة" });
+    if (!requireVehicleOperator(req, res)) return;
     const rows = dbRef.prepare(`SELECT v.*,u.email FROM vehicle_shipments v LEFT JOIN users u ON u.id=v.user_id ORDER BY v.id DESC`).all();
     res.json({ ok: true, role: req.session.user.role, serviceTypes: SERVICE_TYPES, statuses: STATUS, shipments: rows });
   });
 
   appRef.put("/api/admin/vehicle-shipments/:requestNo", async (req, res) => {
-    if (!isVehicleOperator(req)) return res.status(403).json({ error: "صلاحية إدارة السيارات مطلوبة" });
+    if (!requireVehicleOperator(req, res)) return;
     const current = dbRef.prepare(`SELECT v.*,u.email FROM vehicle_shipments v LEFT JOIN users u ON u.id=v.user_id WHERE v.request_no=?`).get(req.params.requestNo);
     if (!current) return res.status(404).json({ error: "طلب السيارة غير موجود" });
     const status = clean(req.body.status, 50) || current.status;
