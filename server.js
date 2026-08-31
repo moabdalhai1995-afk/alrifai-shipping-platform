@@ -150,6 +150,10 @@ if (!userColumns.has("email_verified")) {
 if (!userColumns.has("google_sub")) db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
 if (!userColumns.has("delivery_city")) db.exec("ALTER TABLE users ADD COLUMN delivery_city TEXT");
 if (!userColumns.has("delivery_address")) db.exec("ALTER TABLE users ADD COLUMN delivery_address TEXT");
+if (!userColumns.has("must_change_password")) {
+  db.exec("ALTER TABLE users ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 1");
+  db.exec("UPDATE users SET must_change_password=0 WHERE role!='vehicle_agent'");
+}
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
     ON users(email) WHERE email IS NOT NULL;
@@ -460,7 +464,8 @@ function publicUser(user) {
     phone: user.phone,
     email: user.email || null,
     emailVerified: !!user.email_verified,
-    role: user.role
+    role: user.role,
+    mustChangePassword: !!user.must_change_password
   };
 }
 
@@ -808,6 +813,24 @@ app.post("/api/auth/login", (req, res) => {
 app.post("/api/auth/logout", (req, res) =>
   req.session.destroy(() => res.json({ ok: true }))
 );
+
+app.post("/api/auth/initial-password", (req, res) => {
+  if (!req.session.user || req.session.user.role !== "vehicle_agent" || req.session.user.id <= 0) {
+    return res.status(403).json({ error: "صلاحية مندوب السيارات مطلوبة" });
+  }
+  const password = String(req.body.password || "");
+  const confirmation = String(req.body.confirmation || "");
+  if (password.length < 8) return res.status(400).json({ error: "كلمة المرور يجب ألا تقل عن 8 أحرف" });
+  if (password !== confirmation) return res.status(400).json({ error: "تأكيد كلمة المرور غير مطابق" });
+  const user = db.prepare("SELECT password_hash FROM users WHERE id=? AND role='vehicle_agent'").get(req.session.user.id);
+  if (!user) return res.status(404).json({ error: "حساب المندوب غير موجود" });
+  if (bcrypt.compareSync(password, user.password_hash)) {
+    return res.status(400).json({ error: "اختر كلمة مرور جديدة مختلفة عن المؤقتة" });
+  }
+  db.prepare("UPDATE users SET password_hash=?,must_change_password=0 WHERE id=?")
+    .run(bcrypt.hashSync(password, 12), req.session.user.id);
+  res.json({ ok: true, message: "تم تثبيت كلمة المرور الجديدة" });
+});
 
 app.post("/api/auth/forgot-password", async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
@@ -1543,7 +1566,7 @@ app.post("/api/admin/vehicle-agents", (req, res) => {
     return res.json({ ok: true, id: existing.id, updated: true });
   }
   const info = db.prepare(
-    "INSERT INTO users(name,phone,password_hash,role,email_verified) VALUES(?,?,?,'vehicle_agent',1)"
+    "INSERT INTO users(name,phone,password_hash,role,email_verified,must_change_password) VALUES(?,?,?,'vehicle_agent',1,1)"
   ).run(name, phone, hash);
   res.status(201).json({ ok: true, id: Number(info.lastInsertRowid) });
 });
