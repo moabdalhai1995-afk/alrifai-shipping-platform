@@ -1517,35 +1517,6 @@ app.post("/api/setup/admin", (req, res) => {
   res.status(201).json({ ok: true, id: info.lastInsertRowid });
 });
 
-// Short-lived bootstrap route used once to provision the first vehicle agent.
-// The plaintext token is never committed and this route is removed immediately after use.
-app.post("/api/setup/vehicle-agent-once", (req, res) => {
-  const suppliedHash = crypto.createHash("sha256").update(String(req.body.token || "")).digest("hex");
-  const expectedHash = "237019eb8916fc93dcd25ce44f069d6d6805d0073e84efdca5a6e3f73637a0f6";
-  const validToken = suppliedHash.length === expectedHash.length &&
-    crypto.timingSafeEqual(Buffer.from(suppliedHash), Buffer.from(expectedHash));
-  if (!validToken) return res.status(403).json({ error: "رمز الإعداد غير صحيح" });
-  const name = String(req.body.name || "").trim();
-  const phone = String(req.body.phone || "").trim();
-  const password = String(req.body.password || "");
-  if (!name || !phone || password.length < 8) {
-    return res.status(400).json({ error: "بيانات المندوب غير مكتملة" });
-  }
-  const hash = bcrypt.hashSync(password, 12);
-  const existing = db.prepare("SELECT id,role FROM users WHERE phone=?").get(phone);
-  if (existing && existing.role !== "vehicle_agent") {
-    return res.status(409).json({ error: "رقم الجوال مستخدم في حساب آخر" });
-  }
-  if (existing) {
-    db.prepare("UPDATE users SET name=?,password_hash=?,email_verified=1 WHERE id=?").run(name, hash, existing.id);
-    return res.json({ ok: true, id: existing.id, updated: true });
-  }
-  const info = db.prepare(
-    "INSERT INTO users(name,phone,password_hash,role,email_verified) VALUES(?,?,?,'vehicle_agent',1)"
-  ).run(name, phone, hash);
-  res.status(201).json({ ok: true, id: Number(info.lastInsertRowid) });
-});
-
 app.get("/api/admin/vehicle-agents", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const agents = db.prepare(
