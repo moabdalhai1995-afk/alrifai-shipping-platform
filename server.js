@@ -824,9 +824,6 @@ app.post("/api/auth/initial-password", (req, res) => {
   if (password !== confirmation) return res.status(400).json({ error: "تأكيد كلمة المرور غير مطابق" });
   const user = db.prepare("SELECT password_hash FROM users WHERE id=? AND role='vehicle_agent'").get(req.session.user.id);
   if (!user) return res.status(404).json({ error: "حساب المندوب غير موجود" });
-  if (bcrypt.compareSync(password, user.password_hash)) {
-    return res.status(400).json({ error: "اختر كلمة مرور جديدة مختلفة عن المؤقتة" });
-  }
   db.prepare("UPDATE users SET password_hash=?,must_change_password=0 WHERE id=?")
     .run(bcrypt.hashSync(password, 12), req.session.user.id);
   res.json({ ok: true, message: "تم تثبيت كلمة المرور الجديدة" });
