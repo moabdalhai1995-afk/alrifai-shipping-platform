@@ -1517,6 +1517,37 @@ app.post("/api/setup/admin", (req, res) => {
   res.status(201).json({ ok: true, id: info.lastInsertRowid });
 });
 
+app.get("/api/admin/vehicle-agents", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const agents = db.prepare(
+    "SELECT id,name,phone,email,created_at FROM users WHERE role='vehicle_agent' ORDER BY id DESC"
+  ).all();
+  res.json({ ok: true, agents });
+});
+
+app.post("/api/admin/vehicle-agents", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const name = String(req.body.name || "").trim();
+  const phone = String(req.body.phone || "").trim();
+  const password = String(req.body.password || "");
+  if (!name || !phone || password.length < 8) {
+    return res.status(400).json({ error: "الاسم والجوال وكلمة مرور من 8 أحرف مطلوبة" });
+  }
+  const existing = db.prepare("SELECT id,role FROM users WHERE phone=?").get(phone);
+  if (existing && existing.role !== "vehicle_agent") {
+    return res.status(409).json({ error: "رقم الجوال مستخدم في حساب آخر" });
+  }
+  const hash = bcrypt.hashSync(password, 12);
+  if (existing) {
+    db.prepare("UPDATE users SET name=?,password_hash=? WHERE id=?").run(name, hash, existing.id);
+    return res.json({ ok: true, id: existing.id, updated: true });
+  }
+  const info = db.prepare(
+    "INSERT INTO users(name,phone,password_hash,role,email_verified) VALUES(?,?,?,'vehicle_agent',1)"
+  ).run(name, phone, hash);
+  res.status(201).json({ ok: true, id: Number(info.lastInsertRowid) });
+});
+
 app.get("/api/admin/orders", (req, res) => {
   if (!requireAdmin(req, res)) return;
   res.json({
