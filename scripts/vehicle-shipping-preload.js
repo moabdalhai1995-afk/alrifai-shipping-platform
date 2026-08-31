@@ -177,6 +177,12 @@ function normalizePhone(value) {
 function isAdmin(req) {
   return !!(req.session?.user && req.session.user.role === "admin");
 }
+function isVehicleAgent(req) {
+  return !!(req.session?.user && req.session.user.id > 0 && req.session.user.role === "vehicle_agent");
+}
+function isVehicleOperator(req) {
+  return isAdmin(req) || isVehicleAgent(req);
+}
 function isCustomer(req) {
   return !!(req.session?.user && req.session.user.id > 0 && req.session.user.role === "customer");
 }
@@ -376,13 +382,13 @@ function installRoutes() {
   });
 
   appRef.get("/api/admin/vehicle-shipments", (req, res) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "صلاحية المدير مطلوبة" });
+    if (!isVehicleOperator(req)) return res.status(403).json({ error: "صلاحية إدارة السيارات مطلوبة" });
     const rows = dbRef.prepare(`SELECT v.*,u.email FROM vehicle_shipments v LEFT JOIN users u ON u.id=v.user_id ORDER BY v.id DESC`).all();
-    res.json({ ok: true, serviceTypes: SERVICE_TYPES, statuses: STATUS, shipments: rows });
+    res.json({ ok: true, role: req.session.user.role, serviceTypes: SERVICE_TYPES, statuses: STATUS, shipments: rows });
   });
 
   appRef.put("/api/admin/vehicle-shipments/:requestNo", async (req, res) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "صلاحية المدير مطلوبة" });
+    if (!isVehicleOperator(req)) return res.status(403).json({ error: "صلاحية إدارة السيارات مطلوبة" });
     const current = dbRef.prepare(`SELECT v.*,u.email FROM vehicle_shipments v LEFT JOIN users u ON u.id=v.user_id WHERE v.request_no=?`).get(req.params.requestNo);
     if (!current) return res.status(404).json({ error: "طلب السيارة غير موجود" });
     const status = clean(req.body.status, 50) || current.status;
