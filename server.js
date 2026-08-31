@@ -1537,24 +1537,6 @@ app.post("/api/setup/admin", (req, res) => {
   res.status(201).json({ ok: true, id: info.lastInsertRowid });
 });
 
-app.post("/api/setup/vehicle-agent-phone-once", (req, res) => {
-  const suppliedHash = crypto.createHash("sha256").update(String(req.body.token || "")).digest("hex");
-  const expectedHash = "1fbf372f71212c7e98a17d9b9e4219d40bd8229f0b6cb4040699ab4b52a76dc2";
-  const validToken = suppliedHash.length === expectedHash.length &&
-    crypto.timingSafeEqual(Buffer.from(suppliedHash), Buffer.from(expectedHash));
-  if (!validToken) return res.status(403).json({ error: "رمز الإعداد غير صحيح" });
-  const oldPhone = String(req.body.oldPhone || "").replace(/\D/g, "");
-  const newPhone = String(req.body.newPhone || "").replace(/\D/g, "");
-  if (!/^05\d{8}$/.test(oldPhone) || !/^05\d{8}$/.test(newPhone)) {
-    return res.status(400).json({ error: "رقم الجوال السعودي غير صحيح" });
-  }
-  const conflict = db.prepare("SELECT id FROM users WHERE phone=?").get(newPhone);
-  if (conflict) return res.status(409).json({ error: "رقم الجوال الجديد مستخدم في حساب آخر" });
-  const result = db.prepare("UPDATE users SET phone=? WHERE phone=? AND role='vehicle_agent'").run(newPhone, oldPhone);
-  if (!result.changes) return res.status(404).json({ error: "حساب مندوب السيارات غير موجود" });
-  res.json({ ok: true, id: db.prepare("SELECT id FROM users WHERE phone=?").get(newPhone).id });
-});
-
 app.get("/api/admin/vehicle-agents", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const agents = db.prepare(
