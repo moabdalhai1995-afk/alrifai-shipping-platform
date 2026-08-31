@@ -1402,6 +1402,67 @@ app.get("/api/admin/products", (req, res) => {
   res.json({ ok: true, products: rows });
 });
 
+function requireVehicleCatalogAgent(req, res) {
+  if (!req.session.user || req.session.user.role !== "vehicle_agent" || req.session.user.id <= 0) {
+    res.status(403).json({ error: "صلاحية مندوب السيارات مطلوبة" });
+    return false;
+  }
+  const user = db.prepare("SELECT must_change_password FROM users WHERE id=?").get(req.session.user.id);
+  if (!user || Number(user.must_change_password)) {
+    res.status(428).json({ error: "يجب إنشاء كلمة مرور ثابتة أولاً", code: "PASSWORD_CHANGE_REQUIRED" });
+    return false;
+  }
+  return true;
+}
+
+app.get("/api/vehicle-agent/products", (req, res) => {
+  if (!requireVehicleCatalogAgent(req, res)) return;
+  const products = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.old_price,p.currency,p.stock_quantity,
+    p.supplier_id,p.active,s.name supplier_name FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
+    WHERE p.category LIKE '%سيار%' AND p.category NOT LIKE '%غيار%' ORDER BY p.active DESC,p.id DESC`).all();
+  res.json({ ok: true, products });
+});
+
+app.get("/api/vehicle-agent/suppliers", (req, res) => {
+  if (!requireVehicleCatalogAgent(req, res)) return;
+  res.json({ ok: true, suppliers: db.prepare("SELECT id,name,active FROM suppliers WHERE active=1 ORDER BY name").all() });
+});
+
+app.post("/api/vehicle-agent/products", (req, res) => {
+  if (!requireVehicleCatalogAgent(req, res)) return;
+  const { supplier_id = null, name, description = "", image_url = "", price = 0, old_price = null, stock_quantity = 1 } = req.body;
+  if (!String(name || "").trim()) return res.status(400).json({ error: "اسم السيارة مطلوب" });
+  const currentPrice = Math.max(0, Number(price) || 0);
+  const beforeDiscount = old_price === null || old_price === "" ? null : Math.max(currentPrice, Number(old_price) || 0);
+  const info = db.prepare(`INSERT INTO products_catalog(supplier_id,name,category,description,image_url,price,old_price,currency,stock_quantity)
+    VALUES(?,?,'سيارات',?,?,?,?, 'SAR',?)`).run(supplier_id || null, String(name).trim(), String(description).slice(0,4000),
+      String(image_url).slice(0,1000), currentPrice, beforeDiscount, Math.max(0, Number(stock_quantity) || 0));
+  res.status(201).json({ ok: true, id: Number(info.lastInsertRowid) });
+});
+
+app.patch("/api/vehicle-agent/products/:id", (req, res) => {
+  if (!requireVehicleCatalogAgent(req, res)) return;
+  const product = db.prepare("SELECT id,price FROM products_catalog WHERE id=? AND category LIKE '%سيار%' AND category NOT LIKE '%غيار%'").get(req.params.id);
+  if (!product) return res.status(404).json({ error: "السيارة غير موجودة" });
+  const { supplier_id, name, description, image_url, price, old_price, active, stock_quantity } = req.body;
+  const currentPrice = price === undefined ? product.price : Math.max(0, Number(price) || 0);
+  const beforeDiscount = old_price === undefined ? undefined : (old_price === null || old_price === "" ? null : Math.max(currentPrice, Number(old_price) || 0));
+  db.prepare(`UPDATE products_catalog SET supplier_id=CASE WHEN ? THEN ? ELSE supplier_id END,name=COALESCE(?,name),
+    description=COALESCE(?,description),image_url=COALESCE(?,image_url),price=?,old_price=CASE WHEN ? THEN ? ELSE old_price END,
+    active=COALESCE(?,active),stock_quantity=COALESCE(?,stock_quantity) WHERE id=?`).run(
+      supplier_id !== undefined ? 1 : 0, supplier_id || null, name, description, image_url, currentPrice,
+      old_price !== undefined ? 1 : 0, beforeDiscount, active === undefined ? null : Number(active),
+      stock_quantity === undefined ? null : Math.max(0, Number(stock_quantity) || 0), req.params.id);
+  res.json({ ok: true });
+});
+
+app.delete("/api/vehicle-agent/products/:id", (req, res) => {
+  if (!requireVehicleCatalogAgent(req, res)) return;
+  const info = db.prepare("UPDATE products_catalog SET active=0 WHERE id=? AND category LIKE '%سيار%' AND category NOT LIKE '%غيار%'").run(req.params.id);
+  if (!info.changes) return res.status(404).json({ error: "السيارة غير موجودة" });
+  res.json({ ok: true });
+});
+
 app.post("/api/admin/suppliers", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const { name, phone = "", city = "", details = "" } = req.body;
