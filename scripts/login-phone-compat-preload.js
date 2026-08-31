@@ -113,3 +113,6 @@ express.application.post = function loginPhoneCompatPost(path, ...handlers) {
 };
 
 module.exports = { phoneCandidates, resolveStoredPhone };
+
+// Runtime-last feature layer: centralize safe platform controls inside the admin account.
+require("./admin-smart-control-preload.js");
