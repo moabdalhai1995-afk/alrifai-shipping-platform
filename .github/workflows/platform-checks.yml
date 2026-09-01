@@ -26,7 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Check JavaScript
-        run: npm run check
+        run: |
+          npm run check
+          node scripts/check-unv-catalog.js
       - name: Verify Docker production command
         run: grep --fixed-strings 'CMD ["npm","start"]' Dockerfile
       - name: Start production command and verify platform
