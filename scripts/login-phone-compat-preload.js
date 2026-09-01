@@ -116,3 +116,6 @@ module.exports = { phoneCandidates, resolveStoredPhone };
 
 // Runtime-last feature layer: centralize safe platform controls inside the admin account.
 require("./admin-smart-control-preload.js");
+
+// Runtime-last professional platform layer: checkout, RBAC, audit, 2FA and executive controls.
+require("./professional-suite-preload.js");
