@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.webkit.CookieManager;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -26,6 +27,7 @@ public class MainActivity extends Activity {
             "https://alrifai-shipping-platform.onrender.com";
     private WebView webView;
     private ProgressBar progressBar;
+    private ValueCallback<Uri[]> pendingFileChooser;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean pageLoaded;
     private long lastBackPress;
@@ -53,7 +55,9 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(false);
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        // Required for Android's scoped system photo picker. This does not grant
+        // the WebView unrestricted access to files on the device.
+        settings.setAllowContentAccess(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -69,6 +73,30 @@ public class MainActivity extends Activity {
             public void onProgressChanged(WebView view, int progress) {
                 progressBar.setProgress(progress);
                 progressBar.setVisibility(progress < 100 ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView webView,
+                                             ValueCallback<Uri[]> filePathCallback,
+                                             FileChooserParams fileChooserParams) {
+                if (pendingFileChooser != null) {
+                    pendingFileChooser.onReceiveValue(null);
+                }
+                pendingFileChooser = filePathCallback;
+
+                Intent chooserIntent;
+                try {
+                    chooserIntent = fileChooserParams.createIntent();
+                    chooserIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                    chooserIntent.setType("image/*");
+                    startActivityForResult(chooserIntent, 1001);
+                    return true;
+                } catch (Exception error) {
+                    pendingFileChooser = null;
+                    Toast.makeText(MainActivity.this,
+                            "تعذر فتح استديو الصور", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
             }
         });
 
@@ -122,6 +150,16 @@ public class MainActivity extends Activity {
         handler.postDelayed(browserFallback, 15000);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != 1001 || pendingFileChooser == null) return;
+
+        Uri[] selectedFiles = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+        pendingFileChooser.onReceiveValue(selectedFiles);
+        pendingFileChooser = null;
+    }
+
     private void openInBrowser() {
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PLATFORM_URL)));
@@ -133,6 +171,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         handler.removeCallbacks(browserFallback);
+        if (pendingFileChooser != null) {
+            pendingFileChooser.onReceiveValue(null);
+            pendingFileChooser = null;
+        }
         super.onDestroy();
     }
 
