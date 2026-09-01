@@ -64,14 +64,15 @@ function installUnvCatalog(db) {
   const insert = db.prepare(`INSERT INTO products_catalog
     (supplier_id,name,category,description,image_url,price,old_price,purchase_price,currency,stock_quantity,active)
     VALUES(?,?,?,?,?,0,NULL,?,'SAR',0,1)`);
-  const update = db.prepare(`UPDATE products_catalog SET supplier_id=?,category=?,description=?,
+  const update = db.prepare(`UPDATE products_catalog SET supplier_id=?,category=?,description=?,image_url=?,
     purchase_price=?,price=0,old_price=NULL,currency='SAR',active=1 WHERE id=?`);
 
   db.transaction(() => {
     for (const [model, category, description, purchasePrice] of PRODUCTS) {
+      const imageUrl = "/assets/products/unv/" + model.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".png";
       const existing = find.get(model);
-      if (existing) update.run(supplier.id, category, description, purchasePrice, existing.id);
-      else insert.run(supplier.id, model, category, description, "", purchasePrice);
+      if (existing) update.run(supplier.id, category, description, imageUrl, purchasePrice, existing.id);
+      else insert.run(supplier.id, model, category, description, imageUrl, purchasePrice);
     }
   })();
 }
