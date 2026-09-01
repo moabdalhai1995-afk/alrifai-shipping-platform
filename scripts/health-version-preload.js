@@ -17,7 +17,14 @@ function VersionedExpress(...args) {
   app.use((req, res, next) => {
     if (req.path === "/api/health" && req.method === "GET") {
       res.set("Cache-Control", "no-store");
-      return res.json({ ok: true, service: "alrifai", version: pkg.version });
+      return res.json({
+        ok: true,
+        service: "alrifai",
+        version: pkg.version,
+        commit: process.env.RENDER_GIT_COMMIT || process.env.GITHUB_SHA || "local",
+        branch: process.env.RENDER_GIT_BRANCH || "local",
+        environment: process.env.NODE_ENV || "development"
+      });
     }
     next();
   });

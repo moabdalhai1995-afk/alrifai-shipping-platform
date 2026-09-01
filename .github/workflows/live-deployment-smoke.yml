@@ -1,0 +1,73 @@
+name: Live deployment smoke test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-deployment-smoke
+  cancel-in-progress: true
+
+jobs:
+  verify-live-deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      LIVE_URL: https://alrifai-shipping-platform.onrender.com
+      EXPECTED_SHA: ${{ github.sha }}
+    steps:
+      - name: Wait for Render to publish this commit
+        shell: bash
+        run: |
+          expected_short="${EXPECTED_SHA:0:7}"
+          deployed=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 20               -H 'Cache-Control: no-cache'               "$LIVE_URL/api/health?attempt=$attempt" > /tmp/health.json; then
+              cat /tmp/health.json
+              live_commit="$(node -e 'const d=JSON.parse(require("fs").readFileSync("/tmp/health.json","utf8")); process.stdout.write(String(d.commit||""))')"
+              live_ok="$(node -e 'const d=JSON.parse(require("fs").readFileSync("/tmp/health.json","utf8")); process.stdout.write(d.ok===true?"yes":"no")')"
+              if [ "$live_ok" = "yes" ] && { [ "$live_commit" = "$EXPECTED_SHA" ] || [ "${live_commit:0:7}" = "$expected_short" ]; }; then
+                deployed=1
+                break
+              fi
+            fi
+            sleep 20
+          done
+          if [ "$deployed" -ne 1 ]; then
+            echo "Render did not publish commit $EXPECTED_SHA within 20 minutes." >&2
+            echo "Last health response:" >&2
+            cat /tmp/health.json 2>/dev/null || true
+            exit 1
+          fi
+
+      - name: Verify public pages and APIs
+        shell: bash
+        run: |
+          check_page() {
+            path="$1"
+            marker="$2"
+            output="/tmp/page-$(printf '%s' "$path" | tr '/.' '--')"
+            curl --fail --silent --show-error --max-time 30               -H 'Cache-Control: no-cache' "$LIVE_URL/$path" > "$output"
+            test -s "$output"
+            grep --quiet "$marker" "$output"
+          }
+          check_page index.html "الرفاعي"
+          check_page products.html "المنتج"
+          check_page tracking.html "تتبع"
+          check_page cart.html "إكمال الطلب"
+          check_page account.html "حساب"
+
+          curl --fail --silent --show-error --max-time 30             -H 'Cache-Control: no-cache' "$LIVE_URL/api/me" > /tmp/me.json
+          node -e 'const d=JSON.parse(require("fs").readFileSync("/tmp/me.json","utf8")); if(d.authenticated!==false) process.exit(1)'
+
+      - name: Deployment summary
+        run: |
+          echo "### Live deployment verified" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $LIVE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: $EXPECTED_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Health, public pages, and anonymous session API passed." >> "$GITHUB_STEP_SUMMARY"
