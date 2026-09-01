@@ -119,3 +119,6 @@ require("./admin-smart-control-preload.js");
 
 // Runtime-last professional platform layer: checkout, RBAC, audit, 2FA and executive controls.
 require("./professional-suite-preload.js");
+
+// Unified administrator navigation and the live warehouse workspace.
+require("./admin-navigation-preload.js");
