@@ -20,6 +20,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install platform dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate production platform
+        run: npm run check
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -140,6 +151,6 @@ jobs:
               "$RUNNER_TEMP/$AAB_NAME" \
               --target "$GITHUB_SHA" \
               --title "الرفاعي للشحن الدولي Android v${ALRIFAI_VERSION_NAME}" \
-              --notes "إصدار Android موقّع تلقائيًا. versionCode=${ALRIFAI_VERSION_CODE}. يتضمن APK للتثبيت وAAB للرفع إلى Google Play." \
+              --notes "إصدار Production Stable موقّع تلقائيًا بعد اجتياز فحوصات المنصة. versionCode=${ALRIFAI_VERSION_CODE}. يتضمن APK للتثبيت وAAB للرفع إلى Google Play." \
               --latest
           fi
