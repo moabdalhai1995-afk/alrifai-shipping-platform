@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const { isStaticAssetRequest } = require("./http-performance-preload");
 
 function req(url, method = "GET") {
@@ -25,4 +26,8 @@ for (const [request, expected] of cases) {
 }
 
 if (path.extname("/image.avif") !== ".avif") throw new Error("path sanity check failed");
+const persistentAuth = fs.readFileSync(path.join(__dirname, "customer-persistent-auth-preload.js"), "utf8");
+if (!persistentAuth.includes("if (!req.session) return next();")) {
+  throw new Error("persistent customer auth must tolerate the static session fast-path");
+}
 console.log("HTTP static fast-path checks passed");
