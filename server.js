@@ -128,6 +128,7 @@ const productColumns = new Set(
 if (!productColumns.has("image_url")) db.exec("ALTER TABLE products_catalog ADD COLUMN image_url TEXT");
 if (!productColumns.has("stock_quantity")) db.exec("ALTER TABLE products_catalog ADD COLUMN stock_quantity INTEGER NOT NULL DEFAULT 100");
 if (!productColumns.has("old_price")) db.exec("ALTER TABLE products_catalog ADD COLUMN old_price REAL");
+if (!productColumns.has("purchase_price")) db.exec("ALTER TABLE products_catalog ADD COLUMN purchase_price REAL");
 
 const partnerColumns = new Set(
   db.prepare("PRAGMA table_info(partners)").all().map((column) => column.name)
@@ -1395,7 +1396,7 @@ app.get("/api/catalog", (req, res) => {
 
 app.get("/api/admin/products", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.old_price,p.currency,p.stock_quantity,
+  const rows = db.prepare(`SELECT p.id,p.name,p.category,p.description,p.image_url,p.price,p.old_price,p.purchase_price,p.currency,p.stock_quantity,
     p.supplier_id,p.active,s.name supplier_name
     FROM products_catalog p LEFT JOIN suppliers s ON s.id=p.supplier_id
     ORDER BY p.active DESC,p.stock_quantity ASC,p.id DESC`).all();
