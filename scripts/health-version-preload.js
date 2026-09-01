@@ -22,8 +22,7 @@ function VersionedExpress(...args) {
         service: "alrifai",
         version: pkg.version,
         commit: process.env.RENDER_GIT_COMMIT || process.env.GITHUB_SHA || "local",
-        branch: process.env.RENDER_GIT_BRANCH || "local",
-        environment: process.env.NODE_ENV || "development"
+        branch: process.env.RENDER_GIT_BRANCH || "local"
       });
     }
     next();
