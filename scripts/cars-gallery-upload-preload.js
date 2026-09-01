@@ -13,6 +13,8 @@ express.json = function carsGalleryJson(options) {
 };
 
 const originalReadFileSync = fs.readFileSync.bind(fs);
+const originalStatic = express.static;
+const originalSend = express.response.send;
 
 function injectCarsGallery(source) {
   let html = String(source || "");
@@ -46,6 +48,7 @@ function injectCarsGallery(source) {
     function splitStored(value){
       var text=String(value||'').trim();if(!text)return [];
       if(text.indexOf(SEP)>=0)return text.split(SEP).map(function(x){return x.trim()}).filter(isImageValue);
+      if(/,\\s*(?=(?:data:image\\/|https?:\\/\\/))/i.test(text))return text.split(/,\\s*(?=(?:data:image\\/|https?:\\/\\/))/i).map(function(x){return x.trim()}).filter(isImageValue);
       if(/^data:image\\//i.test(text))return [text];
       return text.split(/[,،\\n]+/).map(function(x){return x.trim()}).filter(isImageValue);
     }
@@ -87,7 +90,7 @@ function injectCarsGallery(source) {
       if(galleryUrl)galleryUrl.addEventListener('change',function(){var dataImages=splitStored(galleryHidden.value).filter(function(v){return /^data:image\\//i.test(v)});galleryHidden.value=unique(dataImages.concat(linkValues(galleryUrl.value))).slice(0,MAX_EXTRA).join(SEP);renderGallery()});
       form.addEventListener('submit',function(e){if(processing>0){e.preventDefault();e.stopImmediatePropagation();if(typeof toast==='function')toast('انتظر حتى يكتمل تجهيز الصور');}},true);
       var originalNormalize=window.normalizeCar;if(typeof originalNormalize==='function')window.normalizeCar=function(p){var c=originalNormalize(p),parsed=typeof window.parseDescription==='function'?window.parseDescription(p.description):null,raw=parsed&&parsed.meta?parsed.meta['صور']:'';var extra=splitStored(raw);c.gallery=unique([c.image].concat(extra)).filter(Boolean);return c;};
-      var originalEdit=window.editCar;if(typeof originalEdit==='function')window.editCar=function(id){originalEdit(id);var p=(window.adminProducts||[]).find(function(x){return Number(x.id)===Number(id)});if(p){var c=window.normalizeCar(p);mainHidden.value=p.image_url||'';galleryHidden.value=c.gallery.filter(function(x){return x&&x!==p.image_url}).join(SEP);}refreshControls();};
+      var originalEdit=window.editCar;if(typeof originalEdit==='function')window.editCar=function(id){originalEdit(id);galleryHidden.value=splitStored(galleryHidden.value).join(SEP);refreshControls();};
       var originalCancel=window.cancelEdit;if(typeof originalCancel==='function')window.cancelEdit=function(){originalCancel();mainHidden.value='';galleryHidden.value='';mainFile.value='';galleryFiles.value='';if(mainUrl)mainUrl.value='';if(galleryUrl)galleryUrl.value='';refreshControls();};
       form.addEventListener('reset',function(){setTimeout(refreshControls,0)});refreshControls();
       setTimeout(function(){if(typeof window.loadCars==='function')window.loadCars();},0);
@@ -108,3 +111,58 @@ fs.readFileSync = function carsGalleryReadFileSync(filePath, options) {
   if (isUtf8 && fileName === "cars.html") return injectCarsGallery(result);
   return result;
 };
+
+express.response.send = function carsGallerySend(body) {
+  const contentType = String(this.getHeader?.("Content-Type") || "").toLowerCase();
+  if (typeof body === "string" && (contentType.includes("text/html") || /^\s*<!doctype html/i.test(body)) && body.includes('id="carForm"')) {
+    body = injectCarsGallery(body);
+    this.removeHeader("Content-Length");
+    this.removeHeader("ETag");
+  }
+  return originalSend.call(this, body);
+};
+
+express.static = function carsGalleryStatic(root, options = {}) {
+  const middleware = originalStatic(root, options);
+  return function carsGalleryStaticMiddleware(req, res, next) {
+    const pathname = String(req.path || req.url || "").split("?")[0];
+    const target = req.method === "GET" && ["/cars", "/cars/", "/cars.html"].includes(pathname);
+    if (!target) return middleware(req, res, next);
+
+    const oldWrite = res.write.bind(res);
+    const oldEnd = res.end.bind(res);
+    const chunks = [];
+    let finished = false;
+
+    function restore() {
+      if (finished) return;
+      finished = true;
+      res.write = oldWrite;
+      res.end = oldEnd;
+    }
+
+    res.write = function bufferedWrite(chunk, encoding, callback) {
+      if (chunk) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, typeof encoding === "string" ? encoding : undefined));
+      if (typeof callback === "function") callback();
+      return true;
+    };
+
+    res.end = function bufferedEnd(chunk, encoding, callback) {
+      if (chunk) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, typeof encoding === "string" ? encoding : undefined));
+      const body = Buffer.concat(chunks).toString("utf8");
+      restore();
+      const output = injectCarsGallery(body);
+      const buffer = Buffer.from(output, "utf8");
+      res.removeHeader("ETag");
+      res.setHeader("Content-Length", String(buffer.length));
+      return oldEnd(buffer, typeof encoding === "function" ? encoding : callback);
+    };
+
+    return middleware(req, res, (error) => {
+      restore();
+      return next(error);
+    });
+  };
+};
+
+module.exports = { injectCarsGallery };
