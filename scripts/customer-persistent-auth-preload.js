@@ -102,6 +102,10 @@ function clearRememberCookie() {
 }
 
 function persistentCustomerMiddleware(req, res, next) {
+  // Static assets intentionally bypass express-session for performance.
+  // Do not run persistent-customer logic when no session was created.
+  if (!req.session) return next();
+
   const cookies = parseCookies(req.headers.cookie);
   const remembered = readCustomer(cookies[COOKIE_NAME]);
 
