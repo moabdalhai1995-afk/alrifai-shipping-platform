@@ -194,6 +194,7 @@ if (enabled) {
   async function bootstrap(db) {
     const client = await pool.connect();
     try {
+      await client.query('ALTER TABLE "products_catalog" ADD COLUMN IF NOT EXISTS "purchase_price" DOUBLE PRECISION');
       const remoteRows = await remoteCount(client);
       const localRows = localCount(db);
       if (remoteRows > 0) {
