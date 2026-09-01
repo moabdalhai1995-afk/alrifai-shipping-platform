@@ -1,0 +1,55 @@
+name: Professional Suite Checks
+
+on:
+  push:
+    branches:
+      - professional-platform-suite-v3-15
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-professional-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Syntax check professional runtime
+        run: |
+          node --check scripts/professional-suite-preload.js
+          node --check scripts/professional-ui-runtime-preload.js
+          node --check scripts/login-phone-compat-preload.js
+
+      - name: Validate professional pages
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const assert = require('assert');
+          const required = {
+            'cart.html': ['/api/pro/checkout-preview','shippingMethod','couponCode'],
+            'executive-dashboard.html': ['/api/pro/dashboard','/api/pro/coupons','/api/pro/staff'],
+            'security-center.html': ['/api/pro/security/2fa/status','/api/pro/security/2fa/enable'],
+            'invoice.html': ['/api/pro/invoice/'],
+            'addresses.html': ['/api/pro/addresses']
+          };
+          for (const [file, markers] of Object.entries(required)) {
+            const source = fs.readFileSync(file, 'utf8');
+            for (const marker of markers) assert(source.includes(marker), `${file} missing ${marker}`);
+          }
+          const loader = fs.readFileSync('scripts/login-phone-compat-preload.js','utf8');
+          assert(loader.includes('professional-suite-preload.js'), 'professional suite is not loaded');
+          console.log('Professional suite markers OK');
+          NODE
+
+      - name: Run existing production checks
+        run: npm run check
