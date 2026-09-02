@@ -103,6 +103,10 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 .category-chip span{background:linear-gradient(145deg,#fff,#f3e5dc);border-color:#ead8ca}.deal-strip{background:linear-gradient(115deg,#2c1915,#76503f)}
 #products{background:#f8f2ed}.product-card{border:1px solid #eadfd6}.product-card .product-img{background:linear-gradient(150deg,#f9f1eb,#fff)}.product-action{background:#2c1915}.product-action:hover{background:#76503f}
 .product-prices strong{color:#7d5135}.kicker{letter-spacing:.04em}.beauty-note{display:inline-flex;gap:8px;align-items:center;margin-top:18px;padding:9px 13px;border:1px solid #d9bfaa;border-radius:999px;color:#704a36;font-size:13px;font-weight:800}
+.product-card{cursor:pointer}.product-card:focus-within{outline:3px solid #b98a5744}.product-card .product-body h3{min-height:auto}.product-desc{color:#746760;font-size:13px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:44px}.stock-ok{color:#18794e;font-weight:800}.quick-view{border:0;background:transparent;color:#76503f;font-weight:900;padding:8px;cursor:pointer}.product-actions{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}
+.product-detail{display:grid;grid-template-columns:1fr 1fr;gap:28px}.detail-image{min-height:340px;border-radius:18px;background:#f8f2ed;display:grid;place-items:center;overflow:hidden;font-size:90px}.detail-image img{width:100%;height:100%;max-height:440px;object-fit:contain;padding:24px}.detail-info h2{font-size:32px;margin:8px 0}.detail-price{font-size:25px;font-weight:900;color:#7d5135}.qty-picker{display:inline-grid;grid-template-columns:42px 62px 42px;align-items:center;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:14px 0}.qty-picker button{height:42px;border:0;background:#f7f2ed;font-size:20px;cursor:pointer}.qty-picker input{width:62px;height:42px;border:0;text-align:center;font-weight:900}
+.checkout-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 22px}.checkout-step{padding:9px;border-radius:10px;background:#f3eee9;color:#82756d;text-align:center;font-size:12px;font-weight:800}.checkout-step.active{background:#2c1915;color:#fff}.order-summary{background:#f8f4ef;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}.order-summary:empty{display:none}.submit-order[disabled]{opacity:.65;cursor:wait}.field-error{display:none;color:#b42318;font-size:12px;margin-top:5px}.field.invalid input,.field.invalid select{border-color:#b42318;background:#fff7f6}.field.invalid .field-error{display:block}.success-card{text-align:center;padding:15px}.success-icon{width:72px;height:72px;border-radius:50%;background:#e4f5eb;color:#18794e;display:grid;place-items:center;font-size:38px;margin:auto}.success-order{font:900 25px monospace;color:#2c1915;background:#f6eee7;padding:12px;border-radius:12px;margin:16px 0}
+@media(max-width:700px){.product-detail{grid-template-columns:1fr}.detail-image{min-height:240px}.detail-info h2{font-size:25px}.product-actions{grid-template-columns:1fr}.quick-view{display:none}.checkout-steps{font-size:11px}.modal-box{padding:20px}}
 </style>
 </head>
 <body>
@@ -278,12 +282,17 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 <a class="whatsapp-float" href="https://wa.me/966540407193?text=السلام عليكم، أريد الاستفسار عن أحد منتجات منصة الرفاعي" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب">☎</a>
 <nav class="mobile-nav" aria-label="التنقل السفلي"><a href="#"><i>⌂</i>الرئيسية</a><a href="/products.html"><i>▦</i>الأقسام</a><a href="/tracking.html"><i>⌖</i>التتبع</a><a href="/cart.html"><i>🛒</i>السلة</a><a href="/account.html"><i>♙</i>حسابي</a></nav>
 
-<div class="modal" id="orderModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>طلب شراء وشحن</h2>
-<div class="field"><label>الاسم *</label><input id="oName"></div><div class="field"><label>رقم الجوال / واتساب *</label><input id="oPhone"></div>
+<div class="modal" id="productDetailModal"><div class="modal-box" style="max-width:920px"><button class="close" onclick="closeModals()">×</button><div id="productDetailContent"></div></div></div>
+
+<div class="modal" id="orderModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>إتمام الطلب</h2>
+<div class="checkout-steps"><div class="checkout-step active">1 بياناتك</div><div class="checkout-step">2 مراجعة الطلب</div><div class="checkout-step">3 تأكيد</div></div><div id="checkoutSummary" class="order-summary"></div>
+<div class="field"><label>الاسم *</label><input id="oName" autocomplete="name"><span class="field-error">اكتب الاسم الكامل</span></div><div class="field"><label>رقم الجوال / واتساب *</label><input id="oPhone" inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx أو +966"><span class="field-error">أدخل رقم جوال صحيحًا</span></div>
 <div class="field"><label>المنتج *</label><input id="oProduct"></div><div class="field"><label>مدينة الوصول *</label><select id="oCity"><option>الخرطوم</option><option>الجزيرة</option><option>عطبرة</option><option>شندي</option></select></div>
 <div class="field"><label>عنوان التوصيل</label><textarea id="oAddress" rows="2" placeholder="الحي، الشارع، أقرب معلم"></textarea></div>
 <div class="field"><label>الكمية</label><input id="oQty" type="number" min="1" value="1"></div><div class="field"><label>التفاصيل</label><textarea id="oDetails" rows="3"></textarea></div>
-<button class="btn primary" style="width:100%" onclick="submitOrder()">حفظ وإرسال الطلب</button></div></div>
+<button id="submitOrderButton" class="btn primary submit-order" style="width:100%" onclick="submitOrder()">تأكيد وإرسال الطلب</button><p class="small muted" style="text-align:center">لن يتم الخصم الآن؛ سنؤكد السعر والتوفر معك أولًا.</p></div></div>
+
+<div class="modal" id="orderSuccessModal"><div class="modal-box"><div class="success-card"><div class="success-icon">✓</div><h2>تم استلام طلبك بنجاح</h2><p>احتفظ برقم الطلب للمتابعة.</p><div id="successOrderNo" class="success-order"></div><button class="btn primary" style="width:100%" onclick="goToNewOrderTracking()">تتبع الطلب الآن</button><button class="btn outline" style="width:100%;margin-top:8px" onclick="closeModals()">متابعة التسوق</button></div></div></div>
 
 <div class="modal" id="partnerModal"><div class="modal-box"><button class="close" onclick="closeModals()">×</button><h2>طلب شراكة</h2>
 <div class="field"><label>اسم الشركة / المتجر *</label><input id="pCompany"></div><div class="field"><label>اسم المسؤول *</label><input id="pName"></div><div class="field"><label>رقم التواصل *</label><input id="pPhone"></div><div class="field"><label>المدينة</label><input id="pCity"></div><div class="field"><label>نوع المنتجات</label><input id="pProducts"></div><div class="field"><label>نبذة</label><textarea id="pDetails" rows="3"></textarea></div>
@@ -691,6 +700,58 @@ const _loadAdmin2=loadAdmin;
 loadAdmin=async function(){await _loadAdmin2();try{await loadAdminPayments()}catch(e){}}
 const _loadAccount2=loadAccount;
 loadAccount=async function(){await _loadAccount2();try{const me=await api("/api/me");if(me.authenticated&&me.user.role!=="admin")await loadPhase4Customer()}catch(e){}}
+</script>
+<script>
+/* Professional storefront and frictionless checkout */
+const safeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+function normalizeCart(){
+ const grouped=new Map();
+ (Array.isArray(cart)?cart:[]).forEach(item=>{const key=String(item.id);if(grouped.has(key))grouped.get(key).qty+=(Number(item.qty)||1);else grouped.set(key,{...item,qty:Number(item.qty)||1})});
+ cart=[...grouped.values()];localStorage.setItem("rifai_cart",JSON.stringify(cart));
+}
+normalizeCart();
+saveCart=function(){
+ localStorage.setItem("rifai_cart",JSON.stringify(cart));const count=cart.reduce((sum,item)=>sum+(Number(item.qty)||1),0);
+ document.getElementById("cartCount").textContent=count;const top=document.getElementById("topCartCount");if(top)top.textContent=count;
+};
+addCart=function(id,quantity=1){
+ const product=currentProducts.find(p=>Number(p.id)===Number(id));if(!product)return showToast("تعذر إضافة المنتج");if(product.stock===0)return showToast("هذا المنتج غير متوفر حاليًا");
+ const item=cart.find(p=>Number(p.id)===Number(id)),next=(Number(item?.qty)||0)+Math.max(1,Number(quantity)||1);
+ if(Number.isFinite(product.stock)&&product.stock>0&&next>product.stock)return showToast("الكمية المطلوبة أكبر من المخزون المتوفر");
+ if(item)item.qty=next;else cart.push({...product,qty:Math.max(1,Number(quantity)||1)});saveCart();showToast("تمت إضافة المنتج إلى السلة");
+};
+renderProducts=async function(){
+ const q=(document.getElementById("search").value||"").trim().toLowerCase(),category=document.getElementById("category").value;let source=products;
+ try{const data=await api("/api/catalog");if(data.products?.length)source=data.products.map(p=>({id:p.id,name:p.name,cat:p.category||"عام",desc:p.description||"",price:p.price?Number(p.price).toLocaleString("ar-SA")+" "+(p.currency==="SAR"?"ر.س":p.currency):"حسب المورد",priceValue:Number(p.price)||0,oldPrice:Number(p.old_price)||0,currency:p.currency||"SAR",stock:Number(p.stock_quantity)||0,image:p.image_url||"",supplier:p.supplier_name||"",icon:"📦"}))}catch(error){}
+ currentProducts=source;let list=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||(p.desc||"").toLowerCase().includes(q))&&(!category||p.cat===category));
+ const sort=document.getElementById("sortProducts")?.value||"featured";if(sort==="name")list.sort((a,b)=>a.name.localeCompare(b.name,"ar"));if(sort==="priceLow")list.sort((a,b)=>(a.priceValue||Infinity)-(b.priceValue||Infinity));
+ const grid=document.getElementById("productsGrid");grid.setAttribute("aria-live","polite");
+ grid.innerHTML=list.length?list.map(p=>{const current=Number(p.priceValue)||0,old=Number(p.oldPrice)||0,discount=old>current&&current>0?Math.round((old-current)/old*100):0,currency=p.currency==="SAR"||!p.currency?"ر.س":p.currency;return `<article class="product product-card" onclick="openProductDetail(${Number(p.id)})"><div class="product-img"><div class="product-badges">${discount?`<span class="discount-badge">-${discount}%</span>`:""}${p.stock>0&&p.stock<=5?'<span class="offer-badge">كمية محدودة</span>':""}</div><button class="product-wish" onclick="toggleWish(${Number(p.id)},this,event)" aria-label="إضافة للمفضلة" style="color:${favoriteIds.has(Number(p.id))?"#d91d2b":""}">${favoriteIds.has(Number(p.id))?"♥":"♡"}</button>${p.image?`<img src="${safeText(p.image)}" alt="${safeText(p.name)}" loading="lazy">`:`<span aria-hidden="true">${p.icon||"📦"}</span>`}</div><div class="product-body"><p class="product-category">${safeText(p.cat)}</p><h3>${safeText(p.name)}</h3><p class="product-desc">${safeText(p.desc||"منتج مختار من موردينا المعتمدين")}</p><div class="stock-label ${p.stock>0?"stock-ok":""}">${p.stock>0?"متوفر للطلب":"نفد المخزون"}</div><div class="product-prices">${discount?`<span class="old-price">${old.toLocaleString("ar-SA")} ${currency}</span>`:""}<strong>${current?current.toLocaleString("ar-SA")+" "+currency:safeText(p.price)}</strong></div><div class="product-actions"><button class="btn product-action" ${p.stock===0?"disabled":""} onclick="event.stopPropagation();addCart(${Number(p.id)})">${p.stock===0?"غير متوفر":"أضف للسلة"}</button><button class="quick-view" onclick="event.stopPropagation();openProductDetail(${Number(p.id)})">التفاصيل</button></div></div></article>`}).join(""):'<div class="empty" style="grid-column:1/-1">لا توجد نتائج. جرّب كلمة بحث أو قسمًا آخر.</div>';
+};
+function openProductDetail(id){
+ const p=currentProducts.find(item=>Number(item.id)===Number(id));if(!p)return;const currency=p.currency==="SAR"||!p.currency?"ر.س":p.currency,current=Number(p.priceValue)||0;
+ document.getElementById("productDetailContent").innerHTML=`<div class="product-detail"><div class="detail-image">${p.image?`<img src="${safeText(p.image)}" alt="${safeText(p.name)}">`:`<span>${p.icon||"📦"}</span>`}</div><div class="detail-info"><span class="tag">${safeText(p.cat)}</span><h2>${safeText(p.name)}</h2><p class="muted">${safeText(p.desc||"منتج مختار من موردينا المعتمدين")}</p>${p.supplier?`<p><b>المورد:</b> ${safeText(p.supplier)}</p>`:""}<div class="detail-price">${current?current.toLocaleString("ar-SA")+" "+currency:safeText(p.price)}</div><p class="stock-ok">${p.stock>0?"✓ متوفر للطلب":"غير متوفر حاليًا"}</p><label for="detailQty"><b>الكمية</b></label><br><div class="qty-picker"><button onclick="changeDetailQty(-1)">−</button><input id="detailQty" value="1" inputmode="numeric" aria-label="الكمية"><button onclick="changeDetailQty(1)">+</button></div><button class="btn primary" style="width:100%" ${p.stock===0?"disabled":""} onclick="addCart(${Number(p.id)},Number(document.getElementById('detailQty').value)||1);closeModals()">إضافة إلى السلة</button><p class="small muted">سنؤكد السعر والتوفر قبل الدفع.</p></div></div>`;
+ document.getElementById("productDetailModal").classList.add("show");
+}
+function changeDetailQty(delta){const input=document.getElementById("detailQty");input.value=Math.max(1,(Number(input.value)||1)+delta)}
+function changeCartQty(id,delta){const item=cart.find(p=>Number(p.id)===Number(id));if(!item)return;const next=(Number(item.qty)||1)+delta;if(next<=0)cart=cart.filter(p=>Number(p.id)!==Number(id));else{if(Number.isFinite(item.stock)&&item.stock>0&&next>item.stock)return showToast("وصلت للكمية المتوفرة");item.qty=next}saveCart();openCart()}
+openCart=function(){
+ const items=document.getElementById("cartItems");items.innerHTML=cart.length?cart.map(p=>`<article class="cart-product"><div class="cart-product-image">${p.image?`<img src="${safeText(p.image)}" alt="${safeText(p.name)}">`:(p.icon||"📦")}</div><div><h3>${safeText(p.name)}</h3><span class="tag">${safeText(p.cat||"منتج")}</span><div class="price">${safeText(p.price||"حسب المورد")}</div><div class="qty-picker"><button onclick="changeCartQty(${Number(p.id)},-1)">−</button><input value="${Number(p.qty)||1}" readonly aria-label="الكمية"><button onclick="changeCartQty(${Number(p.id)},1)">+</button></div></div><button class="btn outline remove-product" onclick="changeCartQty(${Number(p.id)},-${Number(p.qty)||1})">حذف</button></article>`).join(""):'<div class="empty">السلة فارغة. أضف منتجًا ثم أكمل الطلب بخطوات بسيطة.</div>';
+ document.getElementById("cartModal").classList.add("show");
+};
+removeCart=function(index){if(cart[index])cart.splice(index,1);saveCart();openCart()};
+function checkoutSummary(){return cart.length?`<b>ملخص الطلب (${cart.reduce((s,p)=>s+(Number(p.qty)||1),0)} قطعة)</b><div class="small muted" style="margin-top:7px">${cart.map(p=>`${safeText(p.name)} × ${Number(p.qty)||1}`).join("<br>")}</div>`:""}
+orderCart=function(){if(!cart.length)return showToast("السلة فارغة");const method=document.querySelector('input[name="cartPayMethod"]:checked');oProduct.value=cart.map(x=>x.name).join("، ");oDetails.value="وسيلة الدفع المفضلة: "+({card:"البطاقة البنكية",tamara:"تمارا",tabby:"تابي",bank_transfer:"تحويل بنكي"}[method?.value]||"غير محددة");document.getElementById("checkoutSummary").innerHTML=checkoutSummary();fillSavedDelivery();closeModals();document.getElementById("orderModal").classList.add("show");setTimeout(()=>oName.focus(),100)};
+openOrder=function(product=""){oProduct.value=product;document.getElementById("checkoutSummary").innerHTML=checkoutSummary();fillSavedDelivery();document.getElementById("orderModal").classList.add("show")};
+function validPhone(value){return /^(?:\+?966|0)?5\d{8}$/.test(String(value).replace(/[\s()-]/g,""))}
+function validateCheckout(){const fields=[{input:oName,ok:oName.value.trim().length>=2},{input:oPhone,ok:validPhone(oPhone.value)},{input:oProduct,ok:oProduct.value.trim().length>0}];fields.forEach(x=>x.input.closest(".field")?.classList.toggle("invalid",!x.ok));return fields.every(x=>x.ok)}
+submitOrder=async function(){
+ if(!validateCheckout())return showToast("راجع البيانات المطلوبة");const button=document.getElementById("submitOrderButton");button.disabled=true;button.textContent="جارٍ إرسال الطلب...";
+ try{const items=cart.map(item=>({...item,qty:Number(item.qty)||1,unitPrice:Number(item.priceValue)||Number(String(item.price||"").replace(/[^0-9.]/g,""))||0,currency:item.currency||"SAR"}));const data=await api("/api/orders",{method:"POST",body:JSON.stringify({name:oName.value.trim(),phone:oPhone.value.trim(),product:oProduct.value.trim(),city:oCity.value,qty:Number(oQty.value)||1,details:(oAddress.value.trim()?"عنوان التوصيل: "+oAddress.value.trim()+"\n":"")+oDetails.value.trim(),items})});cart=[];saveCart();closeModals();document.getElementById("successOrderNo").textContent=data.orderNo;document.getElementById("trackId").value=data.orderNo;document.getElementById("orderSuccessModal").classList.add("show")}catch(error){showToast(error.message)}finally{button.disabled=false;button.textContent="تأكيد وإرسال الطلب"}
+};
+function goToNewOrderTracking(){closeModals();goToTracking();trackOrder()}
+["oName","oPhone","oProduct"].forEach(id=>document.getElementById(id)?.addEventListener("input",event=>event.target.closest(".field")?.classList.remove("invalid")));
+renderProducts();saveCart();
 </script>
 </body>
 </html>
