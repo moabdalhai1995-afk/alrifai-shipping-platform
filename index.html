@@ -107,6 +107,19 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 .product-detail{display:grid;grid-template-columns:1fr 1fr;gap:28px}.detail-image{min-height:340px;border-radius:18px;background:#f8f2ed;display:grid;place-items:center;overflow:hidden;font-size:90px}.detail-image img{width:100%;height:100%;max-height:440px;object-fit:contain;padding:24px}.detail-info h2{font-size:32px;margin:8px 0}.detail-price{font-size:25px;font-weight:900;color:#7d5135}.qty-picker{display:inline-grid;grid-template-columns:42px 62px 42px;align-items:center;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:14px 0}.qty-picker button{height:42px;border:0;background:#f7f2ed;font-size:20px;cursor:pointer}.qty-picker input{width:62px;height:42px;border:0;text-align:center;font-weight:900}
 .checkout-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 22px}.checkout-step{padding:9px;border-radius:10px;background:#f3eee9;color:#82756d;text-align:center;font-size:12px;font-weight:800}.checkout-step.active{background:#2c1915;color:#fff}.order-summary{background:#f8f4ef;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}.order-summary:empty{display:none}.submit-order[disabled]{opacity:.65;cursor:wait}.field-error{display:none;color:#b42318;font-size:12px;margin-top:5px}.field.invalid input,.field.invalid select{border-color:#b42318;background:#fff7f6}.field.invalid .field-error{display:block}.success-card{text-align:center;padding:15px}.success-icon{width:72px;height:72px;border-radius:50%;background:#e4f5eb;color:#18794e;display:grid;place-items:center;font-size:38px;margin:auto}.success-order{font:900 25px monospace;color:#2c1915;background:#f6eee7;padding:12px;border-radius:12px;margin:16px 0}
 @media(max-width:700px){.product-detail{grid-template-columns:1fr}.detail-image{min-height:240px}.detail-info h2{font-size:25px}.product-actions{grid-template-columns:1fr}.quick-view{display:none}.checkout-steps{font-size:11px}.modal-box{padding:20px}}
+/* Marketplace interface refresh — clearer hierarchy, broader catalog and stronger mobile UX */
+:root{--brand:#241510;--brand-soft:#6f4937;--accent:#c7923f;--surface:#fffdfb;--shadow:0 18px 55px #38211712}
+body{background:#faf7f4}.wrap{max-width:1240px}.promo-bar{background:linear-gradient(90deg,#1f120e,#4b2b21);letter-spacing:.01em}
+header{box-shadow:0 8px 28px #3a25150a}.nav{min-height:78px}.brand{color:var(--brand);letter-spacing:-.02em}.brand span{color:#9b6c2f}.nav nav a{position:relative;padding:27px 0;font-weight:800}.nav nav a:after{content:"";position:absolute;right:0;left:100%;bottom:18px;height:2px;background:var(--accent);transition:.2s}.nav nav a:hover:after{left:0}
+.search-shell{position:sticky;top:78px;z-index:19;box-shadow:0 8px 20px #2d170c08}.store-search{border:1px solid #eadfd6;background:#f8f4f1;transition:.2s}.store-search:focus-within{background:#fff;border-color:#bf8b50;box-shadow:0 0 0 4px #bf8b5018}.store-search input{font-size:16px}.header-icon{width:46px;height:46px;border:1px solid #eadfd6;border-radius:50%}
+.hero{padding:62px 0;background:radial-gradient(circle at 15% 15%,#f2dfcb 0,transparent 35%),linear-gradient(125deg,#fffdfa,#ecded2)}.hero-grid{gap:56px}.hero h1{max-width:760px;color:var(--brand);font-size:clamp(40px,5.5vw,68px);line-height:1.12}.hero p{max-width:680px;color:#675950}.hero .btn{margin-top:10px}.hero-card{border:1px solid #e5d4c5;box-shadow:var(--shadow);transform:rotate(-1deg)}
+.department-shell{padding:28px 0 8px}.department-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:16px}.department-head h2{margin:0;font-size:26px}.department-head p{margin:5px 0 0;color:var(--muted)}.department-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.department-card{min-height:132px;padding:18px;border:1px solid #eadfd6;border-radius:18px;background:var(--surface);display:flex;flex-direction:column;justify-content:space-between;transition:.22s;box-shadow:0 8px 22px #38211708}.department-card:hover{transform:translateY(-4px);border-color:#c99b70;box-shadow:var(--shadow)}.department-card i{font-style:normal;font-size:31px}.department-card b{font-size:15px}.department-card small{display:block;color:var(--muted);margin-top:3px}
+.category-rail{scroll-snap-type:x proximity}.category-chip{scroll-snap-align:start}.category-chip span{box-shadow:0 7px 20px #3821170a}.deal-strip{box-shadow:var(--shadow)}.store-benefit{background:#fff;border:1px solid #eadfd6;border-radius:16px;padding:18px}
+section{padding:64px 0}.section-head h2{color:var(--brand)}.cards .card{box-shadow:0 12px 32px #38211709;transition:.2s}.cards .card:hover{transform:translateY(-3px);border-color:#d1b69d}.product-card{box-shadow:0 9px 30px #3821170b}.product-card:hover{box-shadow:0 18px 42px #38211718}.product-action,.primary{background:linear-gradient(135deg,#2a1812,#6f4937)}.primary:hover,.product-action:hover{background:linear-gradient(135deg,#6f4937,#2a1812)}
+.mobile-nav{box-shadow:0 -10px 28px #2d170c12}.mobile-nav a{color:#62554d}.mobile-nav a:first-child{color:#2c1915;font-weight:900}
+@media(max-width:1000px){.department-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.search-shell{top:58px}.hero{padding:38px 0 30px}.hero h1{font-size:clamp(35px,9vw,50px)}.hero p{font-size:16px}.department-shell{padding-top:22px}.department-grid{display:flex;overflow:auto;margin-inline:-20px;padding:0 20px 12px;scroll-snap-type:x mandatory}.department-card{min-width:155px;scroll-snap-align:start}.section-head{align-items:flex-start}.toolbar{top:118px}}
+@media(max-width:520px){.hero h1{font-size:38px}.hero .btn{width:100%;margin-inline:0}.department-head{align-items:flex-start}.department-head p{font-size:14px}.product-card{border-radius:14px}.product-card .product-img{height:170px}.store-benefit{padding:14px}.section-head h2{font-size:26px}}
 </style>
 </head>
 <body>
@@ -120,13 +133,24 @@ footer{background:#101820;color:#fff;padding:40px 0}.footer-grid{display:grid;gr
 
 <main>
 <section class="hero"><div class="wrap hero-grid">
-<div><div class="kicker">عطرك. حضورك. عنايتك.</div><h1>روائح أصيلة وعناية يومية تصل إليك بأناقة</h1>
-<p>تسوّق العطور والبخور ومنتجات العناية المختارة من موردين موثوقين في السعودية، مع تجهيز آمن وشحن واضح حتى السودان.</p>
-<button class="btn primary" onclick="location.href='#products'">تسوّق المجموعة</button>
-<button class="btn outline" onclick="openOrder()">اطلب شراء وشحن</button></div>
+<div><div class="kicker">من السعودية إلى بابك في السودان</div><h1>كل ما تحتاجه، في منصة شراء وشحن واحدة</h1>
+<p>تسوّق منتجات موردين موثوقين في السعودية، من العطور والأجهزة إلى الكاميرات والسيارات، واطلب الشراء والتجهيز والشحن بخطوات واضحة.</p>
+<button class="btn primary" onclick="location.href='#departments'">تصفح الأقسام</button>
+<button class="btn outline" onclick="openOrder()">اطلب منتجًا محددًا</button></div>
 <div class="hero-card"><div class="route">السعودية <b>→</b> السودان</div><hr style="border:0;border-top:1px solid #eee;margin:22px 0">
 <strong>الخدمة تشمل</strong><ul style="line-height:2.1;color:#68717a"><li>اختيار المنتج من الشركاء</li><li>تنسيق الشراء والاستلام</li><li>تجهيز الشحنة</li><li>تقدير تكلفة الشحن</li><li>متابعة حالة الطلب</li></ul></div>
 </div></section>
+
+<section id="departments" class="department-shell"><div class="wrap">
+<div class="department-head"><div><h2>تسوّق حسب القسم</h2><p>وصول سريع إلى أهم منتجات وخدمات الرفاعي.</p></div><a class="btn outline" href="/products.html">عرض كل المنتجات</a></div>
+<div class="department-grid">
+<a class="department-card" href="/cars.html"><i>🚘</i><span><b>معرض السيارات</b><small>سيارات وخدمة شحن</small></span></a>
+<a class="department-card" href="/security-cameras.html"><i>📹</i><span><b>كاميرات المراقبة</b><small>UNV وأنظمة الأمن</small></span></a>
+<a class="department-card" href="/products.html"><i>❄️</i><span><b>المكيفات والأجهزة</b><small>من موردين معتمدين</small></span></a>
+<a class="department-card" href="/products.html"><i>☀️</i><span><b>الطاقة الشمسية</b><small>ألواح وبطاريات وحلول</small></span></a>
+<a class="department-card" href="#products" onclick="chooseCategory('عطور رجالية')"><i>✨</i><span><b>العطور والعناية</b><small>اختيارات أصلية</small></span></a>
+<a class="department-card" href="/purchase-shipping.html"><i>📦</i><span><b>اطلب أي منتج</b><small>نشتري ونشحن عنك</small></span></a>
+</div></div></section>
 
 <section style="padding:16px 0 25px"><div class="wrap">
 <div class="category-rail">
