@@ -23,6 +23,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.wrap{m
 .ai-chat{max-height:440px;overflow:auto;background:#f7f9fb;border-radius:14px;padding:12px}.ai-message{padding:12px 14px;border-radius:14px;margin:8px 0;white-space:pre-wrap}.ai-user{background:#e8f0f7;margin-right:12%}.ai-assistant{background:#fff;border:1px solid var(--line);margin-left:12%}.ai-compose{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:12px}.ai-compose textarea{min-height:72px;padding:12px;border:1px solid var(--line);border-radius:11px}.ai-action{background:#fff9eb;border:1px solid #ead6a7;border-radius:13px;padding:13px;margin:10px 0}.priority-high{color:var(--danger)}
 @media(max-width:760px){.wrap{padding:13px}.brand small{display:none}.stats{grid-template-columns:repeat(2,1fr)}.grid,.form-grid{grid-template-columns:1fr}.form-grid textarea{grid-column:auto}.hero{padding:19px}.panel{padding:14px}.stat b{font-size:26px}.topbar .btn{padding:9px 11px}.brand h1{font-size:16px}.ai-compose{grid-template-columns:1fr}.ai-user,.ai-assistant{margin-inline:0}}
 </style>
+<script src="/vendor/xlsx.full.min.js"></script>
 </head>
 <body>
 <section id="loginScreen" class="login-screen">
@@ -158,6 +159,27 @@ async function disableProduct(id){if(!confirm("إيقاف هذا المنتج م
 async function restoreProduct(id){try{await api("/api/admin/products/"+id,{method:"PATCH",body:JSON.stringify({active:1})});toast("تمت إعادة نشر المنتج");loadAll()}catch(err){toast(err.message)}}
 $("quoteForm").addEventListener("submit",async e=>{e.preventDefault();try{const d=await api("/api/admin/quotes",{method:"POST",body:JSON.stringify({order_id:Number($("quoteOrder").value),product_total:Number($("quoteProductTotal").value)||0,shipping_total:Number($("quoteShipping").value)||0,service_fee:Number($("quoteService").value)||0,notes:$("quoteNotes").value.trim()})});e.target.reset();toast("تم إنشاء العرض "+d.quoteNo);loadAll()}catch(err){toast(err.message)}});
 async function changePayment(el){try{await api("/api/admin/payments/"+encodeURIComponent(el.dataset.payment)+"/status",{method:"PATCH",body:JSON.stringify({status:el.value})});toast("تم تحديث عملية الدفع");loadAll()}catch(e){toast(e.message)}}
+function setupSupplierImport(){
+ const category=$('productCategory');
+ category.innerHTML=['عطور رجالية','عطور نسائية','بخور وعود','العناية بالبشرة','العناية بالشعر','العناية بالجسم','هدايا ومجموعات'].map(x=>`<option>${x}</option>`).join('');
+ const panel=document.createElement('div');panel.className='subpanel';
+ panel.innerHTML='<h4>استيراد الموردين من Excel أو CSV</h4><p style="color:var(--muted);margin-top:0">الأعمدة المقبولة: اسم المورد، الجوال، المدينة، ملاحظات. تتم معاينة البيانات قبل الحفظ وتجاهل المكرر تلقائيًا.</p><div class="filters"><input id="supplierImportFile" type="file" accept=".xlsx,.xls,.csv,text/csv"><button class="btn btn-gold" type="button" onclick="importSuppliers()">استيراد الملف</button><button class="btn btn-outline" type="button" onclick="downloadSupplierTemplate()">تنزيل نموذج CSV</button></div><div id="supplierImportPreview" style="margin-top:12px"></div>';
+ const supplierForm=$('supplierForm').closest('.subpanel');supplierForm.parentNode.insertBefore(panel,supplierForm.nextSibling);
+}
+async function importSuppliers(){
+ const file=$('supplierImportFile').files[0];if(!file)return toast('اختر ملف Excel أو CSV أولًا');
+ try{const data=await file.arrayBuffer(),workbook=XLSX.read(data,{type:'array'}),sheet=workbook.Sheets[workbook.SheetNames[0]],rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+  if(!rows.length)throw new Error('الملف فارغ');
+  $('supplierImportPreview').innerHTML=`<b>تمت قراءة ${rows.length.toLocaleString('ar-SA')} صف.</b> جارٍ الاستيراد...`;
+  const result=await api('/api/admin/suppliers/import',{method:'POST',body:JSON.stringify({rows})});
+  $('supplierImportPreview').innerHTML=`<span style="color:var(--ok)">تمت إضافة ${result.imported.toLocaleString('ar-SA')} مورد، وتجاوز ${result.skipped.toLocaleString('ar-SA')} صف.</span>`;await loadAll();
+ }catch(error){toast(error.message);$('supplierImportPreview').textContent='تعذر استيراد الملف.'}
+}
+function downloadSupplierTemplate(){
+ const csv='\ufeffاسم المورد,الجوال,المدينة,ملاحظات\nشركة المثال,0500000000,الرياض,مورد عطور وعناية';
+ const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));link.download='نموذج-استيراد-الموردين.csv';link.click();URL.revokeObjectURL(link.href);
+}
+setupSupplierImport();
 boot();
 </script>
 </body>
