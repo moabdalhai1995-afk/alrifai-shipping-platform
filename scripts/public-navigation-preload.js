@@ -96,6 +96,7 @@ body .top .links a.public-nav-active{background:#ffffff18!important;color:#f4d99
     {href:'/products.html',label:'المنتجات',icon:'▦'},
     {href:'/cars.html',label:'السيارات',icon:'🚗'},
     {href:'/tracking.html',label:'التتبع',icon:'⌖'},
+    {href:'/cart.html',label:'السلة',icon:'🛒'},
     {href:'/account.html',label:'حسابي',icon:'♙'}
   ];
   var quickLinks=[
