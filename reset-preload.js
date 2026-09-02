@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 require("./scripts/unv-catalog-preload.js");
+require("./scripts/global-brands-catalog-preload.js");
 const realExpress = require("express");
 
 const TOKEN_TTL_MS = 15 * 60 * 1000;
