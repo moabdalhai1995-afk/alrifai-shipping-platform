@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="طلب تذاكر الطيران والتأشيرات وحجوزات الفنادق عبر منصة الرفاعي">
+  <title>خدمات السفر | الرفاعي للشحن الدولي</title>
+  <link rel="stylesheet" href="/public-sections.css">
+  <style>
+    .service-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}.service-option{position:relative}.service-option input{position:absolute;opacity:0;pointer-events:none}.service-option label{height:100%;display:block;background:#fff;border:2px solid var(--line);border-radius:16px;padding:18px;cursor:pointer}.service-option input:checked+label{border-color:var(--gold);box-shadow:0 0 0 3px #b8892f22}.service-icon{font-size:34px;display:block;margin-bottom:8px}.service-option strong{display:block;font-size:18px}.service-option small{color:var(--muted)}.conditional{display:none}.conditional.show{display:block}.summary{background:#eef7fa;border:1px solid #cce3eb;border-radius:14px;padding:16px}.success{text-align:center;padding:36px}.success .check{font-size:54px}.helper{font-size:13px;color:var(--muted);margin-top:5px}@media(max-width:700px){.service-picker{grid-template-columns:1fr}.service-option label{display:grid;grid-template-columns:44px 1fr;gap:0 10px;align-items:center}.service-icon{grid-row:1/3;margin:0}.service-option small{grid-column:2}}
+  </style>
+</head>
+<body>
+<header class="top"><div class="wrap nav"><a class="brand" href="/"><span>الرفاعي للشحن الدولي</span><small>خدمات السفر والحجوزات</small></a><nav class="links"><a href="/">الرئيسية</a><a href="/services.html">الخدمات</a><a href="/all-requests.html">طلباتي</a><a href="/account.html">حسابي</a></nav></div></header>
+<section class="hero"><div class="wrap"><h1>✈️ خدمات السفر</h1><p>أرسل طلب تذكرة طيران أو تأشيرة أو حجز فندق، وسنراجع الخيارات والتكلفة معك قبل التأكيد والدفع.</p></div></section>
+<main class="main"><div class="wrap">
+  <section id="requestPanel" class="panel">
+    <h2>اختر الخدمة</h2>
+    <div class="service-picker" role="radiogroup" aria-label="نوع خدمة السفر">
+      <div class="service-option"><input id="flight" name="service" type="radio" value="تذكرة طيران" checked><label for="flight"><span class="service-icon">✈️</span><strong>تذكرة طيران</strong><small>ذهاب أو ذهاب وعودة حسب التوفر</small></label></div>
+      <div class="service-option"><input id="visa" name="service" type="radio" value="تأشيرة"><label for="visa"><span class="service-icon">🛂</span><strong>طلب تأشيرة</strong><small>مراجعة المتطلبات والرسوم قبل البدء</small></label></div>
+      <div class="service-option"><input id="hotel" name="service" type="radio" value="حجز فندق"><label for="hotel"><span class="service-icon">🏨</span><strong>حجز فندق</strong><small>خيارات تناسب المدينة والميزانية</small></label></div>
+    </div>
+    <form id="travelForm" class="form-grid">
+      <div><label for="name">اسم مقدم الطلب *</label><input id="name" class="field" autocomplete="name" required></div>
+      <div><label for="phone">رقم الجوال *</label><input id="phone" class="field" inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx" required></div>
+      <div><label for="nationality">الجنسية *</label><input id="nationality" class="field" required></div>
+      <div><label for="travelers">عدد المسافرين *</label><input id="travelers" class="field" type="number" min="1" max="20" value="1" required></div>
+      <div id="fromWrap"><label for="from">مدينة المغادرة *</label><input id="from" class="field" placeholder="مثال: الرياض"></div>
+      <div><label for="destination">الوجهة أو مدينة الفندق *</label><input id="destination" class="field" placeholder="المدينة والدولة" required></div>
+      <div id="departureWrap"><label for="departure">تاريخ المغادرة</label><input id="departure" class="field" type="date"></div>
+      <div id="returnWrap"><label for="returnDate">تاريخ العودة</label><input id="returnDate" class="field" type="date"><div class="helper">اتركه فارغًا لطلب ذهاب فقط</div></div>
+      <div id="visaTypeWrap" class="conditional"><label for="visaType">نوع التأشيرة</label><select id="visaType" class="field"><option>زيارة</option><option>سياحة</option><option>عمل</option><option>عبور</option><option>أخرى</option></select></div>
+      <div id="hotelDatesWrap" class="conditional"><label for="checkin">دخول الفندق</label><input id="checkin" class="field" type="date"><label for="checkout">مغادرة الفندق</label><input id="checkout" class="field" type="date"></div>
+      <div class="wide"><label for="budget">الميزانية التقريبية</label><input id="budget" class="field" inputmode="decimal" placeholder="بالريال السعودي"></div>
+      <div class="wide"><label for="details">ملاحظات وطلبات خاصة</label><textarea id="details" class="field" placeholder="شركة طيران مفضلة، درجة السفر، عدد الغرف، فئة الفندق، أو أي تفاصيل أخرى"></textarea></div>
+      <div class="wide summary">لن يتم الخصم أو إصدار الحجز تلقائيًا. سيتواصل معك الفريق بعرض السعر والمتطلبات، ولا تُرسل صور الجواز أو البيانات الحساسة في خانة الملاحظات.</div>
+      <div class="wide actions"><button id="submitButton" class="btn primary" type="submit">إرسال طلب الخدمة</button><a class="btn secondary" href="/all-requests.html">عرض طلباتي</a></div>
+    </form>
+  </section>
+  <section id="successPanel" class="panel success" hidden><div class="check">✅</div><h2>تم استلام طلبك</h2><p>رقم الطلب: <b id="requestNo"></b></p><p class="muted">سنراجع التوفر والمتطلبات ثم نتواصل معك قبل اعتماد السعر أو الحجز.</p><div class="actions" style="justify-content:center"><a id="trackLink" class="btn primary" href="/tracking.html">متابعة الطلب</a><a class="btn secondary" href="/travel-services.html">طلب خدمة أخرى</a></div></section>
+</div></main>
+<footer><div class="wrap footer-row"><span>الأسعار والتوفر وشروط الإلغاء تُؤكد قبل الدفع</span><a href="https://wa.me/966540407193" target="_blank" rel="noopener">مساعدة عبر واتساب</a></div></footer>
+<div id="toast" class="toast" role="status"></div>
+<script>
+const $=id=>document.getElementById(id);const serviceInputs=[...document.querySelectorAll('input[name="service"]')];
+function selectedService(){return serviceInputs.find(input=>input.checked).value}
+function toggleFields(){const service=selectedService();$('visaTypeWrap').classList.toggle('show',service==='تأشيرة');$('hotelDatesWrap').classList.toggle('show',service==='حجز فندق');$('fromWrap').style.display=service==='تأشيرة'?'none':'block';$('departureWrap').style.display=service==='تأشيرة'?'none':'block';$('returnWrap').style.display=service==='تذكرة طيران'?'block':'none'}
+function toast(message){$('toast').textContent=message;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3000)}
+function requestDetails(){const service=selectedService(),parts=[`نوع الخدمة: ${service}`,`الجنسية: ${$('nationality').value.trim()}`,`عدد المسافرين: ${$('travelers').value}`];if($('from').value.trim()&&service!=='تأشيرة')parts.push(`المغادرة من: ${$('from').value.trim()}`);parts.push(`الوجهة: ${$('destination').value.trim()}`);if(service==='تذكرة طيران'){parts.push(`تاريخ المغادرة: ${$('departure').value||'مرن'}`);parts.push(`العودة: ${$('returnDate').value||'ذهاب فقط'}`)}if(service==='تأشيرة')parts.push(`نوع التأشيرة: ${$('visaType').value}`);if(service==='حجز فندق'){parts.push(`دخول الفندق: ${$('checkin').value||'غير محدد'}`);parts.push(`مغادرة الفندق: ${$('checkout').value||'غير محدد'}`)}if($('budget').value.trim())parts.push(`الميزانية: ${$('budget').value.trim()} ريال`);if($('details').value.trim())parts.push(`ملاحظات: ${$('details').value.trim()}`);return parts.join('\n')}
+serviceInputs.forEach(input=>input.addEventListener('change',toggleFields));
+$('travelForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('submitButton');button.disabled=true;button.textContent='جارٍ إرسال الطلب...';try{const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('name').value.trim(),phone:$('phone').value.trim(),product:`خدمات السفر — ${selectedService()}`,city:$('destination').value.trim(),qty:Math.max(1,Number($('travelers').value)||1),details:requestDetails()})});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'تعذر إرسال الطلب');$('requestNo').textContent=data.orderNo;$('trackLink').href='/tracking.html?order='+encodeURIComponent(data.orderNo);$('requestPanel').hidden=true;$('successPanel').hidden=false;window.scrollTo({top:0,behavior:'smooth'})}catch(error){toast(error.message)}finally{button.disabled=false;button.textContent='إرسال طلب الخدمة'}});
+toggleFields();
+</script>
+</body>
+</html>
