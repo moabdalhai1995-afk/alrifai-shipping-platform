@@ -9,6 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const XLSX = require("xlsx");
 const { OAuth2Client } = require("google-auth-library");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -291,7 +292,11 @@ app.use(rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 }));
-app.use(express.json({ limit: "200kb", verify: (req, res, buffer) => { req.rawBody = buffer; } }));
+app.use(express.json({ limit: "2mb", verify: (req, res, buffer) => { req.rawBody = buffer; } }));
+
+app.get("/vendor/xlsx.full.min.js", (req, res) => {
+  res.type("application/javascript").sendFile(require.resolve("xlsx/dist/xlsx.full.min.js"));
+});
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/") || ["/admin", "/admin/", "/accounting", "/accounting/"].includes(req.path)) {
@@ -1480,6 +1485,30 @@ app.get("/api/admin/suppliers", (req, res) => {
     ok: true,
     suppliers: db.prepare("SELECT * FROM suppliers ORDER BY id DESC").all()
   });
+});
+
+app.post("/api/admin/suppliers/import", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const rows = Array.isArray(req.body.rows) ? req.body.rows.slice(0, 1000) : [];
+  if (!rows.length) return res.status(400).json({ error: "الملف لا يحتوي على بيانات قابلة للاستيراد" });
+  const clean = value => String(value ?? "").trim();
+  const findValue = (row, names) => {
+    const key = Object.keys(row || {}).find(item => names.includes(clean(item).toLowerCase()));
+    return key ? clean(row[key]) : "";
+  };
+  const insert = db.prepare("INSERT INTO suppliers(name,phone,city,details) VALUES(?,?,?,?)");
+  const existing = db.prepare("SELECT id FROM suppliers WHERE lower(name)=lower(?) AND COALESCE(phone,'')=? LIMIT 1");
+  let imported = 0, skipped = 0;
+  db.transaction(() => rows.forEach(row => {
+    const name = findValue(row, ["name","supplier","supplier name","company","اسم","اسم المورد","المورد","الشركة"]);
+    const phone = findValue(row, ["phone","mobile","telephone","الجوال","الهاتف","رقم الجوال"]);
+    const city = findValue(row, ["city","location","المدينة","الموقع"]);
+    const details = findValue(row, ["details","notes","description","التفاصيل","ملاحظات"]);
+    if (!name || existing.get(name, phone)) { skipped += 1; return; }
+    insert.run(name.slice(0, 180), phone.slice(0, 50), city.slice(0, 100), details.slice(0, 2000));
+    imported += 1;
+  }))();
+  res.status(201).json({ ok: true, imported, skipped, total: rows.length });
 });
 
 app.patch("/api/admin/suppliers/:id", (req, res) => {
