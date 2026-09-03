@@ -216,7 +216,12 @@ require.cache[sqlitePath].exports = NotificationDatabase;
 function injectNotificationEntry(html, reqPath = "") {
   if (typeof html !== "string" || !/<html/i.test(html)) return html;
   const customerPage = reqPath === "/account.html" || /حساب العميل/.test(html);
-  const adminPage = reqPath.startsWith("/admin") || /لوحة المدير|تشغيل الشحن|الإدارة/.test(html);
+  const pathname = String(reqPath).split("?")[0];
+  const adminPage = pathname === "/admin" || pathname === "/admin.html" || pathname.startsWith("/admin/") || new Set([
+    "/all-requests.html", "/shipping-operations.html", "/warehouse.html",
+    "/executive-dashboard.html", "/security-center.html", "/accounting", "/accounting.html",
+    "/admin-notifications.html", "/vehicle-operations.html", "/sudan-operations.html"
+  ]).has(pathname);
   if (!customerPage && !adminPage) return html;
   if (html.includes("notification-center-entry-v1")) return html;
   const href = adminPage ? "/admin-notifications.html" : "/notifications.html";
