@@ -21,7 +21,7 @@ const shell = String.raw`<style id="alrifai-admin-navigation-v1">
 <script id="alrifai-admin-navigation-state">(()=>{const p=location.pathname.split('/').pop()||'admin.html';document.querySelectorAll('.rifai-admin-shell a,.rifai-admin-mobile a').forEach(a=>{const r=(a.dataset.route||'').split('#')[0];if(r===p)a.setAttribute('aria-current','page')})})();</script>`;
 
 function isAdminHtml(pathname, html) {
-  return adminPages.has(pathname) || /لوحة المدير|إدارة الرفاعي|مركز التحكم|تشغيل الشحن|إدارة المخزون|الأمان والصلاحيات/.test(html);
+  return pathname === '/admin' || pathname.startsWith('/admin/') || adminPages.has(pathname);
 }
 
 function inject(html, pathname='') {
