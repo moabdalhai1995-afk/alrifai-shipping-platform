@@ -17,12 +17,21 @@ function oldWidgetCleanupScript() {
   return `<script id="top-quick-actions-cleanup-v2">(function(){function clean(){var old=document.getElementById('notification-center-entry-v1');if(old)old.remove()}clean();if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',clean,{once:true})}setTimeout(clean,250)})();<\/script>`;
 }
 
+function isAdminPath(reqPath = "") {
+  const pathname = String(reqPath).split("?")[0];
+  return pathname === "/admin" || pathname === "/admin.html" || pathname.startsWith("/admin/") || new Set([
+    "/all-requests.html", "/shipping-operations.html", "/warehouse.html",
+    "/executive-dashboard.html", "/security-center.html", "/accounting", "/accounting.html",
+    "/admin-notifications.html", "/vehicle-operations.html", "/sudan-operations.html"
+  ]).has(pathname);
+}
+
 function injectTopQuickActions(html, reqPath = "") {
   if (typeof html !== "string" || !/<html/i.test(html)) return html;
   if (!/الرفاعي|AlRifai/i.test(html)) return html;
   if (html.includes('id="top-quick-actions-v1"') || html.includes('id="top-header-notify-v2"')) return html;
 
-  const adminPage = reqPath.startsWith("/admin") || /لوحة المدير|تشغيل الشحن|الإدارة/.test(html);
+  const adminPage = isAdminPath(reqPath);
   const notificationsHref = adminPage ? "/admin-notifications.html" : "/notifications.html";
   const notificationsLabel = adminPage ? "إشعارات المدير" : "الإشعارات";
   const cleanHtml = removeOldNotificationWidget(html);
