@@ -573,8 +573,8 @@ async function loadAccount(){
  try{
   const me=await api("/api/me");
   if(!me.authenticated){document.getElementById("loginBtn").textContent="دخول";document.getElementById("accountGuest").style.display="block";document.getElementById("accountContent").style.display="none";return}
-  document.getElementById("loginBtn").textContent=me.user.role==="admin"?"لوحة الإدارة":"حسابي";
-  if(me.user.role==="admin"){document.getElementById("adminArea").style.display="block";document.getElementById("accountArea").style.display="none";await loadAdmin();}
+  document.getElementById("loginBtn").textContent="حسابي";
+  if(me.user.role==="admin"){document.getElementById("adminArea").style.display="none";document.getElementById("accountArea").style.display="none";}
   else {document.getElementById("accountArea").style.display="block";document.getElementById("accountGuest").style.display="none";document.getElementById("accountContent").style.display="block";document.getElementById("adminArea").style.display="none";await loadProfile();await loadMyOrders();await loadWishlist();await loadSupportTickets();}
  }catch(e){}
 }
