@@ -31,7 +31,13 @@ function injectProfessionalHtml(html, reqPath='') {
     const trust = '<div class="pro-trustbar"><span>✓ <b>شراء موثوق</b> من المورد</span><span>✓ تتبع للشحنات</span><span>✓ تغليف وباركود</span><span>✓ توصيل وتركيب في السودان</span></div>';
     out = out.replace(/<body[^>]*>/i,m=>m+trust);
   }
-  if (/لوحة المدير|تشغيل الشحن|الإدارة/.test(out) || reqPath.startsWith('/admin')) {
+  const pathname=String(reqPath).split('?')[0];
+  const adminPath=pathname==='/admin'||pathname==='/admin.html'||pathname.startsWith('/admin/')||new Set([
+    '/all-requests.html','/shipping-operations.html','/warehouse.html','/executive-dashboard.html',
+    '/security-center.html','/accounting','/accounting.html','/admin-notifications.html',
+    '/vehicle-operations.html','/sudan-operations.html'
+  ]).has(pathname);
+  if (adminPath) {
     out = out.replace(/<\/body>/i,'<div class="pro-admin-launch"><a href="/executive-dashboard.html">مركز التحكم الاحترافي</a><a href="/security-center.html">الأمان والصلاحيات</a></div></body>');
   }
   if (reqPath === '/account.html' || /حساب العميل/.test(out)) {
