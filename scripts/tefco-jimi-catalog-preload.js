@@ -22,28 +22,13 @@ const PRODUCTS = [
     description: "متعقب أصول صغير Jimi PB705 يعتمد Bluetooth Low Energy ويعمل بدون شريحة SIM، ومصمم لتتبع السيارات والأمتعة والمقتنيات عبر منصة Tracksolid Pro. بطارية طويلة العمر تصل إلى نحو 36 شهرًا وفق مواصفات المورد، مع حماية IP68.",
     image: "/assets/products/tefco/jimi-pb705.svg",
     purchasePrice: 60
-  },
-  {
-    name: "JIMI Platform Subscription - 1 Year",
-    category: "اشتراكات منصة التتبع",
-    description: "اشتراك لمدة سنة في منصة JIMI/Tracksolid Pro لإدارة ومتابعة أجهزة التتبع المدعومة، ويُربط بالجهاز والحساب بحسب شروط التفعيل لدى المورد.",
-    image: "/assets/products/tefco/tefco-platform.svg",
-    purchasePrice: 30
-  },
-  {
-    name: "JIMI Platform Subscription - 10 Years",
-    category: "اشتراكات منصة التتبع",
-    description: "اشتراك طويل المدى لمدة 10 سنوات في منصة JIMI لأجهزة التتبع المتوافقة، مع إدارة ومتابعة الجهاز عبر المنصة وفق سياسة المورد والتفعيل.",
-    image: "/assets/products/tefco/tefco-platform.svg",
-    purchasePrice: 120
-  },
-  {
-    name: "JIMI BLE Tags Platform Subscription - 3 Years",
-    category: "اشتراكات منصة التتبع",
-    description: "اشتراك لمدة 3 سنوات مخصص لأجهزة BLE TAGS المتوافقة مع منظومة JIMI، للاستخدام مع خدمات التتبع وإدارة الأصول المدعومة.",
-    image: "/assets/products/tefco/tefco-platform.svg",
-    purchasePrice: 40
   }
+];
+
+const REMOVED_SUBSCRIPTIONS = [
+  "JIMI Platform Subscription - 1 Year",
+  "JIMI Platform Subscription - 10 Years",
+  "JIMI BLE Tags Platform Subscription - 3 Years"
 ];
 
 function installTefcoCatalog(db) {
@@ -69,8 +54,10 @@ function installTefcoCatalog(db) {
     VALUES(?,?,?,?,?,0,NULL,?,'SAR',0,1)`);
   const update = db.prepare(`UPDATE products_catalog SET supplier_id=?,category=?,description=?,image_url=?,
     purchase_price=?,price=0,old_price=NULL,currency='SAR',active=1 WHERE id=?`);
+  const remove = db.prepare("DELETE FROM products_catalog WHERE trim(name)=?");
 
   db.transaction(() => {
+    for (const name of REMOVED_SUBSCRIPTIONS) remove.run(name);
     for (const product of PRODUCTS) {
       const existing = find.get(product.name);
       if (existing) update.run(supplier.id, product.category, product.description, product.image, product.purchasePrice, existing.id);
@@ -102,4 +89,4 @@ for (const key of Reflect.ownKeys(CurrentDatabase)) {
 Object.setPrototypeOf(TefcoCatalogDatabase, CurrentDatabase);
 require.cache[databasePath].exports = TefcoCatalogDatabase;
 
-module.exports = { PRODUCTS, installTefcoCatalog };
+module.exports = { PRODUCTS, REMOVED_SUBSCRIPTIONS, installTefcoCatalog };
