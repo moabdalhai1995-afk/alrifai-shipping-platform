@@ -6,67 +6,66 @@ const allServicesMarkup = `
 <section id="allAvailableServices" class="all-services-home" aria-label="جميع خدمات الرفاعي">
   <div class="wrap">
     <div class="all-services-head">
-      <div>
-        <span class="all-services-kicker">كل خدمات الرفاعي في مكان واحد</span>
-        <h2>خدماتنا المتوفرة</h2>
-        <p>اختر الخدمة مباشرة من الصفحة الرئيسية بدون البحث بين الصفحات.</p>
-      </div>
-      <a class="all-services-more" href="/services.html">عرض صفحة الخدمات</a>
+      <div><h2>خدماتنا المتوفرة</h2><p>وصول مباشر لكل خدمات الرفاعي من الصفحة الرئيسية.</p></div>
+      <a class="all-services-more" href="/services.html">عرض الكل ←</a>
     </div>
     <div class="all-services-grid">
-      <a class="all-service-card" href="/products.html"><span>🛍️</span><b>المتجر والمنتجات</b><small>تسوق من منتجات الموردين والشركاء</small></a>
-      <a class="all-service-card" href="/purchase-shipping.html"><span>🛒</span><b>الشراء والشحن</b><small>نشتري ونستلم ونجهز ثم نشحن للسودان</small></a>
-      <a class="all-service-card" href="/shipping-only.html"><span>📦</span><b>شحن الطرود والأمتعة</b><small>براميل وشنط وكراتين وشحنات عامة</small></a>
-      <a class="all-service-card" href="/air-shipping.html"><span>✈️</span><b>الشحن الجوي</b><small>للطرود والشحنات الخفيفة والمستعجلة</small></a>
-      <a class="all-service-card" href="/container-shipping.html"><span>🚢</span><b>شحن الحاويات</b><small>حاويات 20 و40 قدم وخدمات التجار</small></a>
-      <a class="all-service-card" href="/vehicle-shipping.html"><span>🚗</span><b>شحن السيارات</b><small>شحن المركبات والتصدير وخيارات التربتك</small></a>
-      <a class="all-service-card" href="/cars.html"><span>🚘</span><b>معرض السيارات</b><small>عرض السيارات وربطها بخدمة الشحن</small></a>
-      <a class="all-service-card" href="/security-cameras.html"><span>📹</span><b>كاميرات المراقبة</b><small>توريد وتركيب وربط الأنظمة بالجوال</small></a>
-      <a class="all-service-card" href="/tracking.html"><span>📍</span><b>تتبع الشحنات</b><small>متابعة حالة الطلب والشحنة حتى التسليم</small></a>
-      <a class="all-service-card" href="/calculator.html"><span>🧮</span><b>حاسبة الشحن</b><small>تقدير أولي لتكلفة الشحن قبل الطلب</small></a>
-      <a class="all-service-card" href="/partners.html"><span>🤝</span><b>الشراكات والموردون</b><small>انضم للمنصة كمورد أو شريك خدمات</small></a>
-      <a class="all-service-card" href="/social-media-marketing.html"><span>📣</span><b>برامج السوشل ميديا</b><small>خدمات المحتوى والتسويق الرقمي</small></a>
+      <a class="all-service-card c1" href="/products.html"><span>🛍️</span><b>المتجر والمنتجات</b></a>
+      <a class="all-service-card c2" href="/purchase-shipping.html"><span>🛒</span><b>الشراء والشحن</b></a>
+      <a class="all-service-card c3" href="/shipping-only.html"><span>📦</span><b>شحن الطرود والأمتعة</b></a>
+      <a class="all-service-card c4" href="/air-shipping.html"><span>✈️</span><b>الشحن الجوي</b></a>
+      <a class="all-service-card c5" href="/container-shipping.html"><span>🚢</span><b>شحن الحاويات</b></a>
+      <a class="all-service-card c6" href="/vehicle-shipping.html"><span>🚗</span><b>شحن السيارات</b></a>
+      <a class="all-service-card c7" href="/cars.html"><span>🚘</span><b>معرض السيارات</b></a>
+      <a class="all-service-card c8" href="/security-cameras.html"><span>📹</span><b>كاميرات المراقبة</b></a>
+      <a class="all-service-card c9" href="/products.html?category=auto-parts"><span>⚙️</span><b>قطع غيار السيارات</b></a>
+      <a class="all-service-card c10" href="/products.html?category=solar"><span>☀️</span><b>الطاقة الشمسية</b></a>
+      <a class="all-service-card c11" href="/services.html"><span>🛠️</span><b>التركيب والصيانة</b></a>
+      <a class="all-service-card c12" href="/calculator.html"><span>🧮</span><b>حاسبة الشحن</b></a>
+      <a class="all-service-card c13" href="/services.html"><span>🏨</span><b>التذاكر والفنادق والتأشيرات</b></a>
+      <a class="all-service-card c14" href="/partners.html"><span>🤝</span><b>الشراكات والموردين</b></a>
+      <a class="all-service-card c15" href="/shipping-only.html"><span>🎁</span><b>التغليف المجاني</b></a>
+      <a class="all-service-card c16" href="/tracking.html"><span>📍</span><b>تتبع الشحنات</b></a>
+      <a class="all-service-card c17" href="/cart.html"><span>💳</span><b>طرق الدفع والأقساط</b></a>
+      <a class="all-service-card c18" href="/account.html"><span>🎧</span><b>خدمة العملاء</b></a>
     </div>
     <div class="all-services-benefits">
-      <span>🎁 تغليف مجاني للشحنات المؤهلة</span>
-      <span>🔔 إشعارات وتحديثات حالة الطلب</span>
-      <span>🏠 توصيل حتى الوجهة حسب الخدمة</span>
-      <span>🧰 تنسيق التركيب والخدمة بعد الوصول عند توفرها</span>
+      <span class="benefit-gold">📦 <b>تغليف مجاني</b><small>للشحنات المؤهلة</small></span>
+      <span class="benefit-blue">🛡️ <b>ضمان المنتج</b><small>حسب المورد والوكيل</small></span>
+      <span class="benefit-green">🚚 <b>توصيل وتركيب</b><small>حسب المدينة والخدمة</small></span>
     </div>
   </div>
 </section>`;
 
 const allServicesStyles = `<style id="all-services-home-style">
-.all-services-home{padding:56px 0;background:linear-gradient(180deg,#fff,#f8f4ec)}
-.all-services-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:22px}
-.all-services-kicker{display:inline-block;color:var(--gold2,#8d671f);font-weight:900;font-size:13px;margin-bottom:6px}
-.all-services-head h2{margin:0 0 7px;font-size:clamp(27px,4vw,36px)}
-.all-services-head p{margin:0;color:var(--muted,#68717a)}
-.all-services-more{border:1px solid var(--line,#e7e1d7);background:#fff;border-radius:12px;padding:11px 15px;font-weight:800;white-space:nowrap}
-.all-services-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.all-service-card{display:flex;flex-direction:column;min-height:158px;background:#fff;border:1px solid var(--line,#e7e1d7);border-radius:18px;padding:18px;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
-.all-service-card:hover,.all-service-card:focus-visible{transform:translateY(-3px);border-color:#d8b66d;box-shadow:0 10px 28px rgba(20,30,40,.08);outline:none}
-.all-service-card>span{font-size:31px;margin-bottom:12px}.all-service-card>b{font-size:16px;margin-bottom:6px}.all-service-card>small{color:var(--muted,#68717a);line-height:1.65}
-.all-services-benefits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:16px}
-.all-services-benefits span{background:#fff;border:1px solid var(--line,#e7e1d7);border-radius:12px;padding:11px;text-align:center;font-size:12px;font-weight:800}
-@media(max-width:900px){.all-services-grid{grid-template-columns:repeat(3,1fr)}.all-services-benefits{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:650px){.all-services-home{padding:38px 0}.all-services-head{align-items:flex-start;flex-direction:column}.all-services-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.all-service-card{min-height:145px;padding:15px}.all-services-benefits{grid-template-columns:1fr 1fr}}
-@media(max-width:390px){.all-services-grid{grid-template-columns:1fr}.all-services-benefits{grid-template-columns:1fr}}
+.all-services-home{padding:34px 0 42px;background:#fff}.all-services-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}.all-services-head h2{margin:0 0 4px;color:#0b2b4b;font-size:clamp(25px,4vw,34px);font-weight:900}.all-services-head p{margin:0;color:#6b7680}.all-services-more{border:1px solid #d9e2ea;background:#fff;border-radius:999px;padding:10px 15px;color:#0b2b4b;font-weight:900;white-space:nowrap}
+.all-services-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.all-service-card{min-height:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;border:1px solid rgba(20,44,68,.06);border-radius:16px;padding:12px 8px;box-shadow:0 5px 16px rgba(20,44,68,.05);transition:transform .14s ease,box-shadow .14s ease}.all-service-card>span{font-size:34px;line-height:1}.all-service-card>b{font-size:13px;line-height:1.35;color:#102d49}.all-service-card:hover,.all-service-card:focus-visible{transform:translateY(-2px);box-shadow:0 9px 22px rgba(20,44,68,.10);outline:none}.c1{background:#fff2eb}.c2{background:#eef7ff}.c3{background:#f4efff}.c4{background:#edf8ff}.c5{background:#eff5fb}.c6{background:#eefaf2}.c7{background:#fff0f2}.c8{background:#fff8ea}.c9{background:#fff0f7}.c10{background:#effaf4}.c11{background:#f7f2ed}.c12{background:#eefafb}.c13{background:#fff0f7}.c14{background:#f5efff}.c15{background:#eef7ff}.c16{background:#fff1ed}.c17{background:#eef7ff}.c18{background:#f4f5f7}
+.all-services-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.all-services-benefits span{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;border-radius:14px;padding:14px 16px;font-size:20px}.all-services-benefits b{font-size:15px}.all-services-benefits small{grid-column:2;color:#5f6a73}.benefit-gold{background:#fff5df}.benefit-blue{background:#eef6ff}.benefit-green{background:#edfbf1}
+#products .product,.products .product{border-radius:18px;overflow:hidden;box-shadow:0 7px 22px rgba(16,45,73,.08)}#products .product-img,.products .product-img{height:220px;background:#fff}#products .product-img img,.products .product-img img{width:100%;height:100%;object-fit:cover;display:block}#products .product-body,.products .product-body{padding:15px}#products .product button,.products .product button{border-radius:12px;background:linear-gradient(135deg,#b98020,#d8a13d)}
+@media(max-width:980px){.all-services-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:680px){.all-services-home{padding:25px 0 34px}.all-services-head{align-items:center}.all-services-head p{display:none}.all-services-more{padding:8px 12px;font-size:12px}.all-services-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.all-service-card{min-height:104px;border-radius:14px;padding:10px 5px}.all-service-card>span{font-size:30px}.all-service-card>b{font-size:11px}.all-services-benefits{grid-template-columns:1fr;gap:8px}.all-services-benefits span{padding:12px 14px}#products .product-img,.products .product-img{height:185px}.products{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}}
 </style>`;
 
+const speedScript = `<script id="home-speed-image-script">(function(){function tune(){document.querySelectorAll('img').forEach(function(img,i){if(!img.hasAttribute('decoding'))img.setAttribute('decoding','async');if(i>1&&!img.hasAttribute('loading'))img.setAttribute('loading','lazy');if(i<2)img.setAttribute('fetchpriority','high')});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tune,{once:true});else tune();setTimeout(tune,700);})();</script>`;
+
 function injectAllServices(html) {
-  if (typeof html !== 'string' || !html.includes('</body>') || html.includes('id="allAvailableServices"')) return html;
+  if (typeof html !== 'string' || !html.includes('</body>')) return html;
   let out = html;
   if (!out.includes('id="all-services-home-style"')) out = out.replace('</head>', allServicesStyles + '\n</head>');
-  const servicesHeading = '<section><div class="wrap"><div class="section-head"><div><h2>خدماتنا</h2>';
-  const start = out.indexOf(servicesHeading);
-  if (start >= 0) {
-    const end = out.indexOf('</section>', start);
-    if (end >= 0) return out.slice(0, end + 10) + allServicesMarkup + out.slice(end + 10);
+  if (!out.includes('id="allAvailableServices"')) {
+    const servicesHeading = '<section><div class="wrap"><div class="section-head"><div><h2>خدماتنا</h2>';
+    const start = out.indexOf(servicesHeading);
+    if (start >= 0) {
+      const end = out.indexOf('</section>', start);
+      if (end >= 0) out = out.slice(0, end + 10) + allServicesMarkup + out.slice(end + 10);
+    } else {
+      const productsSection = out.indexOf('<section id="products">');
+      if (productsSection >= 0) out = out.slice(0, productsSection) + allServicesMarkup + out.slice(productsSection);
+      else out = out.replace('</main>', allServicesMarkup + '\n</main>');
+    }
   }
-  const productsSection = out.indexOf('<section id="products">');
-  if (productsSection >= 0) return out.slice(0, productsSection) + allServicesMarkup + out.slice(productsSection);
-  return out.replace('</main>', allServicesMarkup + '\n</main>');
+  if (!out.includes('id="home-speed-image-script"')) out = out.replace('</body>', speedScript + '\n</body>');
+  return out;
 }
 
 express.static = function allServicesStatic(root, options) {
