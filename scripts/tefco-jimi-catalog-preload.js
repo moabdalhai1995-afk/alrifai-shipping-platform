@@ -6,23 +6,30 @@ const PRODUCTS = [
     name: "Jimi VL110C 4G LTE GPS Tracker",
     category: "أجهزة التتبع GPS",
     description: "جهاز تتبع مركبات Jimi VL110C يعمل عبر 4G LTE مع رجوع تلقائي إلى 2G، ويدعم GPS/BDS، جهد تشغيل 9–90V، حماية IP65، وتنبيهات الحركة والسرعة والسياج الجغرافي. مناسب للسيارات والدراجات والمركبات التجارية الخفيفة.",
-    image: "/assets/products/tefco/jimi-vl110c.svg",
+    image: "https://website-cdn.navixy.com/images/devices/Jimi_VL_110_C_1ca3d06ea5.webp",
     purchasePrice: 60
   },
   {
     name: "Jimi VL103D 4G GPS Tracker",
     category: "أجهزة التتبع GPS",
     description: "جهاز تتبع Jimi VL103D للمركبات بتقنية 4G LTE مع دعم GSM احتياطي، GNSS، واجهة RS485، جهد تشغيل 9–90V ومقاومة ماء وغبار IP66. مناسب لإدارة الأساطيل وتتبع السيارات والمركبات الخفيفة.",
-    image: "/assets/products/tefco/jimi-vl103d.svg",
+    image: "https://i.ebayimg.com/images/g/FoIAAOSwdhxkppVb/s-l1200.jpg",
     purchasePrice: 80
   },
   {
     name: "Jimi PB705(M) TAG Asset Tracker Dual Mode",
     category: "أجهزة تتبع الأصول",
     description: "متعقب أصول صغير Jimi PB705 يعتمد Bluetooth Low Energy ويعمل بدون شريحة SIM، ومصمم لتتبع السيارات والأمتعة والمقتنيات عبر منصة Tracksolid Pro. بطارية طويلة العمر تصل إلى نحو 36 شهرًا وفق مواصفات المورد، مع حماية IP68.",
-    image: "/assets/products/tefco/jimi-pb705.svg",
+    image: "https://s.alicdn.com/@sc04/kf/He0f824b7baa847058762ef1b16023c92n/AirTag-Jimiiot-PB705-Jimiot-Mini-Tag-Gps-tracker-for-Asset.jpg",
     purchasePrice: 60
   }
+];
+
+const VERIFIED_IMAGE_OVERRIDES = [
+  [
+    "IPC2228SB-ADF40KM-I1",
+    "https://www.uniview.com/res/202609/04/20260904_2389239_244f948b-7a87-49a3-a8a2-2bb80ab270d6_1001912_651984_0.png"
+  ]
 ];
 
 const REMOVED_SUBSCRIPTIONS = [
@@ -55,6 +62,7 @@ function installTefcoCatalog(db) {
   const update = db.prepare(`UPDATE products_catalog SET supplier_id=?,category=?,description=?,image_url=?,
     purchase_price=?,price=0,old_price=NULL,currency='SAR',active=1 WHERE id=?`);
   const remove = db.prepare("DELETE FROM products_catalog WHERE trim(name)=?");
+  const updateImage = db.prepare("UPDATE products_catalog SET image_url=? WHERE trim(name)=?");
 
   db.transaction(() => {
     for (const name of REMOVED_SUBSCRIPTIONS) remove.run(name);
@@ -63,6 +71,7 @@ function installTefcoCatalog(db) {
       if (existing) update.run(supplier.id, product.category, product.description, product.image, product.purchasePrice, existing.id);
       else insert.run(supplier.id, product.name, product.category, product.description, product.image, product.purchasePrice);
     }
+    for (const [name, imageUrl] of VERIFIED_IMAGE_OVERRIDES) updateImage.run(imageUrl, name);
   })();
 }
 
@@ -89,4 +98,4 @@ for (const key of Reflect.ownKeys(CurrentDatabase)) {
 Object.setPrototypeOf(TefcoCatalogDatabase, CurrentDatabase);
 require.cache[databasePath].exports = TefcoCatalogDatabase;
 
-module.exports = { PRODUCTS, REMOVED_SUBSCRIPTIONS, installTefcoCatalog };
+module.exports = { PRODUCTS, VERIFIED_IMAGE_OVERRIDES, REMOVED_SUBSCRIPTIONS, installTefcoCatalog };
