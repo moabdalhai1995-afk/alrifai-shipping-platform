@@ -1,6 +1,6 @@
 {
   "name": "alrifai-shipping-platform",
-  "version": "3.15.0",
+  "version": "3.15.1",
   "private": true,
   "description": "AlRifai International Shipping Platform - Professional Suite with secure checkout pricing, coupons, electronic invoices, address book, executive dashboard, role-based staff access, audit logs, optional admin 2FA, unified public navigation, mobile UX, shipping operations, tracking, products, cars showroom, notifications, WhatsApp alerts, warehouse and container trips, Sudan fulfillment, durable database sync and Android release validation",
   "main": "server.js",
