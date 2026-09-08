@@ -15,6 +15,22 @@ function isHtmlBody(body, response) {
   return type.includes("text/html") || /^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body);
 }
 
+const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule" aria-label="مواعيد رحلات الشحن الشهرية إلى السودان">
+  <div class="rifai-trip-schedule__inner">
+    <div class="rifai-trip-schedule__label">مواعيد الرحلات الشهرية إلى السودان</div>
+    <div class="rifai-trip-schedule__dates" aria-label="ثلاث رحلات شهريًا أيام 1 و11 و21">
+      <strong>3 رحلات شهريًا</strong>
+      <span class="rifai-trip-date">1</span>
+      <span class="rifai-trip-sep">•</span>
+      <span class="rifai-trip-date">11</span>
+      <span class="rifai-trip-sep">•</span>
+      <span class="rifai-trip-date">21</span>
+      <small>من كل شهر</small>
+    </div>
+    <p>أي شحنة تصل بعد إقفال الرحلة تُرحّل تلقائيًا إلى الرحلة التالية.</p>
+  </div>
+</section>`;
+
 const paletteStyles = String.raw`<style id="${MARKER}-style">
 :root{
   --rifai-navy:#12364D;
@@ -22,6 +38,60 @@ const paletteStyles = String.raw`<style id="${MARKER}-style">
   --rifai-gold-light:#E6BC62;
   --rifai-muted:#6B7280;
   --rifai-placeholder:#9CA3AF;
+}
+
+/* First customer information: fixed monthly Sudan trip schedule */
+.rifai-trip-schedule{
+  position:relative;
+  z-index:30;
+  background:linear-gradient(135deg,#0B2A40,#12364D);
+  color:#fff;
+  border-bottom:3px solid var(--rifai-gold);
+}
+.rifai-trip-schedule__inner{
+  width:min(1180px,100%);
+  margin:auto;
+  padding:11px 20px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+  text-align:center;
+}
+.rifai-trip-schedule__label{
+  color:var(--rifai-gold-light);
+  font-weight:900;
+  font-size:13px;
+}
+.rifai-trip-schedule__dates{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:15px;
+  font-weight:800;
+}
+.rifai-trip-schedule__dates strong{color:#fff}
+.rifai-trip-date{
+  display:inline-grid;
+  place-items:center;
+  min-width:34px;
+  height:34px;
+  padding:0 8px;
+  border-radius:999px;
+  background:var(--rifai-gold);
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+}
+.rifai-trip-sep{color:var(--rifai-gold-light)}
+.rifai-trip-schedule__dates small{color:#E8EEF2;font-size:12px;white-space:nowrap}
+.rifai-trip-schedule p{
+  margin:0;
+  color:#E8EEF2;
+  font-size:12px;
+  font-weight:700;
 }
 
 /* Core text hierarchy */
@@ -127,6 +197,29 @@ body .mobile-nav a[aria-current="page"] i{
 }
 
 @media(max-width:850px){
+  .rifai-trip-schedule__inner{
+    padding:10px 12px 11px;
+    gap:7px;
+  }
+  .rifai-trip-schedule__label{
+    width:100%;
+    font-size:12px;
+  }
+  .rifai-trip-schedule__dates{
+    width:100%;
+    gap:6px;
+    font-size:14px;
+  }
+  .rifai-trip-date{
+    min-width:32px;
+    height:32px;
+    font-size:15px;
+  }
+  .rifai-trip-schedule p{
+    width:100%;
+    font-size:11px;
+    line-height:1.6;
+  }
   body .hero h1{
     color:#fff!important;
     text-shadow:0 1px 1px rgba(0,0,0,.08);
@@ -141,9 +234,17 @@ body .mobile-nav a[aria-current="page"] i{
 </style>`;
 
 function transformHtml(source) {
-  if (typeof source !== "string" || source.includes(`id="${MARKER}-style"`)) return source;
-  if (/<\/head>/i.test(source)) return source.replace(/<\/head>/i, `${paletteStyles}\n</head>`);
-  return paletteStyles + source;
+  if (typeof source !== "string") return source;
+  let html = source;
+  if (!html.includes(`id="${MARKER}-style"`)) {
+    if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, `${paletteStyles}\n</head>`);
+    else html = paletteStyles + html;
+  }
+  if (!html.includes(`id="${MARKER}-trip-schedule"`)) {
+    if (/<body\b[^>]*>/i.test(html)) html = html.replace(/<body\b[^>]*>/i, match => `${match}\n${tripScheduleBanner}`);
+    else html = tripScheduleBanner + html;
+  }
+  return html;
 }
 
 express.response.send = function homeTextPaletteSend(body) {
