@@ -60,6 +60,8 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
+        // Avoid a stale WebView document after platform deployments while keeping cookies/session data.
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
@@ -108,6 +110,14 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                // Treat the page as usable as soon as WebView commits visible content.
+                pageLoaded = true;
+                handler.removeCallbacks(browserFallback);
+                progressBar.setVisibility(View.GONE);
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 pageLoaded = true;
                 handler.removeCallbacks(browserFallback);
@@ -147,7 +157,8 @@ public class MainActivity extends Activity {
         });
 
         webView.loadUrl(PLATFORM_URL);
-        handler.postDelayed(browserFallback, 15000);
+        // Do not leave users on a blank loading screen if WebView cannot finish the page.
+        handler.postDelayed(browserFallback, 7000);
     }
 
     @Override
