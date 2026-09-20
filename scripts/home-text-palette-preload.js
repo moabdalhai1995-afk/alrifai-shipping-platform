@@ -11,11 +11,13 @@ const BRAND_SCRIPT = String.raw`<script id="maraif-brand-v1">
   function apply(){
     document.querySelectorAll(".brand, .auth-brand b").forEach(function(el){
       var span = el.querySelector("span");
-      if (span) { el.childNodes[0].nodeValue = brandName; span.textContent = tagline; }
-      else el.textContent = brandName;
+      if (span) {
+        if (el.childNodes[0] && el.childNodes[0].nodeValue !== brandName) el.childNodes[0].nodeValue = brandName;
+        if (span.textContent !== tagline) span.textContent = tagline;
+      } else if (el.textContent !== brandName) el.textContent = brandName;
     });
-    document.querySelectorAll("[data-brand-name]").forEach(function(el){ el.textContent = brandName; });
-    document.querySelectorAll("[data-brand-tagline]").forEach(function(el){ el.textContent = tagline; });
+    document.querySelectorAll("[data-brand-name]").forEach(function(el){ if (el.textContent !== brandName) el.textContent = brandName; });
+    document.querySelectorAll("[data-brand-tagline]").forEach(function(el){ if (el.textContent !== tagline) el.textContent = tagline; });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply); else apply();
   new MutationObserver(apply).observe(document.documentElement,{subtree:true,childList:true});
