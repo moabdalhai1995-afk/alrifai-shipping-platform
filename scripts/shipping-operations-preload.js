@@ -224,7 +224,7 @@ function getPool() {
   if (!process.env.DATABASE_URL) return null;
   if (!pool) {
     const { Pool } = require("pg");
-    pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, connectionTimeoutMillis: 10000 });
+    pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, connectionTimeoutMillis: 30000 });
     pool.on("error", error => console.error("Shipping operations Neon pool error", error.message));
   }
   return pool;
