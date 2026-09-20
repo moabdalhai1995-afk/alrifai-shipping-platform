@@ -194,7 +194,7 @@ if (enabled) {
   async function bootstrap(db) {
     const client = await pool.connect();
     try {
-      // Keep the Neon schema compatible with the SQLite schema used by the app.\n      // This column is required by vehicle-agent authentication and is safe to add on existing databases.\n      await client.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "must_change_password" INTEGER NOT NULL DEFAULT 1');\n      await client.query('ALTER TABLE "products_catalog" ADD COLUMN IF NOT EXISTS "purchase_price" DOUBLE PRECISION');
+      // Keep the Neon schema compatible with the SQLite schema used by the app.\n      // This column is required by vehicle-agent authentication and is safe to add on existing databases.\n      await client.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "must_change_password" INTEGER NOT NULL DEFAULT 1');\n      await client.query('ALTER TABLE "products_catalog" ADD COLUMN IF NOT EXISTS "purchase_price" DOUBLE PRECISION');\n      await client.query('ALTER TABLE "products_catalog" ADD COLUMN IF NOT EXISTS "old_price" DOUBLE PRECISION');
       const remoteRows = await remoteCount(client);
       const localRows = localCount(db);
       if (remoteRows > 0) {
