@@ -2,10 +2,13 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const replacements = [
-  ["الرفاعي للشحن الدولي", "مرافئ للشحن والخدمات"],
-  ["منصة الرفاعي", "منصة مرافئ"],
-  ["تطبيق الرفاعي", "تطبيق مرافئ"],
-  ["الرفاعي", "مرافئ"]
+  ["الرفاعي للشحن الدولي", "ترتيب للشحن والخدمات"],
+  ["منصة الرفاعي", "منصة ترتيب"],
+  ["تطبيق الرفاعي", "تطبيق ترتيب"],
+  ["مرافئ للشحن والخدمات", "ترتيب للشحن والخدمات"],
+  ["منصة مرافئ", "منصة ترتيب"],
+  ["تطبيق مرافئ", "تطبيق ترتيب"],
+  ["مرافئ", "ترتيب"]
 ];
 
 function isHtml(body, response) {
@@ -20,7 +23,7 @@ function transformBrand(body) {
   return html;
 }
 
-express.response.send = function maraaifBrandSend(body) {
+express.response.send = function arrangementBrandSend(body) {
   if (isHtml(body, this)) {
     body = transformBrand(body);
     this.removeHeader("Content-Length");
