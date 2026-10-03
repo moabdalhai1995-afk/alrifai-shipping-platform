@@ -59,7 +59,7 @@ jobs:
           test "$VERSION_CODE" -gt 5
           printf 'ALRIFAI_VERSION_CODE=%s\n' "$VERSION_CODE" >> "$GITHUB_ENV"
           printf 'ALRIFAI_VERSION_NAME=%s\n' "$PLATFORM_VERSION" >> "$GITHUB_ENV"
-          echo "Android versionCode=$VERSION_CODE versionName=$PLATFORM_VERSION"
+          echo "ترتيب للشحن والخدمات — Android versionCode=$VERSION_CODE versionName=$PLATFORM_VERSION"
 
       - name: Restore permanent signing key
         if: github.event_name != 'pull_request'
@@ -120,7 +120,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: AlRifai-Shipping-Android-${{ github.run_number }}-Signed-APK
+          name: Tarteeb-Shipping-Android-${{ github.run_number }}-Signed-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
@@ -129,7 +129,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: AlRifai-Shipping-Android-${{ github.run_number }}-Google-Play-AAB
+          name: Tarteeb-Shipping-Android-${{ github.run_number }}-Google-Play-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
@@ -141,8 +141,8 @@ jobs:
         shell: bash
         run: |
           RELEASE_TAG="android-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}"
-          APK_NAME="AlRifai-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.apk"
-          AAB_NAME="AlRifai-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.aab"
+          APK_NAME="Tarteeb-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.apk"
+          AAB_NAME="Tarteeb-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.aab"
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$APK_NAME"
           cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$AAB_NAME"
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
@@ -152,7 +152,7 @@ jobs:
               "$RUNNER_TEMP/$APK_NAME" \
               "$RUNNER_TEMP/$AAB_NAME" \
               --target "$GITHUB_SHA" \
-              --title "الرفاعي للشحن الدولي Android v${ALRIFAI_VERSION_NAME}" \
-              --notes "إصدار Production Stable موقّع تلقائيًا بعد اجتياز فحوصات المنصة. versionCode=${ALRIFAI_VERSION_CODE}. يتضمن APK للتثبيت وAAB للرفع إلى Google Play." \
+              --title "ترتيب للشحن والخدمات Android v${ALRIFAI_VERSION_NAME}" \
+              --notes "إصدار Production Stable لتطبيق ترتيب للشحن والخدمات، موقّع تلقائيًا بعد اجتياز فحوصات المنصة. versionCode=${ALRIFAI_VERSION_CODE}. يتضمن APK للتثبيت وAAB للرفع إلى Google Play." \
               --latest
           fi
