@@ -2,19 +2,22 @@ name: Build Android Release
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -24,6 +27,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
 
       - name: Install platform dependencies
         run: npm install --no-audit --no-fund
@@ -59,7 +63,6 @@ jobs:
           test "$VERSION_CODE" -gt 5
           printf 'ALRIFAI_VERSION_CODE=%s\n' "$VERSION_CODE" >> "$GITHUB_ENV"
           printf 'ALRIFAI_VERSION_NAME=%s\n' "$PLATFORM_VERSION" >> "$GITHUB_ENV"
-          echo "ترتيب للشحن والخدمات — Android versionCode=$VERSION_CODE versionName=$PLATFORM_VERSION"
 
       - name: Restore permanent signing key
         if: github.event_name != 'pull_request'
@@ -86,10 +89,7 @@ jobs:
             RESOLVED_KEY_PASSWORD="$KEY_PASSWORD"
           else
             jar --create --file "$RUNNER_TEMP/signing-test.jar" -C "$RUNNER_TEMP/signing-test" .
-            if ! jarsigner -keystore "$RUNNER_TEMP/alrifai-release.jks" -storepass "$STORE_PASSWORD" -keypass "$STORE_PASSWORD" "$RUNNER_TEMP/signing-test.jar" "$KEY_ALIAS" >/dev/null 2>&1; then
-              echo "Signing credentials do not unlock the selected key" >&2
-              exit 1
-            fi
+            jarsigner -keystore "$RUNNER_TEMP/alrifai-release.jks" -storepass "$STORE_PASSWORD" -keypass "$STORE_PASSWORD" "$RUNNER_TEMP/signing-test.jar" "$KEY_ALIAS" >/dev/null 2>&1
             RESOLVED_KEY_PASSWORD="$STORE_PASSWORD"
           fi
           echo "::add-mask::$STORE_PASSWORD"
@@ -140,19 +140,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          RELEASE_TAG="android-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}"
+          RELEASE_TAG="tarteeb-android-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}"
           APK_NAME="Tarteeb-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.apk"
           AAB_NAME="Tarteeb-Shipping-v${ALRIFAI_VERSION_NAME}-build-${ALRIFAI_VERSION_CODE}.aab"
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$APK_NAME"
           cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$AAB_NAME"
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/$APK_NAME" "$RUNNER_TEMP/$AAB_NAME" --clobber
-          else
-            gh release create "$RELEASE_TAG" \
-              "$RUNNER_TEMP/$APK_NAME" \
-              "$RUNNER_TEMP/$AAB_NAME" \
-              --target "$GITHUB_SHA" \
-              --title "ترتيب للشحن والخدمات Android v${ALRIFAI_VERSION_NAME}" \
-              --notes "إصدار Production Stable لتطبيق ترتيب للشحن والخدمات، موقّع تلقائيًا بعد اجتياز فحوصات المنصة. versionCode=${ALRIFAI_VERSION_CODE}. يتضمن APK للتثبيت وAAB للرفع إلى Google Play." \
-              --latest
-          fi
+          gh release create "$RELEASE_TAG" "$RUNNER_TEMP/$APK_NAME" "$RUNNER_TEMP/$AAB_NAME" --target "$GITHUB_SHA" --title "ترتيب للشحن والخدمات Android v${ALRIFAI_VERSION_NAME}" --notes "إصدار Production Stable موقّع تلقائيًا بعد اجتياز فحوصات المنصة. versionCode=${ALRIFAI_VERSION_CODE}." --latest
