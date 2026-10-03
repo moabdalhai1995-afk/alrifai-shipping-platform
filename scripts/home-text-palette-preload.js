@@ -2,10 +2,10 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const originalStatic = express.static;
-const MARKER = "home-text-palette-v1";
-const BRAND_SCRIPT = String.raw`<script id="maraif-brand-v1">
+const MARKER = "home-text-palette-v2";
+const BRAND_SCRIPT = String.raw`<script id="maraif-brand-v2">
 (function(){
-  var brandName = "مرافئ للشحن والخدمات";
+  var brandName = "ترتيب للشحن والخدمات";
   var tagline = "ثقة • أمان • وصول";
   document.title = brandName + " | " + tagline;
   function apply(){
@@ -35,45 +35,41 @@ function isHtmlBody(body, response) {
   return type.includes("text/html") || /^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body);
 }
 
-const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule" aria-label="مواعيد رحلات الشحن الشهرية إلى السودان">
-  <div class="rifai-trip-schedule__inner">
-    <div class="rifai-trip-schedule__label">مواعيد الرحلات الشهرية إلى السودان</div>
-    <div class="rifai-trip-schedule__dates" aria-label="ثلاث رحلات شهريًا أيام 1 و11 و21">
-      <strong>3 رحلات شهريًا</strong>
-      <span class="rifai-trip-date">1</span>
-      <span class="rifai-trip-sep">•</span>
-      <span class="rifai-trip-date">11</span>
-      <span class="rifai-trip-sep">•</span>
-      <span class="rifai-trip-date">21</span>
-      <small>من كل شهر</small>
+const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule rifai-brand-hero" aria-label="ترتيب للشحن والخدمات">
+  <div class="rifai-brand-hero__inner">
+    <div class="rifai-brand-hero__logo" aria-label="ترتيب للشحن والخدمات">
+      <div class="rifai-brand-hero__name">ترتيب</div>
+      <div class="rifai-brand-hero__service">للشحن والخدمات</div>
+      <div class="rifai-brand-hero__tagline">ثقة • أمان • وصول</div>
     </div>
-    <p>أي شحنة تصل بعد إقفال الرحلة تُرحّل تلقائيًا إلى الرحلة التالية.</p>
   </div>
 </section>`;
 
 const paletteStyles = String.raw`<style id="${MARKER}-style">
 :root{
-  --rifai-navy:#12364D;
+  --rifai-black:#000000;
   --rifai-gold:#D39A22;
   --rifai-gold-light:#E6BC62;
   --rifai-muted:#6B7280;
   --rifai-placeholder:#9CA3AF;
 }
-.rifai-trip-schedule{position:relative;z-index:30;background:linear-gradient(135deg,#0B2A40,#12364D);color:#fff;border-bottom:3px solid var(--rifai-gold)}
-.rifai-trip-schedule__inner{width:min(1180px,100%);margin:auto;padding:11px 20px 12px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;text-align:center}
-.rifai-trip-schedule__label{color:var(--rifai-gold-light);font-weight:900;font-size:13px}
-.rifai-trip-schedule__dates{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:800}
-.rifai-trip-schedule__dates strong{color:#fff}.rifai-trip-date{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 8px;border-radius:999px;background:var(--rifai-gold);color:#fff;font-size:16px;font-weight:900}.rifai-trip-sep{color:var(--rifai-gold-light)}.rifai-trip-schedule__dates small{color:#E8EEF2;font-size:12px;white-space:nowrap}.rifai-trip-schedule p{margin:0;color:#E8EEF2;font-size:12px;font-weight:700}
-body .brand,body header:not(.top):not(.topbar) .brand,body .department-head h2,body .section-head h1,body .section-head h2,body .section-head h3,body .department-card b,body .category-chip b,body .card h3,body .all-services-head h2,body .all-service-card>b,body .store-benefit b{color:var(--rifai-navy)!important}
+.rifai-trip-schedule{position:relative;z-index:30;background:#000;color:#fff;border-bottom:0}
+.rifai-brand-hero__inner{width:min(1180px,100%);margin:auto;padding:34px 20px 28px;display:flex;align-items:center;justify-content:center;text-align:center}
+.rifai-brand-hero__logo{background:transparent;border:0;box-shadow:none;padding:0;margin:0}
+.rifai-brand-hero__name{color:var(--rifai-gold);font-weight:900;font-size:clamp(58px,11vw,104px);line-height:.95;letter-spacing:0;text-shadow:0 2px 10px rgba(211,154,34,.18)}
+.rifai-brand-hero__service{color:#fff;font-weight:800;font-size:clamp(28px,5vw,48px);line-height:1.15;margin-top:8px}
+.rifai-brand-hero__tagline{color:var(--rifai-gold);font-weight:800;font-size:clamp(18px,3vw,28px);margin-top:10px}
+body{background:#000}
+body .brand,body header:not(.top):not(.topbar) .brand,body .department-head h2,body .section-head h1,body .section-head h2,body .section-head h3,body .department-card b,body .category-chip b,body .card h3,body .all-services-head h2,body .all-service-card>b,body .store-benefit b{color:#000!important}
 body .brand span,body header:not(.top):not(.topbar) .brand span{color:var(--rifai-gold)!important}
-body header:not(.top):not(.topbar) nav a{color:var(--rifai-navy)!important}
+body header:not(.top):not(.topbar) nav a{color:#000!important}
 body .muted,body .department-head p,body .department-card small,body .card p,body .all-services-head p,body .store-benefit small,body .product-desc,body .product-category{color:var(--rifai-muted)!important}
-body .store-search input,body .toolbar input,body .toolbar select{color:var(--rifai-navy)!important}
+body .store-search input,body .toolbar input,body .toolbar select{color:#000!important}
 body input::placeholder,body textarea::placeholder,body .store-search input::placeholder,body .toolbar input::placeholder{color:var(--rifai-placeholder)!important;opacity:1!important}
-body .btn.primary,body .primary,body .btn-gold,body .product-action{color:#fff!important}body .btn.primary,body .btn-gold{background:linear-gradient(135deg,var(--rifai-gold),#B9811F)!important}body .btn.outline,body .outline,body .btn-light,body .secondary{color:var(--rifai-navy)!important}
-body .hero .kicker{color:var(--rifai-gold-light)!important}body .hero-actions .primary{color:#fff!important}body .hero-actions .outline{background:#fff!important;border-color:#fff!important;color:var(--rifai-navy)!important}body .home-trust-row span{color:var(--rifai-navy)!important;text-shadow:none!important}
-body .mobile-nav a,body .mobile-nav button{color:#53616D!important}body .mobile-nav i{color:var(--rifai-navy)!important}body .mobile-nav a[href="/"],body .mobile-nav a[href="/index.html"],body .mobile-nav a[aria-current="page"]{color:var(--rifai-gold)!important;font-weight:900!important}
-@media(max-width:850px){.rifai-trip-schedule__inner{padding:10px 12px 11px;gap:7px}.rifai-trip-schedule__label{width:100%;font-size:12px}.rifai-trip-schedule__dates{width:100%;gap:6px;font-size:14px}.rifai-trip-date{min-width:32px;height:32px;font-size:15px}.rifai-trip-schedule p{width:100%;font-size:11px;line-height:1.6}body .hero h1{color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.08)}body .hero p{color:#F5F7F9!important}body .hero .kicker{color:var(--rifai-gold-light)!important}}
+body .btn.primary,body .primary,body .btn-gold,body .product-action{color:#fff!important}body .btn.primary,body .btn-gold{background:linear-gradient(135deg,var(--rifai-gold),#B9811F)!important}body .btn.outline,body .outline,body .btn-light,body .secondary{color:#000!important}
+body .hero{background:#000!important}body .hero .kicker{color:var(--rifai-gold-light)!important}body .hero-actions .primary{color:#fff!important}body .hero-actions .outline{background:#fff!important;border-color:#fff!important;color:#000!important}body .home-trust-row span{color:#000!important;text-shadow:none!important}
+body .mobile-nav a,body .mobile-nav button{color:#53616D!important}body .mobile-nav i{color:#000!important}body .mobile-nav a[href="/"],body .mobile-nav a[href="/index.html"],body .mobile-nav a[aria-current="page"]{color:var(--rifai-gold)!important;font-weight:900!important}
+@media(max-width:850px){.rifai-brand-hero__inner{padding:30px 14px 24px}.rifai-brand-hero__name{font-size:72px}.rifai-brand-hero__service{font-size:31px}.rifai-brand-hero__tagline{font-size:20px}body .hero h1{color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.08)}body .hero p{color:#F5F7F9!important}body .hero .kicker{color:var(--rifai-gold-light)!important}}
 </style>`;
 
 function transformHtml(source) {
@@ -87,7 +83,7 @@ function transformHtml(source) {
     if (/<body\b[^>]*>/i.test(html)) html = html.replace(/<body\b[^>]*>/i, match => `${match}\n${tripScheduleBanner}`);
     else html = tripScheduleBanner + html;
   }
-  if (!html.includes('id="maraif-brand-v1"')) {
+  if (!html.includes('id="maraif-brand-v2"')) {
     if (/<body\b[^>]*>/i.test(html)) html = html.replace(/<body\b[^>]*>/i, match => `${match}\n${BRAND_SCRIPT}`);
     else html = BRAND_SCRIPT + html;
   }
