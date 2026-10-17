@@ -37,7 +37,7 @@ function isHtmlBody(body, response) {
 
 const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule rifai-brand-hero" aria-label="SUDANMEX">
   <div class="rifai-brand-hero__inner">
-    <div class="rifai-brand-hero__logo" aria-label="ترتيب للشحن والخدمات">
+    <div class="rifai-brand-hero__logo" aria-label="SUDANMEX">
       <div class="rifai-brand-hero__name">SUDANMEX</div>
       <div class="rifai-brand-hero__service">للشحن والخدمات</div>
       <div class="rifai-brand-hero__tagline">ثقة • أمان • وصول</div>
