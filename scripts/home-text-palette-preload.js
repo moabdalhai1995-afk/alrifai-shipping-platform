@@ -5,7 +5,7 @@ const originalStatic = express.static;
 const MARKER = "home-text-palette-v2";
 const BRAND_SCRIPT = String.raw`<script id="maraif-brand-v2">
 (function(){
-  var brandName = "SUDANMEX";
+  var brandName = "SUDAMEX";
   var tagline = "ثقة • أمان • وصول";
   document.title = brandName + " | " + tagline;
   function apply(){
@@ -35,10 +35,10 @@ function isHtmlBody(body, response) {
   return type.includes("text/html") || /^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body);
 }
 
-const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule rifai-brand-hero" aria-label="SUDANMEX">
+const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule rifai-brand-hero" aria-label="SUDAMEX">
   <div class="rifai-brand-hero__inner">
-    <div class="rifai-brand-hero__logo" aria-label="SUDANMEX">
-      <div class="rifai-brand-hero__name">SUDANMEX</div>
+    <div class="rifai-brand-hero__logo" aria-label="SUDAMEX">
+      <div class="rifai-brand-hero__name">SUDAMEX</div>
       <div class="rifai-brand-hero__service">للشحن والخدمات</div>
       <div class="rifai-brand-hero__tagline">ثقة • أمان • وصول</div>
     </div>
@@ -71,7 +71,7 @@ body .hero{background:#000!important}body .hero .kicker{color:var(--rifai-gold-l
 body .mobile-nav a,body .mobile-nav button{color:#53616D!important}body .mobile-nav i{color:#000!important}body .mobile-nav a[href="/"],body .mobile-nav a[href="/index.html"],body .mobile-nav a[aria-current="page"]{color:var(--rifai-gold)!important;font-weight:900!important}
 @media(max-width:850px){.rifai-brand-hero__inner{padding:30px 14px 24px}.rifai-brand-hero__name{font-size:72px}.rifai-brand-hero__service{font-size:31px}.rifai-brand-hero__tagline{font-size:20px}body .hero h1{color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.08)}body .hero p{color:#F5F7F9!important}body .hero .kicker{color:var(--rifai-gold-light)!important}}
 
-/* SUDANMEX monochrome storefront refresh */
+/* SUDAMEX monochrome storefront refresh */
 :root{--rifai-black:#000;--rifai-gold:#111;--rifai-gold-light:#fff;--rifai-muted:#5b6470;--rifai-placeholder:#8b949e;--ink:#111;--gold:#111;--gold2:#000;--bg:#f5f6f7;--line:#e2e5e9;--dark:#050505}
 body{background:#f5f6f7!important;color:#111!important}
 .rifai-trip-schedule{background:#050505!important;color:#fff!important;border-bottom:1px solid #262626!important}

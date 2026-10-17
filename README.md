@@ -1,6 +1,6 @@
-# SUDANMEX
+# SUDAMEX
 
-تطبيق Android يعرض منصة SUDANMEX للشحن والخدمات داخل WebView آمن.
+تطبيق Android يعرض منصة SUDAMEX للشحن والخدمات داخل WebView آمن.
 
 ## إنشاء APK
 
