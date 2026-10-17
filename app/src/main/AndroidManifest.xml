@@ -9,7 +9,7 @@
         android:usesCleartextTraffic="false"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher"
-        android:label="ترتيب للشحن والخدمات"
+        android:label="SUDANMEX"
         android:theme="@style/Theme.AlRifai">
 
         <activity
