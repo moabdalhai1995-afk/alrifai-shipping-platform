@@ -31,14 +31,14 @@ const mobileTopSpacingStyle = `
 function isHtml(body, response) {
   if (typeof body !== "string") return false;
   const type = String(response?.getHeader?.("Content-Type") || "").toLowerCase();
-  return type.includes("text/html") || /^\\s*<!doctype html/i.test(body) || /^\\s*<html/i.test(body);
+  return type.includes("text/html") || /^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body);
 }
 
 function transformBrand(body) {
   let html = body;
   for (const [from, to] of replacements) html = html.split(from).join(to);
-  if (html.includes("</head>") && !html.includes("id=\\"tarteeb-mobile-top-spacing\\"")) {
-    html = html.replace("</head>", `${mobileTopSpacingStyle}\\n</head>`);
+  if (html.includes("</head>") && !html.includes("id=\"tarteeb-mobile-top-spacing\"")) {
+    html = html.replace("</head>", `${mobileTopSpacingStyle}\n</head>`);
   }
   return html;
 }
