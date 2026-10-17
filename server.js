@@ -16,6 +16,12 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const SESSION_SECRET = String(process.env.SESSION_SECRET || "").trim();
+if (process.env.NODE_ENV === "production" && (SESSION_SECRET.length < 32 || SESSION_SECRET === "CHANGE_ME_BEFORE_PRODUCTION")) {
+  throw new Error("Production startup blocked: configure SESSION_SECRET with a random value of at least 32 characters.");
+}
+const effectiveSessionSecret = SESSION_SECRET || "CHANGE_ME_BEFORE_PRODUCTION";
 const db = new Database(process.env.DB_FILE || path.join(__dirname, "alrifai.db"));
 
 db.pragma("journal_mode = WAL");
@@ -305,7 +311,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(session({
-  secret: process.env.SESSION_SECRET || "CHANGE_ME_BEFORE_PRODUCTION",
+  secret: effectiveSessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
