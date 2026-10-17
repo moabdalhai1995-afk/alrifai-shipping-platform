@@ -70,6 +70,29 @@ body .btn.primary,body .primary,body .btn-gold,body .product-action{color:#fff!i
 body .hero{background:#000!important}body .hero .kicker{color:var(--rifai-gold-light)!important}body .hero-actions .primary{color:#fff!important}body .hero-actions .outline{background:#fff!important;border-color:#fff!important;color:#000!important}body .home-trust-row span{color:#000!important;text-shadow:none!important}
 body .mobile-nav a,body .mobile-nav button{color:#53616D!important}body .mobile-nav i{color:#000!important}body .mobile-nav a[href="/"],body .mobile-nav a[href="/index.html"],body .mobile-nav a[aria-current="page"]{color:var(--rifai-gold)!important;font-weight:900!important}
 @media(max-width:850px){.rifai-brand-hero__inner{padding:30px 14px 24px}.rifai-brand-hero__name{font-size:72px}.rifai-brand-hero__service{font-size:31px}.rifai-brand-hero__tagline{font-size:20px}body .hero h1{color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.08)}body .hero p{color:#F5F7F9!important}body .hero .kicker{color:var(--rifai-gold-light)!important}}
+
+/* SUDANMEX monochrome storefront refresh */
+:root{--rifai-black:#000;--rifai-gold:#111;--rifai-gold-light:#fff;--rifai-muted:#5b6470;--rifai-placeholder:#8b949e;--ink:#111;--gold:#111;--gold2:#000;--bg:#f5f6f7;--line:#e2e5e9;--dark:#050505}
+body{background:#f5f6f7!important;color:#111!important}
+.rifai-trip-schedule{background:#050505!important;color:#fff!important;border-bottom:1px solid #262626!important}
+.rifai-brand-hero__inner{padding:30px 20px 26px!important}
+.rifai-brand-hero__name{color:#fff!important;letter-spacing:.045em!important;text-shadow:none!important}
+.rifai-brand-hero__service,.rifai-brand-hero__tagline{color:#fff!important}
+body header{background:#fff!important;border-bottom:1px solid #e2e5e9!important;box-shadow:0 4px 18px rgba(0,0,0,.035)!important}
+body .brand,body header:not(.top):not(.topbar) .brand,body .department-head h2,body .section-head h1,body .section-head h2,body .section-head h3,body .department-card b,body .category-chip b,body .card h3,body .all-services-head h2,body .all-service-card>b,body .store-benefit b{color:#111!important}
+body .brand span,body header:not(.top):not(.topbar) .brand span{color:#111!important}
+body .hero{background:#050505!important;color:#fff!important}
+body .hero h1,body .hero p,body .hero .kicker{color:#fff!important}
+body .hero-card,body .card,body .product,body .calc,body .step,body .track-item,body .p2-panel,body .p2-stat{background:#fff!important;border-color:#e2e5e9!important;box-shadow:0 8px 24px rgba(0,0,0,.035)!important}
+body .primary,body .btn.primary,body .btn-gold,body .product-action,body .num{background:#050505!important;color:#fff!important;border-color:#050505!important}
+body .outline,body .btn.outline,body .btn-light,body .secondary{background:#fff!important;color:#111!important;border:1px solid #cfd4da!important}
+body .price,body .result strong,body .admin-stat b{color:#111!important}
+body .tag{background:#f0f1f3!important;color:#222!important}
+body .result{background:#f5f6f7!important;border-color:#dfe3e8!important}
+body .mobile-nav a[href="/"],body .mobile-nav a[href="/index.html"],body .mobile-nav a[aria-current="page"]{color:#000!important}
+body input:focus,body select:focus,body textarea:focus{outline:2px solid #111!important;border-color:#111!important}
+body .btn,body .card,body .product,body .hero-card{transition:transform .18s ease,box-shadow .18s ease}
+@media(hover:hover){body .card:hover,body .product:hover,body .hero-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.08)!important}}
 </style>`;
 
 function transformHtml(source) {
