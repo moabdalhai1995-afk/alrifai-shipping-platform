@@ -5,7 +5,7 @@ const originalStatic = express.static;
 const MARKER = "home-text-palette-v2";
 const BRAND_SCRIPT = String.raw`<script id="maraif-brand-v2">
 (function(){
-  var brandName = "ترتيب للشحن والخدمات";
+  var brandName = "SUDANMEX";
   var tagline = "ثقة • أمان • وصول";
   document.title = brandName + " | " + tagline;
   function apply(){
@@ -35,10 +35,10 @@ function isHtmlBody(body, response) {
   return type.includes("text/html") || /^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body);
 }
 
-const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule rifai-brand-hero" aria-label="ترتيب للشحن والخدمات">
+const tripScheduleBanner = String.raw`<section id="${MARKER}-trip-schedule" class="rifai-trip-schedule rifai-brand-hero" aria-label="SUDANMEX">
   <div class="rifai-brand-hero__inner">
     <div class="rifai-brand-hero__logo" aria-label="ترتيب للشحن والخدمات">
-      <div class="rifai-brand-hero__name">ترتيب</div>
+      <div class="rifai-brand-hero__name">SUDANMEX</div>
       <div class="rifai-brand-hero__service">للشحن والخدمات</div>
       <div class="rifai-brand-hero__tagline">ثقة • أمان • وصول</div>
     </div>
