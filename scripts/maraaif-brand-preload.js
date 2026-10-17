@@ -2,19 +2,23 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const replacements = [
-  ["الرفاعي للشحن الدولي", "ترتيب للشحن والخدمات"],
-  ["منصة الرفاعي", "منصة ترتيب"],
-  ["تطبيق الرفاعي", "تطبيق ترتيب"],
-  ["مرافئ للشحن والخدمات", "ترتيب للشحن والخدمات"],
-  ["منصة مرافئ", "منصة ترتيب"],
-  ["تطبيق مرافئ", "تطبيق ترتيب"],
-  ["مرافئ", "ترتيب"]
+  ["الرفاعي للشحن الدولي", "SUDANMEX"],
+  ["منصة الرفاعي", "SUDANMEX"],
+  ["تطبيق الرفاعي", "SUDANMEX"],
+  ["مرافئ للشحن والخدمات", "SUDANMEX"],
+  ["منصة مرافئ", "SUDANMEX"],
+  ["تطبيق مرافئ", "SUDANMEX"],
+  ["ترتيب للشحن والخدمات", "SUDANMEX"],
+  ["منصة ترتيب", "SUDANMEX"],
+  ["تطبيق ترتيب", "SUDANMEX"],
+  ["مرافئ", "SUDANMEX"],
+  ["ترتيب", "SUDANMEX"]
 ];
 
 const mobileTopSpacingStyle = `
 <style id="tarteeb-mobile-top-spacing">
 @media (max-width: 520px) {
-  /* ترتيب: leave clear space above the top promotional text, then lower the black/logo area naturally */
+  /* Keep clear space above the brand area on mobile */
   .promo-bar {
     padding-top: 34px !important;
     padding-bottom: 12px !important;
@@ -27,14 +31,14 @@ const mobileTopSpacingStyle = `
 function isHtml(body, response) {
   if (typeof body !== "string") return false;
   const type = String(response?.getHeader?.("Content-Type") || "").toLowerCase();
-  return type.includes("text/html") || /^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body);
+  return type.includes("text/html") || /^\\s*<!doctype html/i.test(body) || /^\\s*<html/i.test(body);
 }
 
 function transformBrand(body) {
   let html = body;
   for (const [from, to] of replacements) html = html.split(from).join(to);
-  if (html.includes("</head>") && !html.includes("id=\"tarteeb-mobile-top-spacing\"")) {
-    html = html.replace("</head>", `${mobileTopSpacingStyle}\n</head>`);
+  if (html.includes("</head>") && !html.includes("id=\\"tarteeb-mobile-top-spacing\\"")) {
+    html = html.replace("</head>", `${mobileTopSpacingStyle}\\n</head>`);
   }
   return html;
 }
