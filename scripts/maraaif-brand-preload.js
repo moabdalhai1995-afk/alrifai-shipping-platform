@@ -2,17 +2,17 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const replacements = [
-  ["الرفاعي للشحن الدولي", "SUDANMEX"],
-  ["منصة الرفاعي", "SUDANMEX"],
-  ["تطبيق الرفاعي", "SUDANMEX"],
-  ["مرافئ للشحن والخدمات", "SUDANMEX"],
-  ["منصة مرافئ", "SUDANMEX"],
-  ["تطبيق مرافئ", "SUDANMEX"],
-  ["ترتيب للشحن والخدمات", "SUDANMEX"],
-  ["منصة ترتيب", "SUDANMEX"],
-  ["تطبيق ترتيب", "SUDANMEX"],
-  ["مرافئ", "SUDANMEX"],
-  ["ترتيب", "SUDANMEX"]
+  ["الرفاعي للشحن الدولي", "SUDAMEX"],
+  ["منصة الرفاعي", "SUDAMEX"],
+  ["تطبيق الرفاعي", "SUDAMEX"],
+  ["مرافئ للشحن والخدمات", "SUDAMEX"],
+  ["منصة مرافئ", "SUDAMEX"],
+  ["تطبيق مرافئ", "SUDAMEX"],
+  ["ترتيب للشحن والخدمات", "SUDAMEX"],
+  ["منصة ترتيب", "SUDAMEX"],
+  ["تطبيق ترتيب", "SUDAMEX"],
+  ["مرافئ", "SUDAMEX"],
+  ["ترتيب", "SUDAMEX"]
 ];
 
 const mobileTopSpacingStyle = `
