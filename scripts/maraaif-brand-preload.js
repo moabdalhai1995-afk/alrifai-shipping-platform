@@ -2,19 +2,23 @@ const express = require("express");
 
 const originalSend = express.response.send;
 const replacements = [
-  ["الرفاعي للشحن الدولي", "ترتيب للشحن والخدمات"],
-  ["منصة الرفاعي", "منصة ترتيب"],
-  ["تطبيق الرفاعي", "تطبيق ترتيب"],
-  ["مرافئ للشحن والخدمات", "ترتيب للشحن والخدمات"],
-  ["منصة مرافئ", "منصة ترتيب"],
-  ["تطبيق مرافئ", "تطبيق ترتيب"],
-  ["مرافئ", "ترتيب"]
+  ["الرفاعي للشحن الدولي", "SUDANMEX"],
+  ["منصة الرفاعي", "SUDANMEX"],
+  ["تطبيق الرفاعي", "SUDANMEX"],
+  ["مرافئ للشحن والخدمات", "SUDANMEX"],
+  ["منصة مرافئ", "SUDANMEX"],
+  ["تطبيق مرافئ", "SUDANMEX"],
+  ["ترتيب للشحن والخدمات", "SUDANMEX"],
+  ["منصة ترتيب", "SUDANMEX"],
+  ["تطبيق ترتيب", "SUDANMEX"],
+  ["مرافئ", "SUDANMEX"],
+  ["ترتيب", "SUDANMEX"]
 ];
 
 const mobileTopSpacingStyle = `
 <style id="tarteeb-mobile-top-spacing">
 @media (max-width: 520px) {
-  /* ترتيب: leave clear space above the top promotional text, then lower the black/logo area naturally */
+  /* Keep clear space above the brand area on mobile */
   .promo-bar {
     padding-top: 34px !important;
     padding-bottom: 12px !important;
